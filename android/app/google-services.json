@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1033255788496",
+    "project_id": "clinic-app-86bcf",
+    "storage_bucket": "clinic-app-86bcf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1033255788496:android:3c933da2e604c0c36f63d5",
+        "android_client_info": {
+          "package_name": "com.wellness.customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArKI9CO5llksF76LC1Bgi4IblwnhURLOQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
