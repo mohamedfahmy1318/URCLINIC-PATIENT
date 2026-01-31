@@ -35,7 +35,8 @@ class _SliderComponentState extends State<SliderComponent> {
     _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
       if (homeScreenController.dashboardData.value.slider.isNotEmpty) {
         int nextPage = homeScreenController.sliderCurrentPage.value + 1;
-        if (nextPage >= homeScreenController.dashboardData.value.slider.length) {
+        if (nextPage >=
+            homeScreenController.dashboardData.value.slider.length) {
           nextPage = 0; // Loop back to the first page
         }
         homeScreenController.sliderPageController.animateToPage(
@@ -85,9 +86,11 @@ class _SliderComponentState extends State<SliderComponent> {
                         launchMode: LaunchMode.externalApplication,
                       );
                     } else if (sliderItem.type == BannerType.CATEGORY) {
-                      Get.to(() => CategoryScreen(), duration: const Duration(milliseconds: 800));
+                      Get.to(() => CategoryScreen(),
+                          duration: const Duration(milliseconds: 800));
                     } else if (sliderItem.type == BannerType.SERVICE) {
-                      Get.to(() => ServiceDetailScreen(), arguments: sliderItem.linkId);
+                      Get.to(() => ServiceDetailScreen(),
+                          arguments: sliderItem.linkId);
                     }
                   },
                   behavior: HitTestBehavior.translucent,
@@ -124,12 +127,19 @@ class _SliderComponentState extends State<SliderComponent> {
                       child: Obx(
                         () => Container(
                           height: 10,
-                          width: homeScreenController.sliderCurrentPage.value == index ? 20 : 10,
+                          width: homeScreenController.sliderCurrentPage.value ==
+                                  index
+                              ? 20
+                              : 10,
                           margin: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: white),
-                            color: homeScreenController.sliderCurrentPage.value == index ? appColorSecondary : appColorPrimary,
+                            color:
+                                homeScreenController.sliderCurrentPage.value ==
+                                        index
+                                    ? appColorSecondary
+                                    : appColorPrimary,
                           ),
                         ),
                       ),
@@ -140,7 +150,7 @@ class _SliderComponentState extends State<SliderComponent> {
             ),
           ],
         ),
-      ).paddingTop(30);
+      ).paddingTop(5);
     });
   }
 }

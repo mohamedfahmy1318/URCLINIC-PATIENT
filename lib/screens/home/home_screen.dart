@@ -5,16 +5,13 @@ import 'package:kivicare_patient/components/loader_widget.dart';
 
 import '../../components/app_scaffold.dart';
 import '../../main.dart';
-import '../../utils/app_common.dart';
 import '../../utils/empty_error_state_widget.dart';
 
-import 'components/choose_category_components.dart';
 import 'components/greetings_component.dart';
-import 'components/quick_book_component.dart';
-import 'components/perfect_clinic_list.dart';
-import '../service/components/popular_service_component.dart';
+import 'components/home_search_component.dart';
+import 'components/pinned_clinics_component.dart';
 import 'components/slider_component.dart';
-import '../doctor/components/popular_doctor_component.dart';
+import 'components/sort_by_component.dart';
 import 'components/upcoming_appointment_components.dart';
 import 'home_controller.dart';
 import 'model/dashboard_res_model.dart';
@@ -36,12 +33,16 @@ class HomeScreen extends StatelessWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           Get.find<QuickBookController>().resetFields();
-          return homeScreenController.getDashboardDetail(isFromSwipeRefresh: true);
+          return homeScreenController.getDashboardDetail(
+              isFromSwipeRefresh: true);
         },
         child: Obx(
           () => SnapHelperWidget(
             future: homeScreenController.getDashboardDetailFuture.value,
-            initialData: homeScreenController.dashboardData.value.categories.isEmpty ? null : DashboardRes(data: homeScreenController.dashboardData.value),
+            initialData: homeScreenController
+                    .dashboardData.value.categories.isEmpty
+                ? null
+                : DashboardRes(data: homeScreenController.dashboardData.value),
             errorBuilder: (error) {
               return NoDataWidget(
                 title: error,
@@ -52,7 +53,9 @@ class HomeScreen extends StatelessWidget {
                 },
               ).paddingSymmetric(horizontal: 16);
             },
-            loadingWidget: homeScreenController.isLoading.value ? const Offstage() : const LoaderWidget(),
+            loadingWidget: homeScreenController.isLoading.value
+                ? const Offstage()
+                : const LoaderWidget(),
             onSuccess: (dashboardData) {
               return SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 90),
@@ -60,14 +63,15 @@ class HomeScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ChooseCategoryComponents(),
+                    // 1. Search Bar
+                    const HomeSearchComponent(),
+                    // 2. Banner/Slider
                     const SliderComponent(),
-                    if (appConfigs.value.isQuickBookingEnabled.getBoolInt()) QuickBookComponent(),
-                    UpcomingAppointmentComponents(),
-                    // FeaturedServiceComponent(),
-                    PopularServiceComponent(),
-                    PerfectClinicComponent(),
-                    PopularDoctorComponent(),
+                    // 3. Pinned Clinics
+                    PinnedClinicsComponent(),
+                    // 4. Sort By / Browse By
+                    const SortByComponent(),
+                    // 5. Upcoming Appointments
                   ],
                 ),
               );

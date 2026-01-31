@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 abstract class BaseLanguage {
-  static BaseLanguage of(BuildContext context) => Localizations.of<BaseLanguage>(context, BaseLanguage)!;
+  static BaseLanguage of(BuildContext context) =>
+      Localizations.of<BaseLanguage>(context, BaseLanguage)!;
 
   String get language;
 
@@ -879,13 +880,15 @@ abstract class BaseLanguage {
 
   String get appliedTaxes;
 
-  String cancellationChargesWillBeAppliedForCancellationWithin(String amount, String hours);
+  String cancellationChargesWillBeAppliedForCancellationWithin(
+      String amount, String hours);
 
   String get cancelAppointment;
 
   String get goBack;
 
-  String cancellationFeesWillBeAppliedIfYouCancelWithinHoursOfScheduledTime(String hours, bool isCancellationChargesEnabled);
+  String cancellationFeesWillBeAppliedIfYouCancelWithinHoursOfScheduledTime(
+      String hours, bool isCancellationChargesEnabled);
 
   String get reason;
 
@@ -1112,4 +1115,28 @@ abstract class BaseLanguage {
   String get totalCharges;
 
   String get grandTotal;
+
+  String get findClinicsNearYouOnMap;
+
+  String get viewOnMap;
+
+  // New Home Screen translations
+  String get searchDoctorClinicService;
+  String get searchForDoctorsClinicsServices;
+  String get pinnedClinics;
+  String get browseBy;
+  String get sortBy;
+  String get popularDoctors;
+  String get allClinics;
+  String get nearestClinics;
+  String get popularServices;
+  String get defaultSort;
+  String get nameAZ;
+  String get nameZA;
+  String get ratingHighToLow;
+  String get ratingLowToHigh;
+  String get minutes;
+  String get topRated;
+  String get mostDoctors;
+  String get mostServices;
 }

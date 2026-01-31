@@ -12,8 +12,7 @@ const DOMAIN_URL = "https://urclinic.findosystem.com";
 
 const BASE_URL = '$DOMAIN_URL/api/';
 
-const APP_PLAY_STORE_URL =
-    'https://play.google.com/store/apps/details?id=com.wellness.customer';
+const APP_PLAY_STORE_URL = '';
 const APP_APPSTORE_URL = '';
 
 const TERMS_CONDITION_URL = '$DOMAIN_URL/page/terms-conditions';

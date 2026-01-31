@@ -25,7 +25,8 @@ class SplashScreenController extends GetxController {
   @override
   void onReady() {
     try {
-      final getThemeFromLocal = getValueFromLocal(SettingsLocalConst.THEME_MODE);
+      final getThemeFromLocal =
+          getValueFromLocal(SettingsLocalConst.THEME_MODE);
       if (getThemeFromLocal is int) {
         toggleThemeMode(themeId: getThemeFromLocal);
       } else {
@@ -43,10 +44,13 @@ class SplashScreenController extends GetxController {
       appCurrency(value.currency);
       appConfigs(value);
 
-      // Force-apply admin default language when provided
-      final adminLang = value.applicationLanguage.trim();
-      if (adminLang.isNotEmpty) {
-        applyLanguage(adminLang);
+      // Only apply backend language on first launch (when no user preference is saved)
+      final savedLang = getValueFromLocal(SELECTED_LANGUAGE_CODE);
+      if (savedLang == null || savedLang.toString().isEmpty) {
+        final adminLang = value.applicationLanguage.trim();
+        if (adminLang.isNotEmpty) {
+          applyLanguage(adminLang);
+        }
       }
 
       ///Navigation logic
@@ -60,7 +64,8 @@ class SplashScreenController extends GetxController {
   }
 
   void navigationLogic() {
-    if ((getValueFromLocal(SharedPreferenceConst.FIRST_TIME) ?? false) == false) {
+    if ((getValueFromLocal(SharedPreferenceConst.FIRST_TIME) ?? false) ==
+        false) {
       Get.offAll(() => WalkthroughScreen());
     } else if (getValueFromLocal(SharedPreferenceConst.IS_LOGGED_IN) == true) {
       try {

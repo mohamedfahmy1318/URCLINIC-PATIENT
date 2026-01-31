@@ -24,7 +24,12 @@ class DashboardController extends GetxController {
   TextEditingController phoneController = TextEditingController();
   final GlobalKey<FormState> phoneFormKey = GlobalKey();
 
-  Rx<BottomBarItem> selectedBottomNav = BottomBarItem(title: locale.value.home.obs, icon: Assets.navigationIcHomeOutlined, activeIcon: Assets.navigationIcHomeFilled, type: BottomItem.home.name).obs;
+  Rx<BottomBarItem> selectedBottomNav = BottomBarItem(
+          title: locale.value.home.obs,
+          icon: Assets.navigationIcHomeOutlined,
+          activeIcon: Assets.navigationIcHomeFilled,
+          type: BottomItem.home.name)
+      .obs;
 
   RxList<StatelessWidget> screen = [
     HomeScreen(),
@@ -50,10 +55,12 @@ class DashboardController extends GetxController {
   void onReady() {
     reloadBottomTabs();
     if (Get.context != null) {
-      View.of(Get.context!).platformDispatcher.onPlatformBrightnessChanged = () {
+      View.of(Get.context!).platformDispatcher.onPlatformBrightnessChanged =
+          () {
         WidgetsBinding.instance.handlePlatformBrightnessChanged();
         try {
-          final getThemeFromLocal = getValueFromLocal(SettingsLocalConst.THEME_MODE);
+          final getThemeFromLocal =
+              getValueFromLocal(SettingsLocalConst.THEME_MODE);
           if (getThemeFromLocal is int) {
             toggleThemeMode(themeId: getThemeFromLocal);
           }
@@ -69,14 +76,23 @@ class DashboardController extends GetxController {
     debugPrint('reloadBottomTabs ISLOGGEDIN.VALUE: ${isLoggedIn.value}');
     if (isLoggedIn.value) {
       screen.removeWhere((element) => element is SettingScreen);
-      if (bottomNavItems.indexWhere((element) => element is ProfileScreen).isNegative) {
+      if (bottomNavItems
+          .indexWhere((element) => element is ProfileScreen)
+          .isNegative) {
         screen.add(ProfileScreen());
       }
       screen.toSet();
 
-      bottomNavItems.removeWhere((element) => element.type == BottomItem.settings.name);
-      if (bottomNavItems.indexWhere((element) => element.type == BottomItem.profile.name).isNegative) {
-        bottomNavItems.add(BottomBarItem(title: locale.value.profile.obs, icon: Assets.navigationIcUserOutlined, activeIcon: Assets.navigationIcUserFilled, type: BottomItem.profile.name));
+      bottomNavItems
+          .removeWhere((element) => element.type == BottomItem.settings.name);
+      if (bottomNavItems
+          .indexWhere((element) => element.type == BottomItem.profile.name)
+          .isNegative) {
+        bottomNavItems.add(BottomBarItem(
+            title: locale.value.profile.obs,
+            icon: Assets.navigationIcUserOutlined,
+            activeIcon: Assets.navigationIcUserFilled,
+            type: BottomItem.profile.name));
       }
       bottomNavItems.toSet();
     } else {
@@ -84,9 +100,16 @@ class DashboardController extends GetxController {
       screen.add(SettingScreen());
       screen.toSet();
 
-      bottomNavItems.removeWhere((element) => element.type == BottomItem.profile.name);
-      if (bottomNavItems.indexWhere((element) => element.type == BottomItem.settings.name).isNegative) {
-        bottomNavItems.add(BottomBarItem(title: locale.value.settings.obs, icon: Assets.iconsIcSettingOutlined, activeIcon: Assets.iconsIcSetting, type: BottomItem.settings.name));
+      bottomNavItems
+          .removeWhere((element) => element.type == BottomItem.profile.name);
+      if (bottomNavItems
+          .indexWhere((element) => element.type == BottomItem.settings.name)
+          .isNegative) {
+        bottomNavItems.add(BottomBarItem(
+            title: locale.value.settings.obs,
+            icon: Assets.iconsIcSettingOutlined,
+            activeIcon: Assets.iconsIcSetting,
+            type: BottomItem.settings.name));
       }
       bottomNavItems.toSet();
     }
@@ -123,9 +146,14 @@ Future<void> getAppConfigurations() async {
     /// Place ChatGPT Key Here
     chatGPTAPIkey = value.chatgptKey;
 
-    final adminLang = value.applicationLanguage.trim();
-    if (adminLang.isNotEmpty) {
-      await applyLanguage(adminLang);
+    // Only apply backend language on first launch (when no user preference is saved)
+    // Don't override if user has already selected a language
+    final savedLang = getValueFromLocal(SELECTED_LANGUAGE_CODE);
+    if (savedLang == null || savedLang.toString().isEmpty) {
+      final adminLang = value.applicationLanguage.trim();
+      if (adminLang.isNotEmpty) {
+        await applyLanguage(adminLang);
+      }
     }
   }).onError((error, stackTrace) {
     toast(error.toString());
