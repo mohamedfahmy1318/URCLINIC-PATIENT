@@ -11,14 +11,14 @@ import '../../utils/colors.dart';
 import '../../utils/common_base.dart';
 import '../booking/appointments_controller.dart';
 import '../home/home_controller.dart';
-import 'components/btm_nav_item.dart';
 import 'dashboard_controller.dart';
 import 'components/menu.dart';
 
 class DashboardScreen extends StatelessWidget {
   DashboardScreen({super.key});
 
-  final DashboardController dashboardController = Get.put(DashboardController());
+  final DashboardController dashboardController =
+      Get.put(DashboardController());
 
   @override
   Widget build(BuildContext context) {
@@ -27,60 +27,84 @@ class DashboardScreen extends StatelessWidget {
       child: Scaffold(
         body: SafeArea(
           top: false,
-          child: Stack(
-            children: [
-              Obx(() => dashboardController.screen[dashboardController.currentIndex.value]),
-              Obx(
-                () => Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    decoration: BoxDecoration(
-                      color: isDarkMode.value ? fullDarkCanvasColor.withValues(alpha: 0.9) : canvasColor.withValues(alpha: 0.9),
-                      borderRadius: const BorderRadius.all(Radius.circular(50)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isDarkMode.value ? transparentColor : canvasColor.withValues(alpha: 0.3),
-                          offset: const Offset(0, 20),
-                          blurRadius: 20,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ...List.generate(
-                          bottomNavItems.length,
-                          (index) {
-                            final BottomBarItem navBar = bottomNavItems[index];
-                            return Obx(
-                              () => BtmNavItem(
-                                navBar: navBar,
-                                isFirst: index == 0,
-                                isLast: index == bottomNavItems.length - 1,
-                                press: () {
-                                  if (!isLoggedIn.value && index == 1) {
-                                    doIfLoggedIn(() {
-                                      handleChangeTabIndex(index);
-                                    });
-                                  } else {
-                                    handleChangeTabIndex(index);
-                                  }
-                                },
-                                selectedNav: dashboardController.selectedBottomNav.value,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ).fit(),
-                  ),
-                ).paddingSymmetric(vertical: 15),
+          child: Obx(() => dashboardController
+              .screen[dashboardController.currentIndex.value]),
+        ),
+        bottomNavigationBar: Obx(
+          () => Container(
+            decoration: BoxDecoration(
+              color: context.cardColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                currentIndex: dashboardController.currentIndex.value,
+                backgroundColor: context.cardColor,
+                selectedItemColor: appColorPrimary,
+                unselectedItemColor:
+                    isDarkMode.value ? Colors.white54 : Colors.grey.shade500,
+                selectedLabelStyle: boldTextStyle(size: 12),
+                unselectedLabelStyle: primaryTextStyle(size: 11),
+                elevation: 0,
+                onTap: (index) {
+                  if (!isLoggedIn.value && index == 1) {
+                    doIfLoggedIn(() {
+                      handleChangeTabIndex(index);
+                    });
+                  } else {
+                    handleChangeTabIndex(index);
+                  }
+                },
+                items: bottomNavItems
+                    .map(
+                      (navBar) => BottomNavigationBarItem(
+                        icon: Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Image.asset(
+                            navBar.icon,
+                            height: 24,
+                            width: 24,
+                            color: isDarkMode.value
+                                ? Colors.white54
+                                : Colors.grey.shade500,
+                          ),
+                        ),
+                        activeIcon: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: appColorPrimary.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Image.asset(
+                            navBar.activeIcon,
+                            height: 24,
+                            width: 24,
+                            color: appColorPrimary,
+                          ),
+                        ),
+                        label: navBar.title.value,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
           ),
         ),
-        extendBody: true,
       ),
     );
   }
@@ -116,7 +140,8 @@ class DashboardScreen extends StatelessWidget {
             ),
           );
           AuthServiceApis.getUserWallet();
-          setValueToLocal(SharedPreferenceConst.USER_DATA, loginUserData.toJson());
+          setValueToLocal(
+              SharedPreferenceConst.USER_DATA, loginUserData.toJson());
         }).catchError((e) {
           toast(e.toString());
         });

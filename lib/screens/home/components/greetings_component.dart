@@ -18,23 +18,29 @@ class GreetingsComponent extends StatelessWidget {
       width: Get.width,
       child: Row(
         children: [
-          Obx(
-            () => CachedImageWidget(
-              url: loginUserData.value.profileImage,
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: boxDecorationDefault(
+              color: appColorPrimary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const CachedImageWidget(
+              url: Assets.assetsAppLogo,
+              height: 36,
+              width: 36,
               fit: BoxFit.cover,
-              width: 48,
-              height: 48,
-              circle: true,
-            ).paddingRight(8).visible(loginUserData.value.profileImage.contains("http")),
-          ),
+            ),
+          ).paddingRight(10),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Obx(
                 () => Text(
-                  '👋 ${locale.value.hey}, ${isLoggedIn.value ? loginUserData.value.userName.validate() : locale.value.guest.validate()}',
-                  style: primaryTextStyle(color: white, size: 20),
+                  isLoggedIn.value
+                      ? loginUserData.value.userName.validate()
+                      : locale.value.guest.validate(),
+                  style: boldTextStyle(color: white, size: 18),
                 ),
               ),
               Obx(
@@ -49,7 +55,11 @@ class GreetingsComponent extends StatelessWidget {
                         height: 14,
                       ),
                       8.width,
-                      Text(loginUserData.value.address, maxLines: 1, overflow: TextOverflow.ellipsis, style: secondaryTextStyle(color: white, size: 14)).flexible(),
+                      Text(loginUserData.value.address,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: secondaryTextStyle(color: white, size: 14))
+                          .flexible(),
                     ],
                   ),
                 ).paddingTop(4).visible(loginUserData.value.address.isNotEmpty),
@@ -73,12 +83,17 @@ class GreetingsComponent extends StatelessWidget {
                   height: 24,
                 ),
                 Positioned(
-                  top: -8 + -(3 * unreadNotificationCount.value.toString().length).toDouble(),
-                  right: -4 + -(3 * unreadNotificationCount.value.toString().length).toDouble(),
+                  top: -8 +
+                      -(3 * unreadNotificationCount.value.toString().length)
+                          .toDouble(),
+                  right: -4 +
+                      -(3 * unreadNotificationCount.value.toString().length)
+                          .toDouble(),
                   child: Obx(
                     () => Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: boxDecorationDefault(color: appColorSecondary, shape: BoxShape.circle),
+                      decoration: boxDecorationDefault(
+                          color: appColorSecondary, shape: BoxShape.circle),
                       child: Text(
                         unreadNotificationCount.value.toString(),
                         style: secondaryTextStyle(color: white, size: 8),
