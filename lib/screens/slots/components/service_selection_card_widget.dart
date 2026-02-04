@@ -15,7 +15,11 @@ class ServiceSelectionCardWidget extends StatelessWidget {
   final void Function()? onTap;
   final bool isSelected;
 
-  const ServiceSelectionCardWidget({super.key, required this.serviceElement, this.onTap, this.isSelected = false});
+  const ServiceSelectionCardWidget(
+      {super.key,
+      required this.serviceElement,
+      this.onTap,
+      this.isSelected = false});
 
   @override
   Widget build(BuildContext context) {
@@ -33,18 +37,28 @@ class ServiceSelectionCardWidget extends StatelessWidget {
                   width: Get.height * 0.12,
                   height: Get.height * 0.12,
                   decoration: boxDecorationDefault(),
-                  child: CachedImageWidget(url: serviceElement.serviceImage, fit: BoxFit.cover, radius: 6),
+                  child: CachedImageWidget(
+                      url: serviceElement.serviceImage,
+                      fit: BoxFit.cover,
+                      radius: 6),
                 ),
                 if (serviceElement.isVideoConsultancy)
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: boxDecorationDefault(
                         color: completedStatusColor,
-                        borderRadius: BorderRadius.only(topLeft: radiusCircular(), bottomRight: radiusCircular(6)),
-                        border: Border(left: BorderSide(color: context.cardColor, width: 6), top: BorderSide(color: context.cardColor, width: 6)),
+                        borderRadius: BorderRadius.only(
+                            topLeft: radiusCircular(),
+                            bottomRight: radiusCircular(6)),
+                        border: Border(
+                            left:
+                                BorderSide(color: context.cardColor, width: 6),
+                            top:
+                                BorderSide(color: context.cardColor, width: 6)),
                       ),
                       child: Row(
                         children: [
@@ -55,7 +69,9 @@ class ServiceSelectionCardWidget extends StatelessWidget {
                             color: context.cardColor,
                           ),
                           6.width,
-                          Text(locale.value.video, style: boldTextStyle(size: 12, color: context.cardColor)),
+                          Text(locale.value.video,
+                              style: boldTextStyle(
+                                  size: 12, color: context.cardColor)),
                         ],
                       ),
                     ),
@@ -77,12 +93,29 @@ class ServiceSelectionCardWidget extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (serviceElement.isDiscount) PriceWidget(price: serviceElement.payableAmount, size: 18).paddingRight(6),
+                      if (serviceElement.isDiscount)
+                        PriceWidget(
+                                price: serviceElement.payableAmount, size: 18)
+                            .paddingRight(6),
                       PriceWidget(
-                        price: serviceElement.assignDoctor.isNotEmpty ? serviceElement.assignDoctor.firstWhere((e) => e.serviceId == serviceElement.systemServiceId).priceDetail.servicePrice + serviceElement.totalInclusiveTax : serviceElement.charges,
-                        isLineThroughEnabled: serviceElement.isDiscount ? true : false,
+                        price: serviceElement.assignDoctor.isNotEmpty
+                            ? serviceElement.assignDoctor
+                                    .firstWhere(
+                                        (e) =>
+                                            e.serviceId ==
+                                            serviceElement.systemServiceId,
+                                        orElse: () =>
+                                            serviceElement.assignDoctor.first)
+                                    .priceDetail
+                                    .servicePrice +
+                                serviceElement.totalInclusiveTax
+                            : serviceElement.charges,
+                        isLineThroughEnabled:
+                            serviceElement.isDiscount ? true : false,
                         size: serviceElement.isDiscount ? 14 : 18,
-                        color: serviceElement.isDiscount ? textSecondaryColorGlobal : appColorPrimary,
+                        color: serviceElement.isDiscount
+                            ? textSecondaryColorGlobal
+                            : appColorPrimary,
                       ),
                       if (serviceElement.isDiscount)
                         if (serviceElement.discountType == TaxType.PERCENTAGE)
