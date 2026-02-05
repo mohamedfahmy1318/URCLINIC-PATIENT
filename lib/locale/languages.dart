@@ -68,7 +68,7 @@ abstract class BaseLanguage {
 
   String get yourNewPasswordDoesnT;
 
-  String get location;
+  String get selectBranch;
 
   String get yes;
 

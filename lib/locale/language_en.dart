@@ -965,7 +965,8 @@ class LanguageEn extends BaseLanguage {
 
   @override
   String get lblBreak => "Break";
-
+  @override
+  String get selectBranch => "Select Branch";
   @override
   String get clinicDetail => "Clinic Detail";
 

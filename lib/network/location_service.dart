@@ -24,7 +24,7 @@ Future<Position> getUserLocationPosition() async {
   }
 
   if (permission == LocationPermission.deniedForever) {
-    throw '${locale.value.location} ${locale.value.permissionDeniedPermanently}';
+    throw '${locale.value.selectBranch} ${locale.value.permissionDeniedPermanently}';
   }
 
   return Geolocator.getCurrentPosition(
@@ -54,8 +54,10 @@ Future<String> getUserLocation() async {
   return buildFullAddressFromLatLong(position.latitude, position.longitude);
 }
 
-Future<String> buildFullAddressFromLatLong(double latitude, double longitude) async {
-  final List<Placemark> placeMark = await placemarkFromCoordinates(latitude, longitude).catchError((e) async {
+Future<String> buildFullAddressFromLatLong(
+    double latitude, double longitude) async {
+  final List<Placemark> placeMark =
+      await placemarkFromCoordinates(latitude, longitude).catchError((e) async {
     log(e);
     throw errorSomethingWentWrong;
   });
@@ -69,12 +71,19 @@ Future<String> buildFullAddressFromLatLong(double latitude, double longitude) as
 
   String address = '';
 
-  if (!place.name.isEmptyOrNull && !place.street.isEmptyOrNull && place.name != place.street) address = '${place.name.validate()}, ';
-  if (!place.street.isEmptyOrNull) address = '$address${place.street.validate()}';
-  if (!place.locality.isEmptyOrNull) address = '$address, ${place.locality.validate()}';
-  if (!place.administrativeArea.isEmptyOrNull) address = '$address, ${place.administrativeArea.validate()}';
-  if (!place.postalCode.isEmptyOrNull) address = '$address, ${place.postalCode.validate()}';
-  if (!place.country.isEmptyOrNull) address = '$address, ${place.country.validate()}';
+  if (!place.name.isEmptyOrNull &&
+      !place.street.isEmptyOrNull &&
+      place.name != place.street) address = '${place.name.validate()}, ';
+  if (!place.street.isEmptyOrNull)
+    address = '$address${place.street.validate()}';
+  if (!place.locality.isEmptyOrNull)
+    address = '$address, ${place.locality.validate()}';
+  if (!place.administrativeArea.isEmptyOrNull)
+    address = '$address, ${place.administrativeArea.validate()}';
+  if (!place.postalCode.isEmptyOrNull)
+    address = '$address, ${place.postalCode.validate()}';
+  if (!place.country.isEmptyOrNull)
+    address = '$address, ${place.country.validate()}';
 
   setValueToLocal(LocatinKeys.CURRENT_ADDRESS, address);
   setValueToLocal(LocatinKeys.ZIP_CODE, place.postalCode.validate());

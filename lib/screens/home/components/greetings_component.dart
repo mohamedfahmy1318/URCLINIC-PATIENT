@@ -25,7 +25,7 @@ class GreetingsComponent extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: const CachedImageWidget(
-              url: Assets.assetsAppLogo,
+              url: Assets.assetsLogoApp,
               height: 36,
               width: 36,
               fit: BoxFit.cover,

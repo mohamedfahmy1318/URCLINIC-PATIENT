@@ -11,13 +11,16 @@ import '../../main.dart';
 import '../../utils/app_common.dart';
 import '../../utils/colors.dart';
 import '../../utils/empty_error_state_widget.dart';
+import '../../utils/price_widget.dart';
 import '../doctor/model/doctor_list_res.dart';
 import '../doctor/doctor_detail_screen.dart';
 import '../service/model/service_list_model.dart';
 import '../service/service_detail_screen.dart';
 import '../service/services_list_screen.dart';
+import '../slots/booking_form_screen.dart';
 import 'clinic_detail_controller.dart';
 import 'clinic_gallery_list_screen.dart';
+import 'clinic_location_screen.dart';
 import 'components/clinic_session_component.dart';
 
 class ClinicDetailScreen extends StatelessWidget {
@@ -156,7 +159,7 @@ class ClinicDetailScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Circular Logo Overlay
+                // Circular App Logo Overlay
                 Positioned(
                   bottom: 0,
                   left: 24,
@@ -167,18 +170,12 @@ class ClinicDetailScreen extends StatelessWidget {
                       color: context.cardColor,
                       border: Border.all(color: context.cardColor, width: 2),
                     ),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.blue, // Placeholder brand color
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        clinicDetailCont.clinicData.value.name.isNotEmpty
-                            ? clinicDetailCont.clinicData.value.name[0]
-                                .toUpperCase()
-                            : "C",
-                        style: boldTextStyle(size: 30, color: Colors.white),
+                    child: ClipOval(
+                      child: Image.asset(
+                        Assets.assetsLogoApp,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
@@ -196,14 +193,14 @@ class ClinicDetailScreen extends StatelessWidget {
                 // Clinic Name
                 Text(
                   clinicDetailCont.clinicData.value.name,
-                  style: boldTextStyle(size: 24),
+                  style: boldTextStyle(size: 20),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ).visible(clinicDetailCont.clinicData.value.name.isNotEmpty),
 
                 16.height,
 
-                // Select Branch Button
+                // Select Branch Button - Opens Location Screen
                 AppButton(
                   width: Get.width,
                   color: transparentColor,
@@ -212,11 +209,20 @@ class ClinicDetailScreen extends StatelessWidget {
                       borderRadius: radius(8),
                       side: const BorderSide(color: appColorPrimary)),
                   onTap: () {
-                    // TODO: Implement Branch Selection Logic
-                    toast("Select Branch clicked");
+                    Get.to(() => ClinicLocationScreen(
+                          clinic: clinicDetailCont.clinicData.value,
+                        ));
                   },
-                  child: Text("Select branch",
-                      style: boldTextStyle(color: appColorPrimary)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: appColorPrimary, size: 20),
+                      8.width,
+                      Text(locale.value.selectBranch,
+                          style: boldTextStyle(color: appColorPrimary)),
+                    ],
+                  ),
                 ),
 
                 16.height,
@@ -224,7 +230,7 @@ class ClinicDetailScreen extends StatelessWidget {
                 // Clinic Number / Email (Semi-bold text)
                 Row(
                   children: [
-                    Text("Clinic number / email",
+                    Text(locale.value.contactInfo,
                         style: boldTextStyle(size: 16)),
                   ],
                 ),
@@ -336,94 +342,9 @@ class ClinicDetailScreen extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  Widget _buildStatCard(
-    BuildContext context, {
-    required String icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: boxDecorationDefault(
-        color: context.cardColor,
-        borderRadius: radius(12),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: CachedImageWidget(
-              url: icon,
-              height: 22,
-              width: 22,
-              color: color,
-            ),
-          ),
-          10.height,
-          Text(
-            value,
-            style: boldTextStyle(size: 18, color: color),
-          ),
-          4.height,
-          Text(
-            label,
-            style: secondaryTextStyle(size: 11),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Description Section
+  /// Description Section - Removed as per user request
   Widget _buildDescriptionSection(BuildContext context) {
-    if (clinicDetailCont.clinicData.value.description.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: boxDecorationDefault(
-        color: context.cardColor,
-        borderRadius: radius(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            locale.value.about,
-            style: boldTextStyle(size: 16),
-          ),
-          12.height,
-          ReadMoreText(
-            parseHtmlString(
-                "${clinicDetailCont.clinicData.value.description} "),
-            trimLines: 3,
-            style: secondaryTextStyle(size: 14, color: secondaryTextColor),
-            colorClickableText: appColorPrimary,
-            trimMode: TrimMode.Line,
-            trimCollapsedText: " ...${locale.value.readMore}",
-            trimExpandedText: locale.value.readLess,
-            locale: Localizations.localeOf(context),
-          ),
-        ],
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   /// Doctors Section with Grid List
@@ -491,7 +412,12 @@ class ClinicDetailScreen extends StatelessWidget {
 
   Widget _buildDoctorCard(BuildContext context, Doctor doctor, double width) {
     return GestureDetector(
-      onTap: () => Get.to(() => DoctorDetailScreen(), arguments: doctor),
+      onTap: () {
+        // Tap on card opens booking form with doctor selected
+        currentSelectedClinic(clinicDetailCont.clinicData.value);
+        currentSelectedDoctor(doctor);
+        Get.to(() => BookingFormScreen());
+      },
       child: Container(
         width: width,
         decoration: boxDecorationDefault(
@@ -558,13 +484,33 @@ class ClinicDetailScreen extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   4.height,
-                  Text(
-                    doctor
-                        .expert, // Using expert field as "Doctor CV" placeholder equivalent
-                    style: secondaryTextStyle(size: 12),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ).visible(doctor.expert.isNotEmpty),
+                  // Show specialty in both Arabic and English
+                  if (doctor.expert.isNotEmpty) ...[
+                    Text(
+                      doctor.expert,
+                      style: secondaryTextStyle(size: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    4.height,
+                  ],
+                  // Details link to go to doctor detail screen
+                  GestureDetector(
+                    onTap: () =>
+                        Get.to(() => DoctorDetailScreen(), arguments: doctor),
+                    child: Row(
+                      children: [
+                        Text(
+                          locale.value.viewDetail,
+                          style: primaryTextStyle(
+                              size: 12, color: appColorPrimary),
+                        ),
+                        4.width,
+                        Icon(Icons.arrow_forward_ios,
+                            size: 10, color: appColorPrimary),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -574,7 +520,7 @@ class ClinicDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Services Section with Vertical List
+  /// Services Section - Simple List with Names Only
   Widget _buildServicesSection(BuildContext context) {
     return Obx(
       () {
@@ -583,67 +529,93 @@ class ClinicDetailScreen extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return Container(
-          decoration: boxDecorationDefault(
-              color: context.cardColor,
-              borderRadius: radius(12),
-              border: Border.all(color: Colors.grey.shade300)),
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (clinicDetailCont.isServicesLoading.value)
-                const Center(child: CircularProgressIndicator())
-                    .paddingSymmetric(vertical: 20)
-              else
-                ListView.separated(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            16.height,
+            // Section Header - "Services"
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: appColorSecondary.withOpacity(0.1),
+                      borderRadius: radius(8),
+                    ),
+                    child: const CachedImageWidget(
+                      url: Assets.iconsIcServices,
+                      height: 20,
+                      width: 20,
+                      color: appColorSecondary,
+                    ),
+                  ),
+                  12.width,
+                  Text(
+                    locale.value.services,
+                    style: boldTextStyle(size: 16),
+                  ),
+                ],
+              ),
+            ),
+            12.height,
+            if (clinicDetailCont.isServicesLoading.value)
+              const Center(child: CircularProgressIndicator())
+                  .paddingSymmetric(vertical: 20)
+            else
+              // Simple list of service names
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: boxDecorationDefault(
+                  color: context.cardColor,
+                  borderRadius: radius(12),
+                ),
+                child: ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: clinicDetailCont.serviceList.take(5).length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(height: 1, color: Colors.grey)
-                          .paddingSymmetric(horizontal: 16),
+                  itemCount: clinicDetailCont.serviceList.length,
+                  separatorBuilder: (_, __) => Divider(
+                    height: 1,
+                    color: Colors.grey.shade300,
+                  ).paddingSymmetric(horizontal: 16),
                   itemBuilder: (context, index) {
                     final service = clinicDetailCont.serviceList[index];
-                    return _buildServiceRow(context, service);
+                    return GestureDetector(
+                      onTap: () {
+                        Get.to(
+                          () => ServiceDetailScreen(isFromClinicDetail: true),
+                          arguments: service,
+                        );
+                      },
+                      child: Container(
+                        color: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                service.name,
+                                style: primaryTextStyle(size: 14),
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 14,
+                              color: Colors.grey.shade400,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
                 ),
-            ],
-          ),
+              ),
+          ],
         );
       },
-    );
-  }
-
-  Widget _buildServiceRow(BuildContext context, ServiceElement service) {
-    return GestureDetector(
-      onTap: () => Get.to(() => ServiceDetailScreen(isFromClinicDetail: true),
-          arguments: service),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                service.name,
-                style: boldTextStyle(size: 16),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Text(
-              service
-                  .name, // Arabic text in image shows Service Name again or mapped name. Using service name for now.
-              style: secondaryTextStyle(size: 14),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ).visible(
-                false), // Hiding for now as I don't have secondary translation map
-          ],
-        ),
-      ),
     );
   }
 

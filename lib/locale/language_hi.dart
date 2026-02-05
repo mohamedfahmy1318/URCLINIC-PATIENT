@@ -1831,4 +1831,6 @@ class LanguageHi extends BaseLanguage {
 
   @override
   String get mostServices => 'सबसे अधिक सेवाएं';
+  @override
+  String get selectBranch => 'शाखा चुनें';
 }

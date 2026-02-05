@@ -3,6 +3,8 @@ import 'languages.dart';
 class LanguageDe extends BaseLanguage {
   @override
   String get language => 'Sprache';
+  @override
+  String get selectBranch => 'Wählen Sie Zweigstelle';
 
   @override
   String get badRequest => '400: Schlechte Anfrage';

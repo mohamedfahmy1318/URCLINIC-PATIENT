@@ -3,6 +3,8 @@ import 'languages.dart';
 class LanguageAr extends BaseLanguage {
   @override
   String get language => 'لغة';
+  @override
+  String get selectBranch => 'اختر الفرع';
 
   @override
   String get badRequest => '400 طلب سىء';

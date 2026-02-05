@@ -3,6 +3,7 @@ class Assets {
   Assets._();
 
   static const String assetsAppLogo = 'assets/logo_inside.jpeg';
+  static const String assetsLogoApp = 'assets/logo_app.jpeg';
   static const String flagsIcAr = 'assets/flags/ic_ar.png';
   static const String flagsIcDe = 'assets/flags/ic_de.png';
   static const String flagsIcFr = 'assets/flags/ic_fr.png';

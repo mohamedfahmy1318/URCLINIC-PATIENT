@@ -30,6 +30,8 @@ class LanguageFr extends BaseLanguage {
 
   @override
   String get hey => 'Hé';
+  @override
+  String get selectBranch => 'Sélectionnez une branche';
 
   @override
   String get hello => 'Bonjour';
