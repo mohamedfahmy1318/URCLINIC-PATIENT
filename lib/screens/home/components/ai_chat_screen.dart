@@ -24,12 +24,12 @@ class _AIChatScreenState extends State<AIChatScreen> {
     super.initState();
     // Add welcome message
     _messages.add(ChatMessage(
-      text: locale.value.hello,
+      text: 'Hello! Welcome to your AI assistant.',
       isUser: false,
       timestamp: DateTime.now(),
     ));
     _messages.add(ChatMessage(
-      text: 'I\'m your AI assistant. How can I help you today?',
+      text: 'I\'m here to help you with your healthcare needs. How can I assist you today?',
       isUser: false,
       timestamp: DateTime.now(),
     ));
@@ -295,15 +295,13 @@ class _AIChatScreenState extends State<AIChatScreen> {
   Widget _buildDot(int index) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
+      duration: Duration(milliseconds: 600 + (index * 100)),
       builder: (context, value, child) {
         return Container(
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: appColorPrimary.withOpacity(
-              0.3 + (value * 0.7 * ((index % 2 == 0) ? 1 : -1).abs()),
-            ),
+            color: appColorPrimary.withOpacity(0.3 + (value * 0.7)),
             shape: BoxShape.circle,
           ),
         );

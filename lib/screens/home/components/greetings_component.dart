@@ -88,7 +88,7 @@ class GreetingsComponent extends StatelessWidget {
                           height: 12,
                         ),
                         6.width,
-                        Flexible(
+                        Expanded(
                           child: Text(
                             loginUserData.value.address,
                             maxLines: 1,
