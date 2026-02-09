@@ -8,6 +8,8 @@ import '../../../components/cached_image_widget.dart';
 import '../../../generated/assets.dart';
 import '../../../utils/colors.dart';
 import '../../auth/other/notification_screen.dart';
+import '../../clinic/clinics_list_screen.dart';
+import 'ai_chat_screen.dart';
 
 class GreetingsComponent extends StatelessWidget {
   const GreetingsComponent({super.key});
@@ -18,55 +20,106 @@ class GreetingsComponent extends StatelessWidget {
       width: Get.width,
       child: Row(
         children: [
+          // Left side: Search icon
+          GestureDetector(
+            onTap: () {
+              Get.to(() => ClinicListScreen());
+            },
+            behavior: HitTestBehavior.translucent,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: boxDecorationDefault(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.search,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+          12.width,
+          // Chat icon (AI Chat)
+          GestureDetector(
+            onTap: () {
+              Get.to(() => AIChatScreen());
+            },
+            behavior: HitTestBehavior.translucent,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: boxDecorationDefault(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.chat_bubble_outline,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+          16.width,
+          // Center: User info - made flexible to take available space
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Obx(
+                  () => Text(
+                    isLoggedIn.value
+                        ? loginUserData.value.userName.validate()
+                        : locale.value.guest.validate(),
+                    style: boldTextStyle(color: white, size: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Obx(
+                  () => GestureDetector(
+                    onLongPress: () {
+                      loginUserData.value.address.copyToClipboard();
+                    },
+                    child: Row(
+                      children: [
+                        const CachedImageWidget(
+                          url: Assets.imagesLocationPin,
+                          height: 12,
+                        ),
+                        6.width,
+                        Flexible(
+                          child: Text(
+                            loginUserData.value.address,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: secondaryTextStyle(color: white, size: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).paddingTop(4).visible(loginUserData.value.address.isNotEmpty),
+                ),
+              ],
+            ),
+          ),
+          12.width,
+          // Right side: App logo
           Container(
             padding: const EdgeInsets.all(6),
             decoration: boxDecorationDefault(
-              color: appColorPrimary,
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const CachedImageWidget(
               url: Assets.assetsLogoApp,
-              height: 36,
-              width: 36,
+              height: 32,
+              width: 32,
               fit: BoxFit.cover,
             ),
-          ).paddingRight(10),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Obx(
-                () => Text(
-                  isLoggedIn.value
-                      ? loginUserData.value.userName.validate()
-                      : locale.value.guest.validate(),
-                  style: boldTextStyle(color: white, size: 18),
-                ),
-              ),
-              Obx(
-                () => GestureDetector(
-                  onLongPress: () {
-                    loginUserData.value.address.copyToClipboard();
-                  },
-                  child: Row(
-                    children: [
-                      const CachedImageWidget(
-                        url: Assets.imagesLocationPin,
-                        height: 14,
-                      ),
-                      8.width,
-                      Text(loginUserData.value.address,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: secondaryTextStyle(color: white, size: 14))
-                          .flexible(),
-                    ],
-                  ),
-                ).paddingTop(4).visible(loginUserData.value.address.isNotEmpty),
-              ),
-            ],
-          ).expand(),
-          16.width,
+          ),
+          12.width,
+          // Notifications
           GestureDetector(
             onTap: () {
               doIfLoggedIn(() {
@@ -105,7 +158,7 @@ class GreetingsComponent extends StatelessWidget {
             ),
           ),
         ],
-      ).paddingSymmetric(horizontal: 24),
+      ).paddingSymmetric(horizontal: 16),
     );
   }
 }
