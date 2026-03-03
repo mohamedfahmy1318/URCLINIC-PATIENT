@@ -27,10 +27,12 @@ class HomeScreen extends StatelessWidget {
       isBlurBackgroundinLoader: true,
       isLoading: homeScreenController.isLoading,
       appBarVerticalSize: Get.height * 0.14,
+      topBarBgColor: context.scaffoldBackgroundColor,
       appBarChild: const GreetingsComponent(),
       body: RefreshIndicator(
         onRefresh: () async {
           Get.find<QuickBookController>().resetFields();
+          homeScreenController.getBannersList();
           return homeScreenController.getDashboardDetail(
               isFromSwipeRefresh: true);
         },

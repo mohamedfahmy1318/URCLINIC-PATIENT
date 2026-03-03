@@ -22,7 +22,8 @@ class PopularClinicCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: boxDecorationDefault(color: context.cardColor, borderRadius: radius(8)),
+      decoration: boxDecorationDefault(
+          color: context.cardColor, borderRadius: radius(8)),
       width: width ?? Get.width,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,6 +43,34 @@ class PopularClinicCard extends StatelessWidget {
                 Get.delete<ServiceListController>();
                 Get.to(() => ClinicDetailScreen(), arguments: clinicElement);
               }),
+              // Clinic Logo
+              if (clinicElement.logo.isNotEmpty)
+                Positioned(
+                  bottom: -16,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: context.cardColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: CachedImageWidget(
+                        url: clinicElement.logo,
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
           Column(
@@ -64,7 +93,11 @@ class PopularClinicCard extends StatelessWidget {
                 behavior: HitTestBehavior.translucent,
                 child: Row(
                   children: [
-                    const CachedImageWidget(url: Assets.iconsIcLocation, color: iconColor, width: 16, height: 16),
+                    const CachedImageWidget(
+                        url: Assets.iconsIcLocation,
+                        color: iconColor,
+                        width: 16,
+                        height: 16),
                     12.width,
                     Text(
                       clinicElement.address,
@@ -82,24 +115,38 @@ class PopularClinicCard extends StatelessWidget {
                     behavior: HitTestBehavior.translucent,
                     child: Row(
                       children: [
-                        const CachedImageWidget(url: Assets.iconsIcCall, color: iconColor, width: 14, height: 14),
+                        const CachedImageWidget(
+                            url: Assets.iconsIcCall,
+                            color: iconColor,
+                            width: 14,
+                            height: 14),
                         12.width,
                         GestureDetector(
                           onTap: () {
                             launchCall(clinicElement.contactNumber);
                           },
-                          child: Text(clinicElement.contactNumber, style: primaryTextStyle(color: appColorPrimary)),
+                          child: Text(clinicElement.contactNumber,
+                              style: primaryTextStyle(color: appColorPrimary)),
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 6),
                           decoration: boxDecorationDefault(
-                            color: getClinicStatusLightColor(clinicStatus: clinicElement.clinicStatus.toLowerCase()),
+                            color: getClinicStatusLightColor(
+                                clinicStatus:
+                                    clinicElement.clinicStatus.toLowerCase()),
                             borderRadius: radius(22),
                           ),
                           child: Text(
-                            getClinicStatus(status: clinicElement.clinicStatus.toLowerCase()),
-                            style: boldTextStyle(size: 10, color: getClinicStatusColor(clinicStatus: clinicElement.clinicStatus.toLowerCase())),
+                            getClinicStatus(
+                                status:
+                                    clinicElement.clinicStatus.toLowerCase()),
+                            style: boldTextStyle(
+                                size: 10,
+                                color: getClinicStatusColor(
+                                    clinicStatus: clinicElement.clinicStatus
+                                        .toLowerCase())),
                           ),
                         ),
                       ],
@@ -117,7 +164,8 @@ class PopularClinicCard extends StatelessWidget {
                   padding: WidgetStatePropertyAll(EdgeInsets.zero),
                   overlayColor: WidgetStatePropertyAll(lightSecondaryColor),
                 ),
-                child: Text(locale.value.viewDetail, style: boldTextStyle(color: appColorSecondary, size: 12)),
+                child: Text(locale.value.viewDetail,
+                    style: boldTextStyle(color: appColorSecondary, size: 12)),
               ),
               8.height,
             ],

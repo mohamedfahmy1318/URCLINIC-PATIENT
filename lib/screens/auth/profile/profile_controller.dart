@@ -11,7 +11,6 @@ import '../../../api/auth_apis.dart';
 
 class ProfileController extends GetxController {
   RxBool isLoading = false.obs;
-  RxBool isWalletLoading = false.obs;
   RxBool isAutoUpdateOn = false.obs;
 
   @override
@@ -22,8 +21,6 @@ class ProfileController extends GetxController {
 
   void init() {
     getAboutPageData();
-    isWalletLoading(true);
-    AuthServiceApis.getUserWallet().whenComplete(() => isWalletLoading(false));
     isAutoUpdateOn(getValueFromLocal(AutoUpdateConst.isAutoUpdateOn) ?? false);
   }
 

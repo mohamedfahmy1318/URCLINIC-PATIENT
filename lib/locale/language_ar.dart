@@ -1812,4 +1812,28 @@ class LanguageAr extends BaseLanguage {
 
   @override
   String get mostServices => 'الأكثر خدمات';
+
+  @override
+  String get workingHours => 'مواعيد العمل';
+
+  @override
+  String get fromTime => 'من';
+
+  @override
+  String get toTime => 'إلى';
+
+  @override
+  String get exceptDay => 'ماعدا يوم';
+
+  @override
+  String get exceptDays => 'ماعدا أيام';
+
+  @override
+  String get otherBranches => 'فروع أخرى';
+
+  @override
+  String get mainBranch => 'الفرع الرئيسي';
+
+  @override
+  String get openInMaps => 'افتح في الخريطة';
 }

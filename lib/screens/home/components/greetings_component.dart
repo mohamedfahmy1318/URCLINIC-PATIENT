@@ -20,23 +20,17 @@ class GreetingsComponent extends StatelessWidget {
       width: Get.width,
       child: Row(
         children: [
-          // Left side: Search icon
+          // Search icon
           GestureDetector(
             onTap: () {
-              Get.to(() => ClinicListScreen());
+              Get.to(() => ClinicListScreen(),
+                  arguments: {'isFromSearch': true});
             },
             behavior: HitTestBehavior.translucent,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: boxDecorationDefault(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.search,
-                color: Colors.white,
-                size: 24,
-              ),
+            child: const Icon(
+              Icons.search,
+              color: appColorPrimary,
+              size: 24,
             ),
           ),
           12.width,
@@ -46,79 +40,19 @@ class GreetingsComponent extends StatelessWidget {
               Get.to(() => AIChatScreen());
             },
             behavior: HitTestBehavior.translucent,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: boxDecorationDefault(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.chat_bubble_outline,
-                color: Colors.white,
-                size: 24,
-              ),
+            child: const Icon(
+              Icons.chat_bubble_outline,
+              color: appColorPrimary,
+              size: 24,
             ),
           ),
-          16.width,
-          // Center: User info - made flexible to take available space
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Obx(
-                  () => Text(
-                    isLoggedIn.value
-                        ? loginUserData.value.userName.validate()
-                        : locale.value.guest.validate(),
-                    style: boldTextStyle(color: white, size: 16),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Obx(
-                  () => GestureDetector(
-                    onLongPress: () {
-                      loginUserData.value.address.copyToClipboard();
-                    },
-                    child: Row(
-                      children: [
-                        const CachedImageWidget(
-                          url: Assets.imagesLocationPin,
-                          height: 12,
-                        ),
-                        6.width,
-                        Expanded(
-                          child: Text(
-                            loginUserData.value.address,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: secondaryTextStyle(color: white, size: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).paddingTop(4).visible(loginUserData.value.address.isNotEmpty),
-                ),
-              ],
-            ),
+          const Spacer(),
+          // Right side: App name
+          Text(
+            'UrClinic',
+            style: boldTextStyle(size: 20, color: appColorPrimary),
           ),
-          12.width,
-          // Right side: App logo
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: boxDecorationDefault(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const CachedImageWidget(
-              url: Assets.assetsLogoApp,
-              height: 32,
-              width: 32,
-              fit: BoxFit.cover,
-            ),
-          ),
-          12.width,
+          10.width,
           // Notifications
           GestureDetector(
             onTap: () {
@@ -132,7 +66,7 @@ class GreetingsComponent extends StatelessWidget {
               children: [
                 const CachedImageWidget(
                   url: Assets.navigationIcNotifyOutlined,
-                  color: Colors.white,
+                  color: appColorPrimary,
                   height: 24,
                 ),
                 Positioned(

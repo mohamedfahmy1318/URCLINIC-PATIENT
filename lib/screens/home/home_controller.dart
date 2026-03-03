@@ -14,7 +14,8 @@ class HomeController extends GetxController {
   RxBool isRefresh = false.obs;
   late PackageInfoData info;
   TextEditingController searchCont = TextEditingController();
-  Rx<Future<DashboardRes>> getDashboardDetailFuture = Future(() => DashboardRes(data: DashboardData())).obs;
+  Rx<Future<DashboardRes>> getDashboardDetailFuture =
+      Future(() => DashboardRes(data: DashboardData())).obs;
   Rx<DashboardData> dashboardData = DashboardData().obs;
   PageController pageController = PageController();
   RxInt currentPage = 0.obs;
@@ -22,6 +23,10 @@ class HomeController extends GetxController {
   ///Slider
   PageController sliderPageController = PageController();
   RxInt sliderCurrentPage = 0.obs;
+
+  /// Banners
+  RxList<BannerModel> bannerList = <BannerModel>[].obs;
+  RxBool isBannersLoading = false.obs;
 
   @override
   void onReady() {
@@ -31,8 +36,19 @@ class HomeController extends GetxController {
 
   Future<void> init() async {
     getDashboardDetail();
+    getBannersList();
     info = await getPackageInfo();
     // _checkAndShowDialog(getContext, getValueFromLocal(AutoUpdateConst.isAutoUpdateOn) ?? false);
+  }
+
+  /// Get Banners List
+  Future<void> getBannersList() async {
+    isBannersLoading(true);
+    await HomeServiceApis.getBannersList().then((value) {
+      bannerList(value.data);
+    }).catchError((e) {
+      debugPrint('Error fetching banners: $e');
+    }).whenComplete(() => isBannersLoading(false));
   }
 
   ///Get ChooseService List
@@ -49,11 +65,13 @@ class HomeController extends GetxController {
   }
 
   void handleDashboardRes(DashboardRes value) {
-    debugPrint('NEARBYCLINIC.LENGTH: ${dashboardData.value.nearByClinic.length}');
+    debugPrint(
+        'NEARBYCLINIC.LENGTH: ${dashboardData.value.nearByClinic.length}');
     debugPrint('VALUE.DATA: ${value.data.nearByClinic.length}');
     dashboardData(value.data);
     unreadNotificationCount(value.data.unReadCount);
-    debugPrint('After NEARBYCLINIC.LENGTH: ${dashboardData.value.nearByClinic.length}');
+    debugPrint(
+        'After NEARBYCLINIC.LENGTH: ${dashboardData.value.nearByClinic.length}');
     //More Logic....
   }
 

@@ -1,4 +1,3 @@
-
 import 'package:kivicare_patient/utils/constants.dart';
 
 import '../../booking/model/appointments_res_model.dart';
@@ -21,7 +20,9 @@ class DashboardRes {
   factory DashboardRes.fromJson(Map<String, dynamic> json) {
     return DashboardRes(
       status: json['status'] is bool ? json['status'] : false,
-      data: json['data'] is Map ? DashboardData.fromJson(json['data']) : DashboardData(),
+      data: json['data'] is Map
+          ? DashboardData.fromJson(json['data'])
+          : DashboardData(),
       message: json['message'] is String ? json['message'] : "",
     );
   }
@@ -44,7 +45,7 @@ class DashboardData {
   PopularClinicData popularClinic;
   PopularDoctorData topDoctor;
 
-  List<Slider> slider;
+  List<BannerModel> slider;
 
   //Unread Notificaions
   int unReadCount;
@@ -54,41 +55,59 @@ class DashboardData {
     this.nearByClinic = const <Clinic>[],
     this.featuredServices = const <ServiceElement>[],
     this.upcomingAppointment = const <AppointmentData>[],
-    PopularClinicData? popularClinic ,
+    PopularClinicData? popularClinic,
     PopularServicesData? popularService,
     PopularDoctorData? topDoctor,
-    this.slider = const <Slider>[],
+    this.slider = const <BannerModel>[],
 
     //Unread Notificaions
     this.unReadCount = 0,
-  }): popularService = popularService ?? PopularServicesData(),popularClinic = popularClinic ?? PopularClinicData(),topDoctor = topDoctor ?? PopularDoctorData();
+  })  : popularService = popularService ?? PopularServicesData(),
+        popularClinic = popularClinic ?? PopularClinicData(),
+        topDoctor = topDoctor ?? PopularDoctorData();
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
     return DashboardData(
-      categories: json['category'] is List ? List<CategoryElement>.from(json['category'].map((x) => CategoryElement.fromJson(x))) : [],
-      upcomingAppointment: json['upcoming_appointment'] is List ? List<AppointmentData>.from(json['upcoming_appointment'].map((x) => AppointmentData.fromJson(x))) : [],
-      nearByClinic: json['clinics'] is List ? List<Clinic>.from(json['clinics'].map((x) => Clinic.fromJson(x))) : [],
-      featuredServices: json['featured_services'] is List ? List<ServiceElement>.from(json['featured_services'].map((x) => ServiceElement.fromJson(x))) : [],
+      categories: json['category'] is List
+          ? List<CategoryElement>.from(
+              json['category'].map((x) => CategoryElement.fromJson(x)))
+          : [],
+      upcomingAppointment: json['upcoming_appointment'] is List
+          ? List<AppointmentData>.from(json['upcoming_appointment']
+              .map((x) => AppointmentData.fromJson(x)))
+          : [],
+      nearByClinic: json['clinics'] is List
+          ? List<Clinic>.from(json['clinics'].map((x) => Clinic.fromJson(x)))
+          : [],
+      featuredServices: json['featured_services'] is List
+          ? List<ServiceElement>.from(
+              json['featured_services'].map((x) => ServiceElement.fromJson(x)))
+          : [],
       popularClinic: json['perfect_clinics'] != null
           ? PopularClinicData.fromJson(json['perfect_clinics'])
           : null,
-        topDoctor: json['popular_doctors'] != null
-            ? PopularDoctorData.fromJson(json['popular_doctors'])
-            : null,
+      topDoctor: json['popular_doctors'] != null
+          ? PopularDoctorData.fromJson(json['popular_doctors'])
+          : null,
       popularService: json['popular_services'] != null
           ? PopularServicesData.fromJson(json['popular_services'])
           : null,
-      slider: json['slider'] is List ? List<Slider>.from(json['slider'].map((x) => Slider.fromJson(x))) : [],
+      slider: json['slider'] is List
+          ? List<BannerModel>.from(
+              json['slider'].map((x) => BannerModel.fromJson(x)))
+          : [],
 
       //Unread Notificaions
-      unReadCount: json['notification_count'] is int ? json['notification_count'] : 0,
+      unReadCount:
+          json['notification_count'] is int ? json['notification_count'] : 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'category': categories.map((e) => e.toJson()).toList(),
-      'upcoming_appointment': upcomingAppointment.map((e) => e.toJson()).toList(),
+      'upcoming_appointment':
+          upcomingAppointment.map((e) => e.toJson()).toList(),
       'clinics': nearByClinic.map((e) => e.toJson()).toList(),
       'featured_services': featuredServices.map((e) => e.toJson()).toList(),
       'perfect_clinics': popularClinic.toJson(),
@@ -101,7 +120,7 @@ class DashboardData {
   }
 }
 
-class Slider {
+class BannerModel {
   int id;
   String name;
   int status;
@@ -110,7 +129,7 @@ class Slider {
   int linkId;
   String sliderImage;
 
-  Slider({
+  BannerModel({
     this.id = -1,
     this.name = "",
     this.status = -1,
@@ -120,8 +139,8 @@ class Slider {
     this.sliderImage = "",
   });
 
-  factory Slider.fromJson(Map<String, dynamic> json) {
-    return Slider(
+  factory BannerModel.fromJson(Map<String, dynamic> json) {
+    return BannerModel(
       id: json['id'] is int ? json['id'] : -1,
       name: json['name'] is String ? json['name'] : "",
       status: json['status'] is int ? json['status'] : -1,
@@ -171,7 +190,9 @@ class TaxPercentage {
       id: json['id'] is int ? json['id'] : -1,
       title: json['title'] is String ? json['title'] : "",
       type: json['type'] is String ? json['type'] : "",
-      taxScope: json['tax_scope'] is String ? json['tax_scope'] : TaxType.exclusiveTax,
+      taxScope: json['tax_scope'] is String
+          ? json['tax_scope']
+          : TaxType.exclusiveTax,
       bookingType: json['booking_type'] is String ? json['booking_type'] : "",
       value: json['value'] is num ? json['value'] : 0,
       amount: json['amount'] is num ? json['amount'] : 0,

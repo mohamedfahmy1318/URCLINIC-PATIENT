@@ -25,6 +25,7 @@ class DashboardScreen extends StatelessWidget {
     return DoublePressBackWidget(
       message: locale.value.pressBackAgainToExitApp,
       child: Scaffold(
+        backgroundColor: context.scaffoldBackgroundColor,
         body: SafeArea(
           top: false,
           child: Obx(() => dashboardController
@@ -34,74 +35,54 @@ class DashboardScreen extends StatelessWidget {
           () => Container(
             decoration: BoxDecoration(
               color: context.cardColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-              child: BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                currentIndex: dashboardController.currentIndex.value,
-                backgroundColor: context.cardColor,
-                selectedItemColor: appColorPrimary,
-                unselectedItemColor:
-                    isDarkMode.value ? Colors.white54 : Colors.grey.shade500,
-                selectedLabelStyle: boldTextStyle(size: 12),
-                unselectedLabelStyle: primaryTextStyle(size: 11),
-                elevation: 0,
-                onTap: (index) {
-                  if (!isLoggedIn.value && index == 1) {
-                    doIfLoggedIn(() {
-                      handleChangeTabIndex(index);
-                    });
-                  } else {
+            child: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              currentIndex: dashboardController.currentIndex.value,
+              backgroundColor: context.cardColor,
+              selectedItemColor: appColorPrimary,
+              unselectedItemColor:
+                  isDarkMode.value ? Colors.white54 : Colors.grey.shade400,
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
+              elevation: 0,
+              onTap: (index) {
+                if (!isLoggedIn.value && index == 1) {
+                  doIfLoggedIn(() {
                     handleChangeTabIndex(index);
-                  }
-                },
-                items: bottomNavItems
-                    .map(
-                      (navBar) => BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Image.asset(
-                            navBar.icon,
-                            height: 24,
-                            width: 24,
-                            color: isDarkMode.value
-                                ? Colors.white54
-                                : Colors.grey.shade500,
-                          ),
-                        ),
-                        activeIcon: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: appColorPrimary.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Image.asset(
-                            navBar.activeIcon,
-                            height: 24,
-                            width: 24,
-                            color: appColorPrimary,
-                          ),
-                        ),
-                        label: navBar.title.value,
+                  });
+                } else {
+                  handleChangeTabIndex(index);
+                }
+              },
+              items: bottomNavItems
+                  .map(
+                    (navBar) => BottomNavigationBarItem(
+                      icon: Image.asset(
+                        navBar.icon,
+                        height: 24,
+                        width: 24,
+                        color: isDarkMode.value
+                            ? Colors.white54
+                            : Colors.grey.shade400,
                       ),
-                    )
-                    .toList(),
-              ),
+                      activeIcon: Image.asset(
+                        navBar.activeIcon,
+                        height: 24,
+                        width: 24,
+                        color: appColorPrimary,
+                      ),
+                      label: '',
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ),
@@ -139,7 +120,6 @@ class DashboardScreen extends StatelessWidget {
               loginType: loginUserData.value.loginType,
             ),
           );
-          AuthServiceApis.getUserWallet();
           setValueToLocal(
               SharedPreferenceConst.USER_DATA, loginUserData.toJson());
         }).catchError((e) {

@@ -12,6 +12,7 @@ ios/Flutter/App.podspec
 
 # Android
 android/.gradle/
+android/.kotlin/
 android/local.properties
 android/**/GeneratedPluginRegistrant.java
 
@@ -29,3 +30,5 @@ ios/Flutter/flutter_export_environment.sh
 # OS
 .DS_Store
 Thumbs.db
+nul
+tmpclaude-*

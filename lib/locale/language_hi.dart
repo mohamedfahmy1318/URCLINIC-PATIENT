@@ -1833,4 +1833,31 @@ class LanguageHi extends BaseLanguage {
   String get mostServices => 'सबसे अधिक सेवाएं';
   @override
   String get selectBranch => 'शाखा चुनें';
+
+  @override
+  String get workingHours => 'कार्य समय';
+
+  @override
+  String get fromTime => 'से';
+
+  @override
+  String get toTime => 'तक';
+
+  @override
+  String get exceptDay => 'सिवाय';
+
+  @override
+  String get exceptDays => 'सिवाय';
+
+  @override
+  // TODO: implement mainBranch
+  String get mainBranch => 'मुख्य शाखा';
+
+  @override
+  // TODO: implement openInMaps
+  String get openInMaps => 'मैप्स में खोलें';
+
+  @override
+  // TODO: implement otherBranches
+  String get otherBranches => 'अन्य शाखाएं';
 }

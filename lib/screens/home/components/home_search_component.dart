@@ -28,7 +28,7 @@ class HomeSearchComponent extends StatelessWidget {
           // Search Bar
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => _showSearchBottomSheet(context),
+            onTap: () => Get.to(() => ClinicListScreen(), arguments: {'isFromSearch': true}),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: boxDecorationDefault(

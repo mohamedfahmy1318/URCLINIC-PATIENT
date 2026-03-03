@@ -29,7 +29,8 @@ class ClinicCard extends StatelessWidget {
           /// Store selected clinic in global variable
           if (clinicData.id == clinicListCont.selectedClinic.value.id) {
             /// Deselect, If again tap on same clinic
-            clinicListCont.selectedClinic(Clinic(clinicSession: ClinicSession()));
+            clinicListCont
+                .selectedClinic(Clinic(clinicSession: ClinicSession()));
             currentSelectedClinic(clinicListCont.selectedClinic.value);
             log('CURRENT SELECTED CLINIC ID==> ${currentSelectedClinic.value.id}');
             log('CURRENT SELECTED CLINIC NAME==> ${currentSelectedClinic.value.name}');
@@ -41,7 +42,8 @@ class ClinicCard extends StatelessWidget {
           }
         },
         child: Container(
-          decoration: boxDecorationDefault(color: context.cardColor, borderRadius: radius(8)),
+          decoration: boxDecorationDefault(
+              color: context.cardColor, borderRadius: radius(8)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -60,7 +62,10 @@ class ClinicCard extends StatelessWidget {
                     left: 0,
                     right: 0,
                     child: Container(
-                      color: clinicData.id == clinicListCont.selectedClinic.value.id ? appColorPrimary.withValues(alpha: 0.4) : null,
+                      color: clinicData.id ==
+                              clinicListCont.selectedClinic.value.id
+                          ? appColorPrimary.withValues(alpha: 0.4)
+                          : null,
                       width: Get.width,
                       height: Get.height * 0.24,
                     ).cornerRadiusWithClipRRectOnly(topLeft: 8, topRight: 8),
@@ -72,8 +77,38 @@ class ClinicCard extends StatelessWidget {
                       imgPath: Assets.imagesConfirm,
                       color: whiteTextColor,
                       size: 8,
-                    ).circularLightPrimaryBg(color: appColorPrimary, padding: 8),
-                  ).visible(clinicData.id == clinicListCont.selectedClinic.value.id),
+                    ).circularLightPrimaryBg(
+                        color: appColorPrimary, padding: 8),
+                  ).visible(
+                      clinicData.id == clinicListCont.selectedClinic.value.id),
+                  // Clinic Logo
+                  if (clinicData.logo.isNotEmpty)
+                    Positioned(
+                      bottom: -16,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: context.cardColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: CachedImageWidget(
+                            url: clinicData.logo,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
               Column(
@@ -96,7 +131,11 @@ class ClinicCard extends StatelessWidget {
                     behavior: HitTestBehavior.translucent,
                     child: Row(
                       children: [
-                        const CachedImageWidget(url: Assets.iconsIcLocation, color: iconColor, width: 16, height: 16),
+                        const CachedImageWidget(
+                            url: Assets.iconsIcLocation,
+                            color: iconColor,
+                            width: 16,
+                            height: 16),
                         12.width,
                         Text(
                           clinicData.address,
@@ -106,7 +145,9 @@ class ClinicCard extends StatelessWidget {
                         ).expand(),
                       ],
                     ),
-                  ).paddingTop(12).visible(clinicData.address.trim().isNotEmpty),
+                  )
+                      .paddingTop(12)
+                      .visible(clinicData.address.trim().isNotEmpty),
                   Row(
                     children: [
                       GestureDetector(
@@ -116,21 +157,37 @@ class ClinicCard extends StatelessWidget {
                         behavior: HitTestBehavior.translucent,
                         child: Row(
                           children: [
-                            const CachedImageWidget(url: Assets.iconsIcCall, color: iconColor, width: 14, height: 14),
+                            const CachedImageWidget(
+                                url: Assets.iconsIcCall,
+                                color: iconColor,
+                                width: 14,
+                                height: 14),
                             12.width,
-                            Text(clinicData.contactNumber, style: primaryTextStyle(color: appColorPrimary)),
+                            Text(clinicData.contactNumber,
+                                style:
+                                    primaryTextStyle(color: appColorPrimary)),
                           ],
                         ),
-                      ).expand().visible(clinicData.contactNumber.trim().isNotEmpty),
+                      )
+                          .expand()
+                          .visible(clinicData.contactNumber.trim().isNotEmpty),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
                         decoration: boxDecorationDefault(
-                          color: getClinicStatusLightColor(clinicStatus: clinicData.clinicStatus.toLowerCase()),
+                          color: getClinicStatusLightColor(
+                              clinicStatus:
+                                  clinicData.clinicStatus.toLowerCase()),
                           borderRadius: radius(22),
                         ),
                         child: Text(
-                          getClinicStatus(status: clinicData.clinicStatus.toLowerCase()),
-                          style: boldTextStyle(size: 10, color: getClinicStatusColor(clinicStatus: clinicData.clinicStatus.toLowerCase())),
+                          getClinicStatus(
+                              status: clinicData.clinicStatus.toLowerCase()),
+                          style: boldTextStyle(
+                              size: 10,
+                              color: getClinicStatusColor(
+                                  clinicStatus:
+                                      clinicData.clinicStatus.toLowerCase())),
                         ),
                       ),
                     ],
@@ -146,7 +203,9 @@ class ClinicCard extends StatelessWidget {
                       padding: WidgetStatePropertyAll(EdgeInsets.zero),
                       overlayColor: WidgetStatePropertyAll(lightSecondaryColor),
                     ),
-                    child: Text(locale.value.viewDetail, style: boldTextStyle(color: appColorSecondary, size: 12)),
+                    child: Text(locale.value.viewDetail,
+                        style:
+                            boldTextStyle(color: appColorSecondary, size: 12)),
                   ),
                   8.height,
                 ],

@@ -9,7 +9,6 @@ import '../../generated/assets.dart';
 import '../../main.dart';
 import '../../utils/colors.dart';
 import '../../utils/empty_error_state_widget.dart';
-import '../booking/filter/filter_screen.dart';
 import 'appointments_controller.dart';
 import 'components/appointment_card.dart';
 import 'model/appointment_status_model.dart';
@@ -26,37 +25,6 @@ class AppointmentsScreen extends StatelessWidget {
       hasLeadingWidget: false,
       appBarVerticalSize: Get.height * 0.12,
       isLoading: appointmentsCont.isLoading,
-      actions: [
-        InkWell(
-          onTap: () {
-            Get.to(
-              () => FilterScreen(
-                displayName: 'appointment',
-                filterType: 'appointment',
-              ),
-              arguments: [
-                appointmentsCont.clinicId.value,
-                appointmentsCont.serviceType.value,
-                appointmentsCont.priceMin.value,
-                appointmentsCont.priceMax.value,
-                "appointment",
-                appointmentsCont.selectedCategory.value.id,
-              ],
-            );
-          },
-          child: Container(
-            height: 46,
-            width: 46,
-            alignment: Alignment.center,
-            decoration: boxDecorationDefault(color: appColorPrimary, borderRadius: BorderRadius.circular(12)),
-            child: const CachedImageWidget(
-              url: Assets.iconsIcFilter,
-              height: 28,
-              color: white,
-            ),
-          ),
-        ).paddingOnly(right: 16),
-      ],
       body: Obx(
         () => SnapHelperWidget(
           future: appointmentsCont.getAppointments.value,

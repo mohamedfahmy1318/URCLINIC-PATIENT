@@ -71,4 +71,7 @@ class APIEndPoints {
   static const String incidenceList = 'incidence-list';
   static const String incidenceSave = 'incidence-save';
   static const String updateIncidentStatus = 'update-incident-status';
+
+  //Banners
+  static const String getBannersList = 'get-banners-list';
 }

@@ -6,19 +6,18 @@ import 'package:kivicare_patient/generated/assets.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/utils/colors.dart';
 
-import '../../../api/auth_apis.dart';
 import '../../../main.dart';
 import '../../../utils/common_base.dart';
 import '../../../utils/constants.dart';
 import '../../booking/model/booking_req.dart';
 import '../../payment/payment_controller.dart';
-import '../../payment/payment_screen.dart';
 
 class AppointmentSummaryWidget extends StatelessWidget {
   final BookingReq bookingData;
   final bool isQuickBook;
+  final RxBool _isBooking = false.obs;
 
-  const AppointmentSummaryWidget(
+  AppointmentSummaryWidget(
       {super.key, required this.bookingData, this.isQuickBook = false});
 
   @override
@@ -164,29 +163,51 @@ class AppointmentSummaryWidget extends StatelessWidget {
                 ),
               ),
               16.height,
-              AppButton(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                width: Get.width,
-                text: locale.value.proceed,
-                color: appColorSecondary,
-                textStyle: appButtonTextStyleWhite,
-                shapeBorder: RoundedRectangleBorder(
-                    borderRadius: radius(defaultAppButtonRadius / 2)),
-                onTap: () {
-                  Get.back(result: true);
-                  paymentController = PaymentController();
-                  paymentController.bookingData = bookingData;
-                  if (isQuickBook) {
-                    paymentController
-                        .paymentOption(PaymentMethods.PAYMENT_METHOD_CASH);
-                  }
-                  if (bookingData.isEnableAdvancePayment) {
-                    paymentController
-                        .paymentOption(PaymentMethods.PAYMENT_METHOD_STRIPE);
-                  }
-                  if (!isQuickBook) AuthServiceApis.getUserWallet();
-                  Get.to(() => PaymentScreen(isQuickBook: isQuickBook));
-                },
+              Obx(
+                () => _isBooking.value
+                    ? Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        width: Get.width,
+                        height: 50,
+                        decoration: boxDecorationDefault(
+                          color: appColorSecondary,
+                          borderRadius: radius(defaultAppButtonRadius / 2),
+                        ),
+                        child: const Center(
+                          child: SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          ),
+                        ),
+                      )
+                    : AppButton(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        width: Get.width,
+                        text: locale.value.proceed,
+                        color: appColorSecondary,
+                        textStyle: appButtonTextStyleWhite,
+                        shapeBorder: RoundedRectangleBorder(
+                            borderRadius: radius(defaultAppButtonRadius / 2)),
+                        onTap: () {
+                          _isBooking.value = true;
+                          paymentController = PaymentController();
+                          paymentController.bookingData = bookingData;
+                          paymentController.paymentOption(
+                              PaymentMethods.PAYMENT_METHOD_CASH);
+                          // Directly save booking as cash - skip payment screen
+                          paymentController.saveBooking(Get.context!);
+                          // Reset loading on error (on success, navigation dismisses dialog)
+                          paymentController.isLoading.listen((loading) {
+                            if (!loading && _isBooking.value) {
+                              _isBooking.value = false;
+                            }
+                          });
+                        },
+                      ),
               ),
             ],
           ),

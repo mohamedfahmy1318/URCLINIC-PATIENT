@@ -1139,4 +1139,16 @@ abstract class BaseLanguage {
   String get topRated;
   String get mostDoctors;
   String get mostServices;
+
+  // Working Hours
+  String get workingHours;
+  String get fromTime;
+  String get toTime;
+  String get exceptDay;
+  String get exceptDays;
+
+  // Branch / Location
+  String get otherBranches;
+  String get mainBranch;
+  String get openInMaps;
 }

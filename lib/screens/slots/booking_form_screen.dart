@@ -7,10 +7,8 @@ import 'package:nb_utils/nb_utils.dart';
 import '../../../components/app_scaffold.dart';
 import '../../components/add_files_widget.dart';
 import '../../components/applied_tax_list_bottom_sheet.dart';
-import '../../components/bottom_selection_widget.dart';
 import '../../components/cached_image_widget.dart';
 import '../../components/loader_widget.dart';
-import '../../generated/assets.dart';
 import '../../main.dart';
 import '../../utils/app_common.dart';
 import '../../utils/common_base.dart';
@@ -26,7 +24,7 @@ import '../other_patient/add_other_patient_screen.dart';
 import '../service/model/service_list_model.dart';
 import 'booking_form_controller.dart';
 import 'components/clinic_selection_card_widget.dart';
-import 'components/common_selection_comp.dart';
+
 import 'components/doctor_selection_card_widget.dart';
 import 'components/service_selection_card_widget.dart';
 
@@ -57,165 +55,6 @@ class BookingFormScreen extends StatelessWidget {
                   bottom: 90,
                 ),
                 children: [
-                  16.height,
-                  ViewAllLabel(
-                          label: locale.value.bookingInfo, isShowAll: false)
-                      .paddingOnly(right: 8),
-                  Obx(
-                    () => Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration:
-                          boxDecorationDefault(color: context.cardColor),
-                      child: Column(
-                        children: [
-                          CommonSelectionWid(
-                            title: "${locale.value.serviceName}:",
-                            selectedName:
-                                timeSlotsCont.serviceNameText.value.isNotEmpty
-                                    ? timeSlotsCont.serviceNameText.value
-                                    : currentSelectedService.value.serviceName,
-                            onEdit: () {
-                              timeSlotsCont.servicePage(1);
-                              timeSlotsCont.getServiceList();
-                              serviceCommonBottomSheet(
-                                context,
-                                child: BottomSelectionSheet(
-                                  title: locale.value.chooseService,
-                                  hintText: locale.value.searchForService,
-                                  hasError: timeSlotsCont
-                                      .hasErrorFetchingService.value,
-                                  isEmpty: !timeSlotsCont.isLoading.value &&
-                                      timeSlotsCont.serviceList.isEmpty,
-                                  errorText:
-                                      timeSlotsCont.errorMessageService.value,
-                                  noDataTitle: locale.value.serviceListIsEmpty,
-                                  noDataSubTitle: locale.value
-                                      .thereAreNoServicesListedAtTheMomentStayTunedF,
-                                  isLoading: timeSlotsCont.isLoading,
-                                  searchApiCall: (p0) => timeSlotsCont
-                                      .getServiceList(searchText: p0),
-                                  onRetry: () {
-                                    timeSlotsCont.servicePage(1);
-                                    timeSlotsCont.getServiceList();
-                                  },
-                                  listWidget: Obx(() =>
-                                      serviceListWid(timeSlotsCont.serviceList)
-                                          .expand()),
-                                ),
-                              );
-                            },
-                            suffixIcon: timeSlotsCont.serviceNameText
-                                    .contains(locale.value.pleaseSelectService)
-                                ? Assets.iconsIcAdd
-                                : Assets.iconsIcEditReview,
-                          ),
-                          commonDivider.paddingSymmetric(vertical: 16),
-                          Obx(() {
-                            return CommonSelectionWid(
-                              title: "${locale.value.clinicName}:",
-                              selectedName: timeSlotsCont.clinicNameText.value,
-                              errorText:
-                                  timeSlotsCont.clinicValidationError.value,
-                              onEdit: () {
-                                if (currentSelectedService
-                                        .value.id.isNegative &&
-                                    timeSlotsCont
-                                        .selectedService.value.id.isNegative) {
-                                  toast(locale.value.kindlyChooseAServiceFirst);
-                                  return;
-                                }
-
-                                timeSlotsCont.clinicPage(1);
-                                timeSlotsCont.getClinicList();
-                                serviceCommonBottomSheet(
-                                  context,
-                                  child: BottomSelectionSheet(
-                                    title: locale.value.chooseClinic,
-                                    hintText: locale.value.searchForClinic,
-                                    hasError: timeSlotsCont
-                                        .hasErrorFetchingClinic.value,
-                                    isEmpty: !timeSlotsCont.isLoading.value &&
-                                        timeSlotsCont.clinicList.isEmpty,
-                                    errorText:
-                                        timeSlotsCont.errorMessageClinic.value,
-                                    noDataTitle: locale.value.clinicListIsEmpty,
-                                    noDataSubTitle: locale.value
-                                        .thereAreNoClinicsListedAtTheMomentStayTunedFo,
-                                    isLoading: timeSlotsCont.isLoading,
-                                    searchApiCall: (p0) {
-                                      timeSlotsCont.getClinicList(
-                                          searchText: p0);
-                                    },
-                                    onRetry: () {
-                                      timeSlotsCont.clinicPage(1);
-                                      timeSlotsCont.getClinicList();
-                                    },
-                                    listWidget: Obx(() =>
-                                        clinicListWid(timeSlotsCont.clinicList)
-                                            .expand()),
-                                  ),
-                                );
-                              },
-                              suffixIcon: timeSlotsCont.clinicNameText
-                                      .contains(locale.value.pleaseSelectClinic)
-                                  ? Assets.iconsIcAdd
-                                  : Assets.iconsIcEditReview,
-                            );
-                          }),
-                          commonDivider.paddingSymmetric(vertical: 16),
-                          Obx(() {
-                            return CommonSelectionWid(
-                              title: "${locale.value.doctorName}:",
-                              selectedName: timeSlotsCont.doctorNameText.value,
-                              errorText:
-                                  timeSlotsCont.doctorValidationError.value,
-                              onEdit: () {
-                                if (timeSlotsCont
-                                    .selectedClinic.value.id.isNegative) {
-                                  toast(locale.value.kindlyChooseAClinicFirst);
-                                  return;
-                                }
-
-                                timeSlotsCont.doctorPage(1);
-                                timeSlotsCont.getDoctorList();
-                                serviceCommonBottomSheet(
-                                  context,
-                                  child: BottomSelectionSheet(
-                                    title: locale.value.chooseDoctor,
-                                    hintText: locale.value.searchForDoctor,
-                                    hasError: timeSlotsCont
-                                        .hasErrorFetchingDoctor.value,
-                                    isEmpty: !timeSlotsCont.isLoading.value &&
-                                        timeSlotsCont.doctorList.isEmpty,
-                                    errorText:
-                                        timeSlotsCont.errorMessageDoctor.value,
-                                    isLoading: timeSlotsCont.isLoading,
-                                    noDataTitle: locale.value
-                                        .thereAreNoDoctorsListedAtTheMomentStayTunedFo,
-                                    searchApiCall: (p0) {
-                                      timeSlotsCont.getDoctorList(
-                                          searchText: p0);
-                                    },
-                                    onRetry: () {
-                                      timeSlotsCont.doctorPage(1);
-                                      timeSlotsCont.getDoctorList();
-                                    },
-                                    listWidget: Obx(() =>
-                                        doctorListWid(timeSlotsCont.doctorList)
-                                            .expand()),
-                                  ),
-                                );
-                              },
-                              suffixIcon: timeSlotsCont.doctorNameText
-                                      .contains(locale.value.pleaseSelectDoctor)
-                                  ? Assets.iconsIcAdd
-                                  : Assets.iconsIcEditReview,
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ),
                   16.height,
                   ViewAllLabel(label: locale.value.chooseDate, isShowAll: false)
                       .paddingOnly(right: 8),

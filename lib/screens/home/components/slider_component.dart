@@ -33,10 +33,9 @@ class _SliderComponentState extends State<SliderComponent> {
   void _startAutoScroll() {
     _timer?.cancel(); // Cancel any existing timer
     _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
-      if (homeScreenController.dashboardData.value.slider.isNotEmpty) {
+      if (homeScreenController.bannerList.isNotEmpty) {
         int nextPage = homeScreenController.sliderCurrentPage.value + 1;
-        if (nextPage >=
-            homeScreenController.dashboardData.value.slider.length) {
+        if (nextPage >= homeScreenController.bannerList.length) {
           nextPage = 0; // Loop back to the first page
         }
         homeScreenController.sliderPageController.animateToPage(
@@ -58,7 +57,7 @@ class _SliderComponentState extends State<SliderComponent> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final sliderList = homeScreenController.dashboardData.value.slider;
+      final sliderList = homeScreenController.bannerList;
 
       if (sliderList.isEmpty) {
         return const Offstage();
@@ -78,25 +77,11 @@ class _SliderComponentState extends State<SliderComponent> {
               itemCount: sliderList.length,
               itemBuilder: (context, index) {
                 final sliderItem = sliderList[index];
-                return GestureDetector(
-                  onTap: () {
-                    if (sliderItem.link.isURL) {
-                      commonLaunchUrl(
-                        sliderItem.link,
-                        launchMode: LaunchMode.externalApplication,
-                      );
-                    } else if (sliderItem.type == BannerType.CATEGORY) {
-                      Get.to(() => CategoryScreen(),
-                          duration: const Duration(milliseconds: 800));
-                    } else if (sliderItem.type == BannerType.SERVICE) {
-                      Get.to(() => ServiceDetailScreen(),
-                          arguments: sliderItem.linkId);
-                    }
-                  },
-                  behavior: HitTestBehavior.translucent,
-                  child: Container(
-                    color: Colors.transparent,
-                    width: Get.width,
+                return Container(
+                  color: context.scaffoldBackgroundColor,
+                  width: Get.width,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
                     child: CachedImageWidget(
                       url: sliderItem.sliderImage,
                       fit: BoxFit.fitWidth,
@@ -150,7 +135,7 @@ class _SliderComponentState extends State<SliderComponent> {
             ),
           ],
         ),
-      ).paddingTop(5);
+      ).paddingAll(15);
     });
   }
 }

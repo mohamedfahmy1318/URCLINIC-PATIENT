@@ -11,17 +11,11 @@ import '../../main.dart';
 import '../../utils/app_common.dart';
 import '../../utils/colors.dart';
 import '../../utils/empty_error_state_widget.dart';
-import '../../utils/price_widget.dart';
-import '../doctor/model/doctor_list_res.dart';
-import '../doctor/doctor_detail_screen.dart';
-import '../service/model/service_list_model.dart';
-import '../service/service_detail_screen.dart';
+import '../service/service_doctors_screen.dart';
 import '../service/services_list_screen.dart';
-import '../slots/booking_form_screen.dart';
 import 'clinic_detail_controller.dart';
 import 'clinic_gallery_list_screen.dart';
 import 'clinic_location_screen.dart';
-import 'components/clinic_session_component.dart';
 
 class ClinicDetailScreen extends StatelessWidget {
   ClinicDetailScreen({super.key});
@@ -61,23 +55,23 @@ class ClinicDetailScreen extends StatelessWidget {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.only(bottom: 100),
                     children: [
-                      // Clinic Header with Image
-                      _buildClinicHeader(context),
+                      // Cover Image + Overlapping Logo (Twitter-style)
+                      _buildCoverWithLogo(context),
 
-                      // Quick Stats Section
-                      _buildQuickStats(context),
+                      // Clinic Name + Status + Select Branch
+                      _buildClinicInfo(context),
 
-                      // Description Section
-                      _buildDescriptionSection(context),
-
-                      // Our Doctors Section
-                      _buildDoctorsSection(context),
-
-                      // Our Services Section
+                      // Services horizontal list
                       _buildServicesSection(context),
 
-                      // Sessions & Gallery Links
-                      _buildSessionsAndGallery(context),
+                      // Contact Info
+                      _buildContactInfo(context),
+
+                      // Working Hours (inline schedule)
+                      _buildWorkingHours(context),
+
+                      // Gallery
+                      _buildGalleryCard(context),
 
                       24.height,
                     ],
@@ -99,237 +93,121 @@ class ClinicDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Clinic Header with Image, Name, and Contact Info
-  Widget _buildClinicHeader(BuildContext context) {
-    return Container(
-      color: context.cardColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  /// Cover image with overlapping logo (Twitter/X style header)
+  Widget _buildCoverWithLogo(BuildContext context) {
+    final double coverHeight = Get.height * 0.22;
+    const double logoSize = 80.0;
+    const double logoBorderWidth = 4.0;
+
+    return SizedBox(
+      height: coverHeight + (logoSize / 2),
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // Clinic Image with Status Badge and Logo
-          SizedBox(
-            height: Get.height * 0.32,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CachedImageWidget(
-                  url: clinicDetailCont.clinicData.value.clinicImage,
-                  fit: BoxFit.cover,
-                  width: Get.width,
-                  height: Get.height * 0.28,
-                  topLeftRadius: 0,
-                  topRightRadius: 0,
+          // Cover Image
+          CachedImageWidget(
+            url: clinicDetailCont.clinicData.value.clinicImage,
+            fit: BoxFit.cover,
+            width: Get.width,
+            height: coverHeight,
+            topLeftRadius: 0,
+            topRightRadius: 0,
+          ),
+
+          // Gradient overlay at bottom of cover for smooth transition
+          Positioned(
+            bottom: logoSize / 2,
+            left: 0,
+            right: 0,
+            height: 60,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    context.scaffoldBackgroundColor.withOpacity(0.7),
+                  ],
                 ),
-                // Status Badge
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: boxDecorationDefault(
-                      color: getClinicStatusLightColor(
+              ),
+            ),
+          ),
+
+          // Status Badge (top right on cover)
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: boxDecorationDefault(
+                color: getClinicStatusLightColor(
+                  clinicStatus: clinicDetailCont.clinicData.value.clinicStatus
+                      .toLowerCase(),
+                ),
+                borderRadius: radius(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: getClinicStatusColor(
                         clinicStatus: clinicDetailCont
                             .clinicData.value.clinicStatus
                             .toLowerCase(),
                       ),
-                      borderRadius: radius(22),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade600,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        8.width,
-                        Text(
-                          getClinicStatus(
-                              status: clinicDetailCont
-                                  .clinicData.value.clinicStatus
-                                  .toLowerCase()),
-                          style: boldTextStyle(
-                              size: 12, color: Colors.green.shade600),
-                        ),
-                      ],
+                      shape: BoxShape.circle,
                     ),
                   ),
-                ),
-                // Circular App Logo Overlay
-                Positioned(
-                  bottom: 0,
-                  left: 24,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: boxDecorationDefault(
-                      shape: BoxShape.circle,
-                      color: context.cardColor,
-                      border: Border.all(color: context.cardColor, width: 2),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        Assets.assetsLogoApp,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
+                  6.width,
+                  Text(
+                    getClinicStatus(
+                        status: clinicDetailCont.clinicData.value.clinicStatus
+                            .toLowerCase()),
+                    style: boldTextStyle(
+                      size: 11,
+                      color: getClinicStatusColor(
+                        clinicStatus: clinicDetailCont
+                            .clinicData.value.clinicStatus
+                            .toLowerCase(),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
-          // Clinic Info
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Clinic Name
-                Text(
-                  clinicDetailCont.clinicData.value.name,
-                  style: boldTextStyle(size: 20),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ).visible(clinicDetailCont.clinicData.value.name.isNotEmpty),
-
-                16.height,
-
-                // Select Branch Button - Opens Location Screen
-                AppButton(
-                  width: Get.width,
-                  color: transparentColor,
-                  elevation: 0,
-                  shapeBorder: RoundedRectangleBorder(
-                      borderRadius: radius(8),
-                      side: const BorderSide(color: appColorPrimary)),
-                  onTap: () {
-                    Get.to(() => ClinicLocationScreen(
-                          clinic: clinicDetailCont.clinicData.value,
-                        ));
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.location_on_outlined,
-                          color: appColorPrimary, size: 20),
-                      8.width,
-                      Text(locale.value.selectBranch,
-                          style: boldTextStyle(color: appColorPrimary)),
-                    ],
+          // Logo overlapping the cover (bottom-left)
+          Positioned(
+            bottom: 0,
+            left: 16,
+            child: Container(
+              padding: const EdgeInsets.all(logoBorderWidth),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
+                ],
+              ),
+              child: ClipOval(
+                child: CachedImageWidget(
+                  url: clinicDetailCont.clinicData.value.logo.isNotEmpty
+                      ? clinicDetailCont.clinicData.value.logo
+                      : clinicDetailCont.clinicData.value.clinicImage,
+                  width: logoSize - (logoBorderWidth * 2),
+                  height: logoSize - (logoBorderWidth * 2),
+                  fit: BoxFit.cover,
                 ),
-
-                16.height,
-
-                // Clinic Number / Email (Semi-bold text)
-                Row(
-                  children: [
-                    Text(locale.value.contactInfo,
-                        style: boldTextStyle(size: 16)),
-                  ],
-                ),
-                12.height,
-
-                // Contact Row
-                Row(
-                  children: [
-                    // Phone
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => launchCall(
-                            clinicDetailCont.clinicData.value.contactNumber),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 8), // Reduced horizontal padding
-                          decoration: boxDecorationDefault(
-                            color: Colors.grey.shade200,
-                            borderRadius: radius(8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const CachedImageWidget(
-                                url: Assets.iconsIcCall,
-                                color: appColorPrimary,
-                                height: 20,
-                                width: 20,
-                              ),
-                              8.width,
-                              Flexible(
-                                // Used Flexible to prevent overflow
-                                child: Text(
-                                  locale.value.contactNumber,
-                                  style: boldTextStyle(
-                                      size: 13, // Reduced font size slightly
-                                      color: Colors.black),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ).visible(clinicDetailCont.clinicData.value.contactNumber
-                        .trim()
-                        .isNotEmpty),
-
-                    12.width.visible(clinicDetailCont
-                            .clinicData.value.contactNumber
-                            .trim()
-                            .isNotEmpty &&
-                        clinicDetailCont.clinicData.value.email.isNotEmpty),
-
-                    // Email
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () =>
-                            launchMail(clinicDetailCont.clinicData.value.email),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 8), // Reduced horizontal padding
-                          decoration: boxDecorationDefault(
-                            color: Colors.grey.shade200,
-                            borderRadius: radius(8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const CachedImageWidget(
-                                url: Assets.iconsIcMail,
-                                color: appColorPrimary,
-                                height: 20,
-                                width: 20,
-                              ),
-                              8.width,
-                              Flexible(
-                                // Used Flexible to prevent overflow
-                                child: Text(
-                                  locale.value.email,
-                                  style: boldTextStyle(
-                                      size: 13, // Reduced font size slightly
-                                      color: Colors.black),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ).visible(
-                        clinicDetailCont.clinicData.value.email.isNotEmpty),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -337,190 +215,83 @@ class ClinicDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Quick Stats Section - Removed as it was empty and causing GetX error
-  Widget _buildQuickStats(BuildContext context) {
-    return const SizedBox.shrink();
-  }
-
-  /// Description Section - Removed as per user request
-  Widget _buildDescriptionSection(BuildContext context) {
-    return const SizedBox.shrink();
-  }
-
-  /// Doctors Section with Grid List
-  Widget _buildDoctorsSection(BuildContext context) {
-    return Obx(
-      () {
-        if (clinicDetailCont.doctors.isEmpty &&
-            !clinicDetailCont.isDoctorsLoading.value) {
-          return const SizedBox.shrink();
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            16.height,
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: appColorPrimary.withOpacity(0.1),
-                      borderRadius: radius(8),
-                    ),
-                    child: const CachedImageWidget(
-                      url: Assets.iconsIcDoctor,
-                      height: 20,
-                      width: 20,
-                      color: appColorPrimary,
-                    ),
-                  ),
-                  12.width,
-                  Text(
-                    locale.value.doctors,
-                    style: boldTextStyle(size: 16),
-                  ),
-                ],
-              ),
-            ),
-            16.height,
-            if (clinicDetailCont.isDoctorsLoading.value)
-              const Center(child: CircularProgressIndicator())
-                  .paddingSymmetric(vertical: 20)
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: List.generate(
-                      clinicDetailCont.doctors.take(4).length, (index) {
-                    final doctor = clinicDetailCont.doctors[index];
-                    // Calculate width for 2 columns with spacing
-                    final width = (Get.width - 48) / 2;
-                    return _buildDoctorCard(context, doctor, width);
-                  }),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildDoctorCard(BuildContext context, Doctor doctor, double width) {
-    return GestureDetector(
-      onTap: () {
-        // Tap on card opens booking form with doctor selected
-        currentSelectedClinic(clinicDetailCont.clinicData.value);
-        currentSelectedDoctor(doctor);
-        Get.to(() => BookingFormScreen());
-      },
-      child: Container(
-        width: width,
-        decoration: boxDecorationDefault(
-          color: context.cardColor,
-          borderRadius: radius(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Doctor Image
-            Stack(
-              children: [
-                CachedImageWidget(
-                  url: doctor.profileImage,
-                  height: width * 0.8,
-                  width: width,
-                  fit: BoxFit.cover,
-                  topLeftRadius: 12,
-                  topRightRadius: 12,
-                ),
-                // Status (Active/Inactive)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: boxDecorationDefault(
-                      color: doctor.status == 1 ? Colors.green : Colors.grey,
-                      borderRadius: radius(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        4.width,
-                        Text(
-                          doctor.status == 1 ? locale.value.active : 'Inactive',
-                          style: boldTextStyle(size: 9, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ).visible(doctor.status == 1),
-                ),
-              ],
-            ),
-            // Doctor Info
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    doctor.fullName,
-                    style: boldTextStyle(size: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  4.height,
-                  // Show specialty in both Arabic and English
-                  if (doctor.expert.isNotEmpty) ...[
+  /// Clinic name, specialty, and branch selector below the header
+  Widget _buildClinicInfo(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Clinic Name
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      doctor.expert,
-                      style: secondaryTextStyle(size: 11),
-                      maxLines: 1,
+                      clinicDetailCont.clinicData.value.name,
+                      style: boldTextStyle(size: 20),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                    4.height,
+                    ).visible(
+                        clinicDetailCont.clinicData.value.name.isNotEmpty),
+                    if (clinicDetailCont
+                        .clinicData.value.specialty.isNotEmpty) ...[
+                      4.height,
+                      Text(
+                        clinicDetailCont.clinicData.value.specialty,
+                        style: secondaryTextStyle(size: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
-                  // Details link to go to doctor detail screen
-                  GestureDetector(
-                    onTap: () =>
-                        Get.to(() => DoctorDetailScreen(), arguments: doctor),
-                    child: Row(
-                      children: [
-                        Text(
-                          locale.value.viewDetail,
-                          style: primaryTextStyle(
-                              size: 12, color: appColorPrimary),
-                        ),
-                        4.width,
-                        Icon(Icons.arrow_forward_ios,
-                            size: 10, color: appColorPrimary),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+              8.width,
+              // Select Branch / Location button
+              GestureDetector(
+                onTap: () {
+                  Get.to(() => ClinicLocationScreen(
+                        clinic: clinicDetailCont.clinicData.value,
+                      ));
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: boxDecorationDefault(
+                    color: appColorPrimary.withOpacity(0.1),
+                    borderRadius: radius(20),
+                    border: Border.all(color: appColorPrimary, width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: appColorPrimary, size: 16),
+                      6.width,
+                      Text(
+                          clinicDetailCont.clinicData.value.additionalAddresses
+                                  .isNotEmpty
+                              ? locale.value.selectBranch
+                              : locale.value.address,
+                          style: boldTextStyle(
+                              size: 12, color: appColorPrimary)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          12.height,
+        ],
       ),
     );
   }
 
-  /// Services Section - Simple List with Names Only
+  /// Services Section - Horizontal scrollable chips
   Widget _buildServicesSection(BuildContext context) {
     return Obx(
       () {
@@ -532,31 +303,12 @@ class ClinicDetailScreen extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            16.height,
-            // Section Header - "Services"
+            // Section Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: appColorSecondary.withOpacity(0.1),
-                      borderRadius: radius(8),
-                    ),
-                    child: const CachedImageWidget(
-                      url: Assets.iconsIcServices,
-                      height: 20,
-                      width: 20,
-                      color: appColorSecondary,
-                    ),
-                  ),
-                  12.width,
-                  Text(
-                    locale.value.services,
-                    style: boldTextStyle(size: 16),
-                  ),
-                ],
+              child: Text(
+                locale.value.services,
+                style: boldTextStyle(size: 16),
               ),
             ),
             12.height,
@@ -564,118 +316,310 @@ class ClinicDetailScreen extends StatelessWidget {
               const Center(child: CircularProgressIndicator())
                   .paddingSymmetric(vertical: 20)
             else
-              // Simple list of service names
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: boxDecorationDefault(
-                  color: context.cardColor,
-                  borderRadius: radius(12),
-                ),
+              SizedBox(
+                height: 42,
                 child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: clinicDetailCont.serviceList.length,
-                  separatorBuilder: (_, __) => Divider(
-                    height: 1,
-                    color: Colors.grey.shade300,
-                  ).paddingSymmetric(horizontal: 16),
+                  separatorBuilder: (_, __) => 10.width,
                   itemBuilder: (context, index) {
                     final service = clinicDetailCont.serviceList[index];
                     return GestureDetector(
                       onTap: () {
                         Get.to(
-                          () => ServiceDetailScreen(isFromClinicDetail: true),
-                          arguments: service,
+                          () => const ServiceDoctorsScreen(),
+                          arguments: {
+                            'service': service,
+                            'clinic': clinicDetailCont.clinicData.value,
+                          },
                         );
                       },
                       child: Container(
-                        color: Colors.transparent,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                service.name,
-                                style: primaryTextStyle(size: 14),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 14,
-                              color: Colors.grey.shade400,
-                            ),
-                          ],
+                            horizontal: 16, vertical: 10),
+                        decoration: boxDecorationDefault(
+                          color: appColorPrimary.withOpacity(0.08),
+                          borderRadius: radius(20),
+                          border: Border.all(
+                              color: appColorPrimary.withOpacity(0.2),
+                              width: 1),
+                        ),
+                        child: Text(
+                          service.name,
+                          style:
+                              boldTextStyle(size: 13, color: appColorPrimary),
                         ),
                       ),
                     );
                   },
                 ),
               ),
+            16.height,
           ],
         );
       },
     );
   }
 
-  /// Sessions and Gallery Links
-  Widget _buildSessionsAndGallery(BuildContext context) {
+  /// Contact Info section
+  Widget _buildContactInfo(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(locale.value.contactInfo, style: boldTextStyle(size: 16)),
+          12.height,
+          Row(
+            children: [
+              // Phone
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => launchCall(
+                      clinicDetailCont.clinicData.value.contactNumber),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    decoration: boxDecorationDefault(
+                      color: context.cardColor,
+                      borderRadius: radius(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CachedImageWidget(
+                          url: Assets.iconsIcCall,
+                          color: appColorPrimary,
+                          height: 18,
+                          width: 18,
+                        ),
+                        8.width,
+                        Flexible(
+                          child: Text(
+                            locale.value.contactNumber,
+                            style: boldTextStyle(size: 12, color: Colors.black),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ).visible(clinicDetailCont.clinicData.value.contactNumber
+                  .trim()
+                  .isNotEmpty),
+
+              12.width.visible(clinicDetailCont.clinicData.value.contactNumber
+                      .trim()
+                      .isNotEmpty &&
+                  clinicDetailCont.clinicData.value.email.isNotEmpty),
+
+              // Email
+              Expanded(
+                child: GestureDetector(
+                  onTap: () =>
+                      launchMail(clinicDetailCont.clinicData.value.email),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    decoration: boxDecorationDefault(
+                      color: context.cardColor,
+                      borderRadius: radius(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CachedImageWidget(
+                          url: Assets.iconsIcMail,
+                          color: appColorPrimary,
+                          height: 18,
+                          width: 18,
+                        ),
+                        8.width,
+                        Flexible(
+                          child: Text(
+                            locale.value.email,
+                            style: boldTextStyle(size: 12, color: Colors.black),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ).visible(clinicDetailCont.clinicData.value.email.isNotEmpty),
+            ],
+          ),
+          16.height,
+        ],
+      ),
+    );
+  }
+
+  /// Working Hours - compact summary: "مواعيد العمل من X إلى Y ماعدا يوم Z"
+  Widget _buildWorkingHours(BuildContext context) {
+    final openDays = clinicDetailCont.clinicData.value.clinicSession.openDays;
+    final closeDays = clinicDetailCont.clinicData.value.clinicSession.closeDays;
+
+    if (openDays.isEmpty && closeDays.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Get the most common schedule (majority hours)
+    final String startTime =
+        openDays.isNotEmpty ? _formatTime(openDays.first.startTime) : '';
+    final String endTime =
+        openDays.isNotEmpty ? _formatTime(openDays.first.endTime) : '';
+
+    // Find days with different hours than the majority
+    final Map<String, String> differentHours = {};
+    for (final day in openDays) {
+      final s = _formatTime(day.startTime);
+      final e = _formatTime(day.endTime);
+      if (s != startTime || e != endTime) {
+        differentHours[day.day] = '$s - $e';
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: boxDecorationDefault(
+          color: context.cardColor,
+          borderRadius: radius(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row with icon and title
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: appColorSecondary.withOpacity(0.1),
+                    borderRadius: radius(8),
+                  ),
+                  child: const CachedImageWidget(
+                    url: Assets.iconsIcClock,
+                    height: 20,
+                    width: 20,
+                    color: appColorSecondary,
+                  ),
+                ),
+                12.width,
+                Text(
+                  locale.value.workingHours,
+                  style: boldTextStyle(size: 16),
+                ),
+              ],
+            ),
+            14.height,
+
+            // Main schedule line: من X إلى Y
+            if (startTime.isNotEmpty && endTime.isNotEmpty)
+              RichText(
+                text: TextSpan(
+                  style: primaryTextStyle(size: 14),
+                  children: [
+                    TextSpan(
+                      text: '${locale.value.fromTime} ',
+                      style: secondaryTextStyle(size: 14),
+                    ),
+                    TextSpan(
+                      text: startTime,
+                      style: boldTextStyle(size: 14, color: appColorPrimary),
+                    ),
+                    TextSpan(
+                      text: ' ${locale.value.toTime} ',
+                      style: secondaryTextStyle(size: 14),
+                    ),
+                    TextSpan(
+                      text: endTime,
+                      style: boldTextStyle(size: 14, color: appColorPrimary),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Closed days line: ماعدا يوم X
+            if (closeDays.isNotEmpty) ...[
+              8.height,
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: closeDays.length == 1
+                          ? '${locale.value.exceptDay} '
+                          : '${locale.value.exceptDays} ',
+                      style: secondaryTextStyle(size: 13),
+                    ),
+                    TextSpan(
+                      text: closeDays.join(', '),
+                      style: boldTextStyle(size: 13, color: cancelStatusColor),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Days with different hours than the majority
+            if (differentHours.isNotEmpty) ...[
+              8.height,
+              ...differentHours.entries.map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${entry.key}: ',
+                          style: primaryTextStyle(size: 13),
+                        ),
+                        TextSpan(
+                          text: entry.value,
+                          style:
+                              boldTextStyle(size: 13, color: appColorSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Format time from "09:00:00" to "9:00 AM"
+  String _formatTime(String time) {
+    if (time.isEmpty) return '';
+    try {
+      final parts = time.split(':');
+      int hour = int.parse(parts[0]);
+      final minute = parts[1];
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour > 12) hour -= 12;
+      if (hour == 0) hour = 12;
+      return '$hour:$minute $period';
+    } catch (e) {
+      return time;
+    }
+  }
+
+  /// Gallery card
+  Widget _buildGalleryCard(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          16.height,
-          // Sessions
-          GestureDetector(
-            onTap: () => Get.to(() =>
-                ClinicSessionComponent(clinicDetailCont: clinicDetailCont)),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: boxDecorationDefault(
-                color: context.cardColor,
-                borderRadius: radius(12),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: appColorSecondary.withOpacity(0.1),
-                      borderRadius: radius(10),
-                    ),
-                    child: const CachedImageWidget(
-                      url: Assets.iconsIcClock,
-                      height: 24,
-                      width: 24,
-                      color: appColorSecondary,
-                    ),
-                  ),
-                  16.width,
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        locale.value.sessions,
-                        style: boldTextStyle(size: 15),
-                      ),
-                      4.height,
-                      Text(
-                        locale.value.clinicSessionsInformation,
-                        style: secondaryTextStyle(size: 12),
-                      ),
-                    ],
-                  ).expand(),
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 16, color: darkGray),
-                ],
-              ),
-            ),
-          ),
-
           12.height,
-
-          // Gallery
           Obx(
             () => GestureDetector(
               onTap: () => Get.to(() => ClinicGalleryListScreen(),

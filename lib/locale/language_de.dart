@@ -1847,4 +1847,31 @@ class LanguageDe extends BaseLanguage {
 
   @override
   String get mostServices => 'Meiste Dienste';
+
+  @override
+  String get workingHours => 'Arbeitszeiten';
+
+  @override
+  String get fromTime => 'Von';
+
+  @override
+  String get toTime => 'Bis';
+
+  @override
+  String get exceptDay => 'Außer';
+
+  @override
+  String get exceptDays => 'Außer';
+
+  @override
+  // TODO: implement mainBranch
+  String get mainBranch => 'Hauptzweigstelle';
+
+  @override
+  // TODO: implement openInMaps
+  String get openInMaps => 'In Maps öffnen';
+
+  @override
+  // TODO: implement otherBranches
+  String get otherBranches => 'Andere Zweigstellen';
 }

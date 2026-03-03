@@ -30,6 +30,7 @@ class ClinicListController extends GetxController {
   RxString priceMin = ''.obs;
   RxString priceMax = ''.obs;
   RxInt clinicId = (-1).obs;
+  RxBool isFromSearch = false.obs;
 
   @override
   void onInit() {
@@ -39,12 +40,16 @@ class ClinicListController extends GetxController {
     });
     if (Get.arguments is ServiceElement) {
       service(Get.arguments);
-    }
-    else if(Get.arguments   is Map){
-
+    } else if (Get.arguments is Map) {
+      final args = Get.arguments as Map;
+      if (args['isFromSearch'] == true) {
+        isFromSearch(true);
+        // Don't auto-load clinics; wait for user to search
+        super.onInit();
+        return;
+      }
       getClinicList();
-    }
-    else if (Get.arguments is int) {
+    } else if (Get.arguments is int) {
       clinicId(Get.arguments as int);
       log('clinicId==== $clinicId');
       getClinicList();

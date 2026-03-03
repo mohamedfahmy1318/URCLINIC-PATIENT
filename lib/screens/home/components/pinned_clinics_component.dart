@@ -18,9 +18,11 @@ class PinnedClinicsComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Use popularClinic as pinned clinics
-      final pinnedClinics =
+      final allClinics =
           homeController.dashboardData.value.popularClinic.selectedClinic;
+
+      /// Filter only pinned clinics (is_pending == 1)
+      final pinnedClinics = allClinics.where((c) => c.isPending == 1).toList();
 
       if (pinnedClinics.isEmpty) {
         return const Offstage();
@@ -61,6 +63,9 @@ class _PinnedClinicCard extends StatelessWidget {
 
   const _PinnedClinicCard({required this.clinic});
 
+  String get _imageUrl =>
+      clinic.logo.isNotEmpty ? clinic.logo : clinic.clinicImage;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -70,18 +75,20 @@ class _PinnedClinicCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Clinic Image
+            // Clinic Logo/Image
             Container(
               width: 65,
               height: 65,
               decoration: boxDecorationDefault(
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: appColorPrimary.withOpacity(0.2), width: 2),
+                  color: appColorPrimary.withOpacity(0.3),
+                  width: 2,
+                ),
               ),
               child: ClipOval(
                 child: CachedImageWidget(
-                  url: clinic.clinicImage,
+                  url: _imageUrl,
                   fit: BoxFit.cover,
                   width: 65,
                   height: 65,

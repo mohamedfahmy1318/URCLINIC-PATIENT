@@ -1846,4 +1846,31 @@ class LanguageFr extends BaseLanguage {
 
   @override
   String get mostServices => 'Plus de services';
+
+  @override
+  String get workingHours => 'Heures de travail';
+
+  @override
+  String get fromTime => 'De';
+
+  @override
+  String get toTime => 'À';
+
+  @override
+  String get exceptDay => 'Sauf le';
+
+  @override
+  String get exceptDays => 'Sauf les';
+
+  @override
+  // TODO: implement mainBranch
+  String get mainBranch => 'Branche principale';
+
+  @override
+  // TODO: implement openInMaps
+  String get openInMaps => 'Ouvrir dans Maps';
+
+  @override
+  // TODO: implement otherBranches
+  String get otherBranches => 'Autres branches';
 }

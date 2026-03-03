@@ -1824,4 +1824,28 @@ class LanguageEn extends BaseLanguage {
 
   @override
   String get mostServices => 'Most Services';
+
+  @override
+  String get workingHours => 'Working Hours';
+
+  @override
+  String get fromTime => 'From';
+
+  @override
+  String get toTime => 'To';
+
+  @override
+  String get exceptDay => 'Except';
+
+  @override
+  String get exceptDays => 'Except';
+
+  @override
+  String get otherBranches => 'Other Branches';
+
+  @override
+  String get mainBranch => 'Main Branch';
+
+  @override
+  String get openInMaps => 'Open in Maps';
 }

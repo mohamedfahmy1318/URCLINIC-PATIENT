@@ -47,30 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyArKI9CO5llksF76LC1Bgi4IblwnhURLOQ',
-    appId: '1:1033255788496:android:3c933da2e604c0c36f63d5',
-    messagingSenderId: '1033255788496',
-    projectId: 'clinic-app-86bcf',
-    storageBucket: 'clinic-app-86bcf.firebasestorage.app',
+    apiKey: 'AIzaSyCqOPRcTd-MpP8LRVuvTAQ4QHKqNDvq2QQ',
+    appId: '1:584658171555:android:8e30435e51b84b1a9bf116',
+    messagingSenderId: '584658171555',
+    projectId: 'urclinic-72a3e',
+    storageBucket: 'urclinic-72a3e.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDKrOCqpxr9jtuX0QQLj1gLPzn2SVMCWbk',
-    appId: '1:1033255788496:ios:eae7dda85cce4aba6f63d5',
-    messagingSenderId: '1033255788496',
-    projectId: 'clinic-app-86bcf',
-    storageBucket: 'clinic-app-86bcf.firebasestorage.app',
-    iosBundleId: 'com.wellness.customer',
+    apiKey: 'AIzaSyCJOVCOFAvHYfdBLfWyZAZNX6tzHHxqRmY',
+    appId: '1:584658171555:ios:cca1795b82fe4b369bf116',
+    messagingSenderId: '584658171555',
+    projectId: 'urclinic-72a3e',
+    storageBucket: 'urclinic-72a3e.firebasestorage.app',
+    iosBundleId: 'com.urclinic.patient',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBhEAKCQiMqYuhof0tJiyIkAwELtxHCn5E',
-    appId: '1:1033255788496:web:f1e2468e3bb308b16f63d5',
-    messagingSenderId: '1033255788496',
-    projectId: 'clinic-app-86bcf',
-    authDomain: 'clinic-app-86bcf.firebaseapp.com',
-    storageBucket: 'clinic-app-86bcf.firebasestorage.app',
-    measurementId: 'G-0MR0CSHDST',
+    apiKey: 'AIzaSyDcL6cJMuKf8wyFtaB2PRGgFKj6GKEChjQ',
+    appId: '1:584658171555:web:9ef9b9e7a342ab0d9bf116',
+    messagingSenderId: '584658171555',
+    projectId: 'urclinic-72a3e',
+    authDomain: 'urclinic-72a3e.firebaseapp.com',
+    storageBucket: 'urclinic-72a3e.firebasestorage.app',
   );
 
 }

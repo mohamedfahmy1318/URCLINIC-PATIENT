@@ -51,20 +51,25 @@ Future<void> applyLanguage(String code) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform).then((value) {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+      .then((value) {
     PushNotificationService().setupFirebaseMessaging();
     if (kReleaseMode) {
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
     }
   }).catchError(onError);
 
   await GetStorage.init();
   //
-  fontFamilyPrimaryGlobal = GoogleFonts.interTight(fontWeight: FontWeight.w500).fontFamily;
+  fontFamilyPrimaryGlobal =
+      GoogleFonts.interTight(fontWeight: FontWeight.w500).fontFamily;
   textPrimarySizeGlobal = 14;
-  fontFamilySecondaryGlobal = GoogleFonts.interTight(fontWeight: FontWeight.w400).fontFamily;
+  fontFamilySecondaryGlobal =
+      GoogleFonts.interTight(fontWeight: FontWeight.w400).fontFamily;
   textSecondarySizeGlobal = 12;
-  fontFamilyBoldGlobal = GoogleFonts.interTight(fontWeight: FontWeight.w600).fontFamily;
+  fontFamilyBoldGlobal =
+      GoogleFonts.interTight(fontWeight: FontWeight.w600).fontFamily;
   //
   defaultBlurRadius = 0;
   defaultRadius = 12;
@@ -75,14 +80,18 @@ void main() async {
   defaultAppButtonTextColorGlobal = Colors.white;
   passwordLengthGlobal = 8;
 
-  selectedLanguageCode(getValueFromLocal(SELECTED_LANGUAGE_CODE) ?? DEFAULT_LANGUAGE);
+  selectedLanguageCode(
+      getValueFromLocal(SELECTED_LANGUAGE_CODE) ?? DEFAULT_LANGUAGE);
 
-  await initialize(aLocaleLanguageList: languageList(), defaultLanguage: selectedLanguageCode.value);
+  await initialize(
+      aLocaleLanguageList: languageList(),
+      defaultLanguage: selectedLanguageCode.value);
 
   // Populate language list for settings dropdown
   appLanguageList.assignAll(languageList());
 
-  locale.value = await const AppLocalizations().load(Locale(selectedLanguageCode.value));
+  locale.value =
+      await const AppLocalizations().load(Locale(selectedLanguageCode.value));
 
   try {
     final getThemeFromLocal = getValueFromLocal(SettingsLocalConst.THEME_MODE);
@@ -115,7 +124,8 @@ class MyApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          localeResolutionCallback: (locale, supportedLocales) => Locale(selectedLanguageCode.value),
+          localeResolutionCallback: (locale, supportedLocales) =>
+              Locale(selectedLanguageCode.value),
           fallbackLocale: const Locale(DEFAULT_LANGUAGE),
           locale: Locale(selectedLanguageCode.value),
           theme: AppTheme.lightTheme,

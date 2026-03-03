@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "1033255788496",
-    "project_id": "clinic-app-86bcf",
-    "storage_bucket": "clinic-app-86bcf.firebasestorage.app"
+    "project_number": "584658171555",
+    "project_id": "urclinic-72a3e",
+    "storage_bucket": "urclinic-72a3e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1033255788496:android:3c933da2e604c0c36f63d5",
+        "mobilesdk_app_id": "1:584658171555:android:8e30435e51b84b1a9bf116",
         "android_client_info": {
-          "package_name": "com.wellness.customer"
+          "package_name": "com.urclinic.patient"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyArKI9CO5llksF76LC1Bgi4IblwnhURLOQ"
+          "current_key": "AIzaSyCqOPRcTd-MpP8LRVuvTAQ4QHKqNDvq2QQ"
         }
       ],
       "services": {

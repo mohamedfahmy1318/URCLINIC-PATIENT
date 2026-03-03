@@ -142,8 +142,6 @@ class PaymentController extends GetxController {
       payWithSadad(context);
     } else if (paymentOption.value == PaymentMethods.PAYMENT_METHOD_CINETPAY) {
       payWithCinetPay(context);
-    } else if (paymentOption.value == PaymentMethods.PAYMENT_METHOD_WALLET) {
-      payWithWallet(context);
     } else if (paymentOption.value == PaymentMethods.PAYMENT_METHOD_CASH && isCashPayment) {
       payWithCash(context);
     }
@@ -429,5 +427,4 @@ void reLoadBookingsOnDashboard() {
   } catch (e) {
     log('E: $e');
   }
-  AuthServiceApis.getUserWallet();
 }
