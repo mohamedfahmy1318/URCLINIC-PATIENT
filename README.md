@@ -1,4 +1,4 @@
-# KiviCare - Patient App
+# uRCLINIC patient- Patient App
 
 A new Flutter project.
 
