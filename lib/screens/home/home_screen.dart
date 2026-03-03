@@ -8,7 +8,6 @@ import '../../main.dart';
 import '../../utils/empty_error_state_widget.dart';
 
 import 'components/greetings_component.dart';
-import 'components/home_search_component.dart';
 import 'components/pinned_clinics_component.dart';
 import 'components/slider_component.dart';
 import 'components/sort_by_component.dart';
@@ -62,15 +61,12 @@ class HomeScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Search Bar
-                    const HomeSearchComponent(),
-                    // 2. Banner/Slider
+                    // 1. Banner/Slider
                     const SliderComponent(),
-                    // 3. Pinned Clinics
+                    // 2. Pinned Clinics
                     PinnedClinicsComponent(),
-                    // 4. Sort By / Browse By
+                    // 3. Clinics Grid
                     const SortByComponent(),
-                    // 5. Upcoming Appointments
                   ],
                 ),
               );

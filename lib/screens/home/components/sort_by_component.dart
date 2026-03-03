@@ -341,153 +341,83 @@ class _SortByComponentState extends State<SortByComponent> {
         return _buildEmptyState(locale.value.noDataFound);
       }
 
-      return ListView.separated(
+      return GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.85,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
         itemCount: clinics.length > 6 ? 6 : clinics.length,
-        separatorBuilder: (_, __) => 12.height,
         itemBuilder: (context, index) {
           final clinic = clinics[index];
-          return _buildClinicCard(clinic);
+          return _buildClinicGridCard(clinic);
         },
       );
     });
   }
 
-  Widget _buildClinicCard(Clinic clinic) {
+  Widget _buildClinicGridCard(Clinic clinic) {
     return GestureDetector(
       onTap: () => Get.to(() => ClinicDetailScreen(), arguments: clinic),
       child: Container(
-        padding: const EdgeInsets.all(12),
         decoration: boxDecorationDefault(
           color: context.cardColor,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Clinic Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: CachedImageWidget(
-                url: clinic.clinicImage,
-                height: 75,
-                width: 75,
-                fit: BoxFit.cover,
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+                child: CachedImageWidget(
+                  url: clinic.clinicImage,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
               ),
             ),
-            12.width,
-            // Clinic Info
+            // Clinic Name
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Name
-                  Text(
-                    clinic.name,
-                    style: boldTextStyle(size: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  6.height,
-                  // Address
-                  if (clinic.address.isNotEmpty)
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      clinic.name,
+                      style: boldTextStyle(size: 13),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    4.height,
+                    // Rating
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: 14, color: Colors.grey),
+                        const Icon(Icons.star,
+                            color: Colors.amber, size: 14),
                         4.width,
-                        Expanded(
-                          child: Text(
-                            clinic.address,
-                            style: secondaryTextStyle(size: 12),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Text(
+                          '${clinic.satisfactionPercentage}%',
+                          style: secondaryTextStyle(size: 11),
                         ),
                       ],
                     ),
-                  6.height,
-                  // Rating & Stats Row
-                  Row(
-                    children: [
-                      // Rating
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: boxDecorationDefault(
-                          color: Colors.amber.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.amber, size: 14),
-                            4.width,
-                            Text(
-                              '${clinic.satisfactionPercentage}%',
-                              style: boldTextStyle(
-                                  size: 11, color: Colors.amber.shade700),
-                            ),
-                          ],
-                        ),
-                      ),
-                      8.width,
-                      // Doctors count
-                      if (clinic.totalDoctors > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: boxDecorationDefault(
-                            color: appColorPrimary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.person,
-                                  size: 14, color: appColorPrimary),
-                              4.width,
-                              Text(
-                                '${clinic.totalDoctors}',
-                                style: boldTextStyle(
-                                    size: 11, color: appColorPrimary),
-                              ),
-                            ],
-                          ),
-                        ),
-                      8.width,
-                      // Services count
-                      if (clinic.totalServices > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: boxDecorationDefault(
-                            color: const Color(0xFF00BFA5).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.medical_services,
-                                  size: 14, color: const Color(0xFF00BFA5)),
-                              4.width,
-                              Text(
-                                '${clinic.totalServices}',
-                                style: boldTextStyle(
-                                    size: 11, color: const Color(0xFF00BFA5)),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            8.width,
-            // Arrow
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),
       ),
