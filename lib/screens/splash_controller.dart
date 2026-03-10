@@ -3,7 +3,6 @@
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/screens/home/home_controller.dart';
-import 'package:kivicare_patient/screens/walkthrough/walkthrough_screen.dart';
 import 'package:kivicare_patient/utils/app_common.dart';
 import 'package:kivicare_patient/utils/local_storage.dart';
 import '../main.dart';
@@ -64,10 +63,7 @@ class SplashScreenController extends GetxController {
   }
 
   void navigationLogic() {
-    if ((getValueFromLocal(SharedPreferenceConst.FIRST_TIME) ?? false) ==
-        false) {
-      Get.offAll(() => WalkthroughScreen());
-    } else if (getValueFromLocal(SharedPreferenceConst.IS_LOGGED_IN) == true) {
+    if (getValueFromLocal(SharedPreferenceConst.IS_LOGGED_IN) == true) {
       try {
         final userData = getValueFromLocal(SharedPreferenceConst.USER_DATA);
         isLoggedIn(true);

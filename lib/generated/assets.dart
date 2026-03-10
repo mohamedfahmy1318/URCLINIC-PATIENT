@@ -162,10 +162,4 @@ class Assets {
   static const String upiPaymentPaytm = 'assets/icons/upi_payment/paytm.png';
   static const String upiPaymentPhonepeIcon =
       'assets/icons/upi_payment/phonepe-icon.webp';
-  static const String walkthroughImagesWalkImage1 =
-      'assets/images/walkthrough_images/walk_image1.png';
-  static const String walkthroughImagesWalkImage2 =
-      'assets/images/walkthrough_images/walk_image2.png';
-  static const String walkthroughImagesWalkImage3 =
-      'assets/images/walkthrough_images/walk_image3.png';
 }
