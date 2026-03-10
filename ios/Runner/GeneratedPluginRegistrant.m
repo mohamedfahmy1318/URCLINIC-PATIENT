@@ -42,22 +42,10 @@
 @import firebase_messaging;
 #endif
 
-#if __has_include(<flutter_inappwebview_ios/InAppWebViewFlutterPlugin.h>)
-#import <flutter_inappwebview_ios/InAppWebViewFlutterPlugin.h>
-#else
-@import flutter_inappwebview_ios;
-#endif
-
 #if __has_include(<flutter_local_notifications/FlutterLocalNotificationsPlugin.h>)
 #import <flutter_local_notifications/FlutterLocalNotificationsPlugin.h>
 #else
 @import flutter_local_notifications;
-#endif
-
-#if __has_include(<flutter_paystack/FlutterPaystackPlugin.h>)
-#import <flutter_paystack/FlutterPaystackPlugin.h>
-#else
-@import flutter_paystack;
 #endif
 
 #if __has_include(<flutter_secure_storage/FlutterSecureStoragePlugin.h>)
@@ -102,12 +90,6 @@
 @import image_picker_ios;
 #endif
 
-#if __has_include(<midpay/MidpayPlugin.h>)
-#import <midpay/MidpayPlugin.h>
-#else
-@import midpay;
-#endif
-
 #if __has_include(<nb_utils/NbUtilsPlugin.h>)
 #import <nb_utils/NbUtilsPlugin.h>
 #else
@@ -132,18 +114,6 @@
 @import permission_handler_apple;
 #endif
 
-#if __has_include(<phonepe_payment_sdk/PhonePePaymentSdk.h>)
-#import <phonepe_payment_sdk/PhonePePaymentSdk.h>
-#else
-@import phonepe_payment_sdk;
-#endif
-
-#if __has_include(<razorpay_flutter/RazorpayFlutterPlugin.h>)
-#import <razorpay_flutter/RazorpayFlutterPlugin.h>
-#else
-@import razorpay_flutter;
-#endif
-
 #if __has_include(<shared_preferences_foundation/SharedPreferencesPlugin.h>)
 #import <shared_preferences_foundation/SharedPreferencesPlugin.h>
 #else
@@ -154,12 +124,6 @@
 #import <sqflite_darwin/SqflitePlugin.h>
 #else
 @import sqflite_darwin;
-#endif
-
-#if __has_include(<stripe_ios/StripeIosPlugin.h>)
-#import <stripe_ios/StripeIosPlugin.h>
-#else
-@import stripe_ios;
 #endif
 
 #if __has_include(<the_apple_sign_in/TheAppleSignInPlugin.h>)
@@ -183,9 +147,7 @@
   [FLTFirebaseCorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCorePlugin"]];
   [FLTFirebaseCrashlyticsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCrashlyticsPlugin"]];
   [FLTFirebaseMessagingPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseMessagingPlugin"]];
-  [InAppWebViewFlutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"InAppWebViewFlutterPlugin"]];
   [FlutterLocalNotificationsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterLocalNotificationsPlugin"]];
-  [FlutterPaystackPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterPaystackPlugin"]];
   [FlutterSecureStoragePlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterSecureStoragePlugin"]];
   [FluttertoastPlugin registerWithRegistrar:[registry registrarForPlugin:@"FluttertoastPlugin"]];
   [GeocodingPlugin registerWithRegistrar:[registry registrarForPlugin:@"GeocodingPlugin"]];
@@ -193,16 +155,12 @@
   [FLTGoogleMapsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleMapsPlugin"]];
   [FLTGoogleSignInPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleSignInPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
-  [MidpayPlugin registerWithRegistrar:[registry registrarForPlugin:@"MidpayPlugin"]];
   [NbUtilsPlugin registerWithRegistrar:[registry registrarForPlugin:@"NbUtilsPlugin"]];
   [FPPPackageInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPPackageInfoPlusPlugin"]];
   [PathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"PathProviderPlugin"]];
   [PermissionHandlerPlugin registerWithRegistrar:[registry registrarForPlugin:@"PermissionHandlerPlugin"]];
-  [PhonePePaymentSdk registerWithRegistrar:[registry registrarForPlugin:@"PhonePePaymentSdk"]];
-  [RazorpayFlutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"RazorpayFlutterPlugin"]];
   [SharedPreferencesPlugin registerWithRegistrar:[registry registrarForPlugin:@"SharedPreferencesPlugin"]];
   [SqflitePlugin registerWithRegistrar:[registry registrarForPlugin:@"SqflitePlugin"]];
-  [StripeIosPlugin registerWithRegistrar:[registry registrarForPlugin:@"StripeIosPlugin"]];
   [TheAppleSignInPlugin registerWithRegistrar:[registry registrarForPlugin:@"TheAppleSignInPlugin"]];
   [URLLauncherPlugin registerWithRegistrar:[registry registrarForPlugin:@"URLLauncherPlugin"]];
 }

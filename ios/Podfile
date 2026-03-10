@@ -40,6 +40,7 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
     target.build_configurations.each do |config|
           config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
             '$(inherited)',
@@ -86,6 +87,27 @@ post_install do |installer|
         ## dart: PermissionGroup.criticalAlerts
         # 'PERMISSION_CRITICAL_ALERTS=1'
           ]
+
+      # Xcode 26 simulator builds can fail while codesigning some Pod frameworks.
+      # Pods do not need signing for simulator runs.
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+      config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ''
+  config.build_settings['CODE_SIGN_IDENTITY'] = ''
+  config.build_settings['CODE_SIGN_IDENTITY[sdk=iphonesimulator*]'] = ''
+
+  # Also disable code signing for the main project's Debug configuration for simulators
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if config.name == 'Debug'
+          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+          config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+          config.build_settings['CODE_SIGNING_IDENTITY'] = ''
+        end
+      end
+    end
+  end
 
         end
   end

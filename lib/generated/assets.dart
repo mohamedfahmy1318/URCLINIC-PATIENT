@@ -113,15 +113,8 @@ class Assets {
   static const String imagesLocationPin = 'assets/images/location_pin.png';
   static const String imagesLockOutlined = 'assets/images/lock_outlined.png';
   static const String imagesMapPinLine = 'assets/images/map_pin_line.png';
-  static const String imagesMidtransLogo = 'assets/images/midtrans_logo.png';
   static const String imagesMoreMenu = 'assets/images/more_menu.png';
-  static const String imagesPaypalLogo = 'assets/images/paypal_logo.png';
-  static const String imagesPaystackLogo = 'assets/images/paystack_logo.png';
-  static const String imagesPhonepeLogo = 'assets/images/phonepe_logo.png';
-  static const String imagesRazorpayLogo = 'assets/images/razorpay_logo.png';
-  static const String imagesSadadLogo = 'assets/images/sadad_logo.png';
   static const String imagesSearch = 'assets/images/search.png';
-  static const String imagesStripeLogo = 'assets/images/stripe_logo.png';
   static const String imagesSuccessBg = 'assets/images/success_bg.png';
   static const String imagesTherapist = 'assets/images/therapist.png';
   static const String imagesTooth = 'assets/images/tooth.png';
