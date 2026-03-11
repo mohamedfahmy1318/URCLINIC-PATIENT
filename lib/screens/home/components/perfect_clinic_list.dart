@@ -14,7 +14,8 @@ class PerfectClinicComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (homeController.dashboardData.value.popularClinic.selectedClinic.isEmpty) {
+    if (homeController
+        .dashboardData.value.popularClinic.selectedClinic.isEmpty) {
       return const Offstage();
     }
 
@@ -28,7 +29,8 @@ class PerfectClinicComponent extends StatelessWidget {
             onTap: () {
               Get.to(
                 () => ClinicListComponent(
-                  title: homeController.dashboardData.value.popularClinic.subTitle,
+                  title:
+                      homeController.dashboardData.value.popularClinic.subTitle,
                   isFromDashboard: true,
                 ),
                 arguments: {"isPopular": 1},
@@ -40,11 +42,14 @@ class PerfectClinicComponent extends StatelessWidget {
             () => HorizontalList(
               spacing: 16,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: homeController.dashboardData.value.popularClinic.selectedClinic.length,
+              itemCount: homeController
+                  .dashboardData.value.popularClinic.selectedClinic.length,
               itemBuilder: (context, index) {
                 return PopularClinicCard(
-                  clinicElement: homeController.dashboardData.value.popularClinic.selectedClinic[index],
+                  clinicElement: homeController
+                      .dashboardData.value.popularClinic.selectedClinic[index],
                   width: Get.width / 1.2,
+                  showLogo: false,
                 );
               },
             ),

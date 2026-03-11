@@ -60,6 +60,8 @@ abstract class BaseLanguage {
 
   String get yourInternetIsNotWorking;
 
+  String get location;
+
   String get profileUpdatedSuccessfully;
 
   String get wouldYouLikeToSetProfilePhotoAs;
@@ -702,6 +704,8 @@ abstract class BaseLanguage {
 
   String get goToAppointments;
 
+  String get goToHistory;
+
   String get noteForCashPaymentPurposesDontUseThePayNowBut;
 
   String get choosePaymentMethod;
@@ -1151,4 +1155,21 @@ abstract class BaseLanguage {
   String get otherBranches;
   String get mainBranch;
   String get openInMaps;
+
+  // AI Chat
+  String get aiChatTitle;
+  String get aiChatWelcomeMessage;
+  String get aiChatHint;
+  String get aiChatTyping;
+  String get aiChatCopiedMessage;
+  String get aiChatMissingApiKey;
+  String get aiChatNoInternet;
+  String get aiChatKeyPermissionError;
+  String get aiChatNetworkError;
+  String get aiChatGenericError;
+  String get aiChatSuggestion1;
+  String get aiChatSuggestion2;
+  String get aiChatSuggestion3;
+  String get aiChatSuggestion4;
+  String get aiChatSystemPrompt;
 }

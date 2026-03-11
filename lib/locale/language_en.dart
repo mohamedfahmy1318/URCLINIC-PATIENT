@@ -1115,6 +1115,9 @@ class LanguageEn extends BaseLanguage {
   String get goToAppointments => "Go to Appointments";
 
   @override
+  String get goToHistory => "Go to History";
+
+  @override
   String get noteForCashPaymentPurposesDontUseThePayNowBut =>
       "Note: For cash payment purposes, don't use the 'Pay Now' button. If you want to make a payment with cash, you can manually give the cash to the doctor and complete your appointment by Doctor side.";
 
@@ -1505,6 +1508,64 @@ class LanguageEn extends BaseLanguage {
 
   @override
   String get phoneNumber => 'Phone Number';
+
+  @override
+  String get aiChatTitle => 'AI Chat';
+
+  @override
+  String get aiChatWelcomeMessage =>
+      'Hi! I am the smart assistant for URCLINIC.\nHow can I help you today?';
+
+  @override
+  String get aiChatHint => 'Type your message...';
+
+  @override
+  String get aiChatTyping => 'Typing...';
+
+  @override
+  String get aiChatCopiedMessage => 'Message copied';
+
+  @override
+  String get aiChatMissingApiKey =>
+      'Gemini API key is not configured. Add GEMINI_API_KEY and restart the app.';
+
+  @override
+  String get aiChatNoInternet =>
+      'No internet connection. Check your network and try again.';
+
+  @override
+  String get aiChatKeyPermissionError =>
+      'Failed to connect to AI service due to API key or permission settings. Check GEMINI_API_KEY and Gemini API access.';
+
+  @override
+  String get aiChatNetworkError =>
+      'Connection error. Please check your internet and try again.';
+
+  @override
+  String get aiChatGenericError =>
+      'Unable to send the message right now. Please try again later.';
+
+  @override
+  String get aiChatSuggestion1 => '🦷 How do I keep my teeth healthy?';
+
+  @override
+  String get aiChatSuggestion2 => '😬 What causes tooth decay?';
+
+  @override
+  String get aiChatSuggestion3 => '🪥 What is the correct way to brush teeth?';
+
+  @override
+  String get aiChatSuggestion4 => '🩺 When should I visit the dentist?';
+
+  @override
+  String get aiChatSystemPrompt =>
+      'You are a smart medical assistant in the URCLINIC clinic app. '
+      'Help patients by answering their general medical questions, '
+      'health tips, and information about medical services. '
+      'Always respond kindly and professionally. '
+      'If the question requires a precise medical diagnosis, '
+      'advise the patient to visit a doctor. '
+      'Respond in the language used by the patient.';
 
   @override
   String get chooseImage => 'Choose Image';

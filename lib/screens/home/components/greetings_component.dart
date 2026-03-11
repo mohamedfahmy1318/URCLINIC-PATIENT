@@ -8,6 +8,7 @@ import '../../../components/cached_image_widget.dart';
 import '../../../generated/assets.dart';
 import '../../../utils/colors.dart';
 import '../../auth/other/notification_screen.dart';
+import '../../clinic/clinic_map_screen.dart';
 import '../../clinic/clinics_list_screen.dart';
 import 'ai_chat_screen.dart';
 
@@ -42,6 +43,19 @@ class GreetingsComponent extends StatelessWidget {
             behavior: HitTestBehavior.translucent,
             child: const Icon(
               Icons.chat_bubble_outline,
+              color: appColorPrimary,
+              size: 24,
+            ),
+          ),
+          12.width,
+          // Nearby Location icon
+          GestureDetector(
+            onTap: () {
+              Get.to(() => ClinicMapScreen());
+            },
+            behavior: HitTestBehavior.translucent,
+            child: const Icon(
+              Icons.near_me_outlined,
               color: appColorPrimary,
               size: 24,
             ),

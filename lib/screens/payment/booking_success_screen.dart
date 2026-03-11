@@ -34,38 +34,32 @@ class BookingSuccessScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     alignment: Alignment.center,
-                    decoration: boxDecorationDefault(color: appColorPrimary, shape: BoxShape.circle),
+                    decoration: boxDecorationDefault(
+                        color: appColorPrimary, shape: BoxShape.circle),
                     child: Image.asset(Assets.imagesConfirm, scale: 1),
                   ),
                   24.height,
-                  Text(locale.value.great, style: boldTextStyle(color: appColorSecondary), textAlign: TextAlign.center),
+                  Text(locale.value.great,
+                      style: boldTextStyle(color: appColorSecondary),
+                      textAlign: TextAlign.center),
                   16.height,
-                  Text(locale.value.bookingSuccessful, style: primaryTextStyle(size: 18)),
+                  Text(locale.value.bookingSuccessful,
+                      style: primaryTextStyle(size: 18)),
                   8.height,
-                  Text(locale.value.yourAppointmentHasBeenBookedSuccessfully, textAlign: TextAlign.center, style: secondaryTextStyle()),
+                  Text(locale.value.yourAppointmentHasBeenBookedSuccessfully,
+                      textAlign: TextAlign.center, style: secondaryTextStyle()),
                   32.height,
                   Wrap(
                     runSpacing: 8,
                     spacing: 4,
-                    children: List.generate(Get.width ~/ 14, (index) => Container(width: 8, height: 2, decoration: boxDecorationDefault(color: context.dividerColor.withValues(alpha: 0.3)))),
-                  ),
-                  32.height,
-                  Text(
-                    "To ${saveBookingRes.value.saveBookingResData.clinicName.capitalizeEachWord()} On ${saveBookingRes.value.saveBookingResData.appointmentDate.dateInDMMMMyyyyFormat} At ${saveBookingRes.value.saveBookingResData.appointmentTime.format24HourtoAMPM} ${saveBookingRes.value.saveBookingResData.endTime.isNotEmpty ? "-" : ""} ${saveBookingRes.value.saveBookingResData.endTime.isNotEmpty ? saveBookingRes.value.saveBookingResData.endTime.format24HourtoAMPM : ""}",
-                    textAlign: TextAlign.center,
-                    style: secondaryTextStyle(),
-                  ).paddingSymmetric(horizontal: 16),
-                  32.height,
-                  Text(
-                    saveBookingRes.value.saveBookingResData.advancePaidAmount != 0 ? locale.value.advancePayment : locale.value.totalPayment,
-                    textAlign: TextAlign.center,
-                    style: boldTextStyle(color: secondaryTextColor),
-                  ),
-                  16.height,
-                  PriceWidget(
-                    price: saveBookingRes.value.saveBookingResData.advancePaidAmount != 0 ? saveBookingRes.value.saveBookingResData.advancePaidAmount : saveBookingRes.value.saveBookingResData.totalAmount,
-                    color: appColorPrimary,
-                    size: 20,
+                    children: List.generate(
+                        Get.width ~/ 14,
+                        (index) => Container(
+                            width: 8,
+                            height: 2,
+                            decoration: boxDecorationDefault(
+                                color: context.dividerColor
+                                    .withValues(alpha: 0.3)))),
                   ),
                 ],
               ),
@@ -75,13 +69,15 @@ class BookingSuccessScreen extends StatelessWidget {
               left: 16,
               right: 16,
               child: AppButton(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 text: locale.value.goToAppointments,
                 color: appColorSecondary,
                 textStyle: appButtonTextStyleWhite,
                 onTap: () {
                   /// To Clear Value
-                  saveBookingRes(SaveBookingRes(saveBookingResData: SaveBookingResData()));
+                  saveBookingRes(
+                      SaveBookingRes(saveBookingResData: SaveBookingResData()));
                   Get.back();
                 },
               ),

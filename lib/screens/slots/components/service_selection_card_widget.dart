@@ -6,8 +6,6 @@ import '../../../components/cached_image_widget.dart';
 import '../../../generated/assets.dart';
 import '../../../main.dart';
 import '../../../utils/colors.dart';
-import '../../../utils/constants.dart';
-import '../../../utils/price_widget.dart';
 import '../../service/model/service_list_model.dart';
 
 class ServiceSelectionCardWidget extends StatelessWidget {
@@ -84,54 +82,9 @@ class ServiceSelectionCardWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  serviceElement.name,
+                  serviceElement.localizedName,
                   overflow: TextOverflow.ellipsis,
                   style: boldTextStyle(size: 16),
-                ),
-                12.height,
-                Marquee(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (serviceElement.isDiscount)
-                        PriceWidget(
-                                price: serviceElement.payableAmount, size: 18)
-                            .paddingRight(6),
-                      PriceWidget(
-                        price: serviceElement.assignDoctor.isNotEmpty
-                            ? serviceElement.assignDoctor
-                                    .firstWhere(
-                                        (e) =>
-                                            e.serviceId ==
-                                            serviceElement.systemServiceId,
-                                        orElse: () =>
-                                            serviceElement.assignDoctor.first)
-                                    .priceDetail
-                                    .servicePrice +
-                                serviceElement.totalInclusiveTax
-                            : serviceElement.charges,
-                        isLineThroughEnabled:
-                            serviceElement.isDiscount ? true : false,
-                        size: serviceElement.isDiscount ? 14 : 18,
-                        color: serviceElement.isDiscount
-                            ? textSecondaryColorGlobal
-                            : appColorPrimary,
-                      ),
-                      if (serviceElement.isDiscount)
-                        if (serviceElement.discountType == TaxType.PERCENTAGE)
-                          Text(
-                            '${serviceElement.discountValue}% ${locale.value.off}',
-                            style: boldTextStyle(color: greenColor, size: 14),
-                          ).paddingLeft(8)
-                        else if (serviceElement.discountType == TaxType.FIXED)
-                          PriceWidget(
-                            price: serviceElement.discountValue,
-                            color: greenColor,
-                            size: 14,
-                            isDiscountedPrice: true,
-                          ).paddingLeft(6),
-                    ],
-                  ),
                 ),
               ],
             ).expand(),

@@ -32,9 +32,21 @@ class SortByComponent extends StatelessWidget {
 
         // Clinics Grid
         Obx(() {
-          final clinics = List<Clinic>.from(
+          final popularClinics = List<Clinic>.from(
             homeController.dashboardData.value.popularClinic.selectedClinic,
           );
+          final nearByClinics = List<Clinic>.from(
+            homeController.dashboardData.value.nearByClinic,
+          );
+
+          final List<Clinic> clinics = <Clinic>[];
+          final Set<int> addedClinicIds = <int>{};
+
+          for (final clinic in [...popularClinics, ...nearByClinics]) {
+            if (addedClinicIds.add(clinic.id)) {
+              clinics.add(clinic);
+            }
+          }
 
           if (clinics.isEmpty) {
             return Container(
@@ -62,7 +74,7 @@ class SortByComponent extends StatelessWidget {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
-            itemCount: clinics.length > 6 ? 6 : clinics.length,
+            itemCount: clinics.length > 5 ? 5 : clinics.length,
             itemBuilder: (context, index) {
               final clinic = clinics[index];
               return _buildClinicGridCard(context, clinic);
@@ -102,34 +114,6 @@ class SortByComponent extends StatelessWidget {
                       height: double.infinity,
                     ),
                   ),
-                  // Clinic Logo
-                  if (clinic.logo.isNotEmpty)
-                    Positioned(
-                      bottom: -14,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: context.cardColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: CachedImageWidget(
-                            url: clinic.logo,
-                            width: 28,
-                            height: 28,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),

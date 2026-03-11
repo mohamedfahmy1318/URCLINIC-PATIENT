@@ -1,5 +1,7 @@
 import 'clinic_detail_model.dart';
 
+import '../../../utils/app_common.dart';
+
 class ClinicsRes {
   bool status;
   List<Clinic> data;
@@ -102,6 +104,7 @@ class Clinic {
   String description;
   String systemServiceCategory;
   String specialty;
+  String specialtyAr;
   String contactNumber;
   int countryId;
   int stateId;
@@ -145,6 +148,11 @@ class Clinic {
   int satisfactionPercentage;
   int totalVerifiedDoctor;
 
+  String get localizedSpecialty =>
+      selectedLanguageCode.value == 'ar' && specialtyAr.isNotEmpty
+          ? specialtyAr
+          : specialty;
+
   Clinic({
     this.id = -1,
     this.slug = "",
@@ -153,6 +161,7 @@ class Clinic {
     this.description = "",
     this.systemServiceCategory = "",
     this.specialty = "",
+    this.specialtyAr = "",
     this.contactNumber = "",
     this.countryId = -1,
     this.stateId = -1,
@@ -203,6 +212,7 @@ class Clinic {
           ? json['system_service_category']
           : "",
       specialty: json['specialty'] is String ? json['specialty'] : "",
+      specialtyAr: json['specialty_ar'] is String ? json['specialty_ar'] : "",
       contactNumber:
           json['contact_number'] is String ? json['contact_number'] : "",
       countryId: json['country_id'] is int ? json['country_id'] : -1,
@@ -268,6 +278,7 @@ class Clinic {
       'description': description,
       'system_service_category': systemServiceCategory,
       'specialty': specialty,
+      'specialty_ar': specialtyAr,
       'contact_number': contactNumber,
       'country_id': countryId,
       'state_id': stateId,

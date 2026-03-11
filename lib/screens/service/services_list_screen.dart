@@ -21,9 +21,14 @@ class ServiceListScreen extends StatelessWidget {
   final bool isFromClinicDetail;
   final bool isFromDashboard;
 
-  ServiceListScreen({super.key, this.title, this.isFromClinicDetail = false, this.isFromDashboard = false});
+  ServiceListScreen(
+      {super.key,
+      this.title,
+      this.isFromClinicDetail = false,
+      this.isFromDashboard = false});
 
-  final ServiceListController serviceListCont = Get.put(ServiceListController());
+  final ServiceListController serviceListCont =
+      Get.put(ServiceListController());
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +96,9 @@ class ServiceListScreen extends StatelessWidget {
                         height: 46,
                         width: 46,
                         alignment: Alignment.center,
-                        decoration: boxDecorationDefault(color: appColorPrimary, borderRadius: BorderRadius.circular(12)),
+                        decoration: boxDecorationDefault(
+                            color: appColorPrimary,
+                            borderRadius: BorderRadius.circular(12)),
                         child: const CachedImageWidget(
                           url: Assets.iconsIcFilter,
                           height: 28,
@@ -110,7 +117,8 @@ class ServiceListScreen extends StatelessWidget {
                             ),
                             child: Text(
                               '${serviceListCont.selectedFilterCount.value}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 10),
                             ),
                           ),
                         ),
@@ -132,12 +140,15 @@ class ServiceListScreen extends StatelessWidget {
                   },
                 ).paddingSymmetric(horizontal: 32);
               },
-              loadingWidget: serviceListCont.isLoading.value ? const Offstage() : const LoaderWidget(),
+              loadingWidget: serviceListCont.isLoading.value
+                  ? const Offstage()
+                  : const LoaderWidget(),
               onSuccess: (p0) {
                 if (serviceListCont.serviceList.isEmpty) {
                   return NoDataWidget(
                     title: locale.value.noServicesFoundAtAMoment,
-                    subTitle: '${locale.value.looksLikeThereIsNoServicesForThis}$appbarTitle, ${locale.value.wellKeepYouPostedWhenTheresAnUpdate}',
+                    subTitle:
+                        '${locale.value.looksLikeThereIsNoServicesForThis}$appbarTitle, ${locale.value.wellKeepYouPostedWhenTheresAnUpdate}',
                     titleTextStyle: primaryTextStyle(),
                     imageWidget: const EmptyStateWidget(),
                     retryText: locale.value.reload,
@@ -170,8 +181,11 @@ class ServiceListScreen extends StatelessWidget {
                       itemCount: serviceListCont.serviceList.length,
                       listAnimationType: ListAnimationType.FadeIn,
                       itemBuilder: (ctx, index) {
-                        final ServiceElement serviceElement = serviceListCont.serviceList[index];
-                        return ServiceCard(serviceElement: serviceElement, isFromClinicDetail: isFromClinicDetail);
+                        final ServiceElement serviceElement =
+                            serviceListCont.serviceList[index];
+                        return ServiceCard(
+                            serviceElement: serviceElement,
+                            isFromClinicDetail: isFromClinicDetail);
                       },
                     ),
                   ],

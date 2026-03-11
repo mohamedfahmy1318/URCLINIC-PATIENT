@@ -238,10 +238,10 @@ class ClinicDetailScreen extends StatelessWidget {
                     ).visible(
                         clinicDetailCont.clinicData.value.name.isNotEmpty),
                     if (clinicDetailCont
-                        .clinicData.value.specialty.isNotEmpty) ...[
+                        .clinicData.value.localizedSpecialty.isNotEmpty) ...[
                       4.height,
                       Text(
-                        clinicDetailCont.clinicData.value.specialty,
+                        clinicDetailCont.clinicData.value.localizedSpecialty,
                         style: secondaryTextStyle(size: 13),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -277,8 +277,8 @@ class ClinicDetailScreen extends StatelessWidget {
                                   .isNotEmpty
                               ? locale.value.selectBranch
                               : locale.value.address,
-                          style: boldTextStyle(
-                              size: 12, color: appColorPrimary)),
+                          style:
+                              boldTextStyle(size: 12, color: appColorPrimary)),
                     ],
                   ),
                 ),
@@ -346,7 +346,7 @@ class ClinicDetailScreen extends StatelessWidget {
                               width: 1),
                         ),
                         child: Text(
-                          service.name,
+                          service.localizedName,
                           style:
                               boldTextStyle(size: 13, color: appColorPrimary),
                         ),

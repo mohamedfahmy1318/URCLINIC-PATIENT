@@ -61,7 +61,7 @@ class _ServiceDoctorsScreenState extends State<ServiceDoctorsScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffoldNew(
-      appBartitleText: service.name,
+      appBartitleText: service.localizedName,
       scaffoldBackgroundColor: context.scaffoldBackgroundColor,
       appBarVerticalSize: Get.height * 0.12,
       isLoading: isLoading,

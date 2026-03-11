@@ -1104,6 +1104,9 @@ class LanguageAr extends BaseLanguage {
   String get goToAppointments => "اذهب إلى المواعيد";
 
   @override
+  String get goToHistory => "اذهب إلى السجل";
+
+  @override
   String get noteForCashPaymentPurposesDontUseThePayNowBut =>
       'ملاحظة: لأغراض الدفع النقدي ، لا تستخدم زر "الدفع الآن".إذا كنت ترغب في إجراء دفعة نقدًا ، فيمكنك إعطاء الأموال يدويًا للطبيب وإكمال موعدك من جانب الطبيب.';
 
@@ -1497,6 +1500,63 @@ class LanguageAr extends BaseLanguage {
 
   @override
   String get phoneNumber => 'رقم التليفون';
+
+  @override
+  String get aiChatTitle => 'الدردشة الذكية';
+
+  @override
+  String get aiChatWelcomeMessage =>
+      'مرحباً! أنا المساعد الذكي لعيادة URCLINIC.\nكيف يمكنني مساعدتك اليوم؟';
+
+  @override
+  String get aiChatHint => 'اكتب رسالتك...';
+
+  @override
+  String get aiChatTyping => 'يكتب...';
+
+  @override
+  String get aiChatCopiedMessage => 'تم نسخ الرسالة';
+
+  @override
+  String get aiChatMissingApiKey =>
+      'لم يتم إعداد مفتاح Gemini بعد. أضف GEMINI_API_KEY ثم أعد تشغيل التطبيق.';
+
+  @override
+  String get aiChatNoInternet =>
+      'لا يوجد اتصال بالإنترنت. تحقق من الشبكة ثم حاول مرة أخرى.';
+
+  @override
+  String get aiChatKeyPermissionError =>
+      'فشل الاتصال بخدمة الذكاء الاصطناعي بسبب إعدادات المفتاح أو الصلاحيات. تحقق من GEMINI_API_KEY وتفعيل Gemini API.';
+
+  @override
+  String get aiChatNetworkError =>
+      'حدث خطأ في الاتصال. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.';
+
+  @override
+  String get aiChatGenericError =>
+      'تعذر إرسال الرسالة حالياً. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get aiChatSuggestion1 => '🦷 كيف أحافظ على أسناني؟';
+
+  @override
+  String get aiChatSuggestion2 => '😬 ما أسباب تسوس الأسنان؟';
+
+  @override
+  String get aiChatSuggestion3 => '🪥 ما الطريقة الصحيحة لتنظيف الأسنان؟';
+
+  @override
+  String get aiChatSuggestion4 => '🩺 متى يجب زيارة طبيب الأسنان؟';
+
+  @override
+  String get aiChatSystemPrompt => 'أنت مساعد طبي ذكي في تطبيق عيادة URCLINIC. '
+      'ساعد المرضى بالإجابة عن أسئلتهم الطبية العامة، '
+      'ونصائح صحية، ومعلومات عن الخدمات الطبية. '
+      'أجب دائماً بلطف واحترافية. '
+      'إذا كان السؤال يتطلب تشخيصاً طبياً دقيقاً، '
+      'انصح المريض بزيارة الطبيب. '
+      'أجب باللغة التي يستخدمها المريض.';
 
   @override
   String get chooseImage => 'اختر الصورة';

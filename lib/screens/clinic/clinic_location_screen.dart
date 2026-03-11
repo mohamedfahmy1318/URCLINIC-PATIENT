@@ -116,10 +116,10 @@ class ClinicLocationScreen extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (clinic.specialty.isNotEmpty) ...[
+                if (clinic.localizedSpecialty.isNotEmpty) ...[
                   4.height,
                   Text(
-                    clinic.specialty,
+                    clinic.localizedSpecialty,
                     style: secondaryTextStyle(size: 13),
                   ),
                 ],

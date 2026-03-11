@@ -18,7 +18,8 @@ import '../home_controller.dart';
 class QuickBookComponent extends StatelessWidget {
   QuickBookComponent({super.key});
 
-  final QuickBookController quickBookController = Get.put(QuickBookController());
+  final QuickBookController quickBookController =
+      Get.put(QuickBookController());
   final HomeController homeScreenController = Get.find();
 
   @override
@@ -48,7 +49,8 @@ class QuickBookComponent extends StatelessWidget {
                       () => BottomSelectionSheet(
                         title: locale.value.chooseService,
                         hintText: locale.value.searchForService,
-                        hasError: quickBookController.hasErrorFetchingServices.value,
+                        hasError:
+                            quickBookController.hasErrorFetchingServices.value,
                         isEmpty: quickBookController.serviceList.isEmpty,
                         isLoading: quickBookController.isLoading,
                         currentPage: quickBookController.currentPage,
@@ -70,10 +72,15 @@ class QuickBookComponent extends StatelessWidget {
                           itemBuilder: (ctx, index) {
                             return GestureDetector(
                               onTap: () {
-                                quickBookController.selectedServiceId.value = quickBookController.serviceList[index].id;
-                                quickBookController.serviceCont.text = quickBookController.serviceList[index].name;
-                                quickBookController.selectedService.value = quickBookController.serviceCont.text;
-                                quickBookController.serviceData = quickBookController.serviceList[index];
+                                quickBookController.selectedServiceId.value =
+                                    quickBookController.serviceList[index].id;
+                                quickBookController.serviceCont.text =
+                                    quickBookController
+                                        .serviceList[index].localizedName;
+                                quickBookController.selectedService.value =
+                                    quickBookController.serviceCont.text;
+                                quickBookController.serviceData =
+                                    quickBookController.serviceList[index];
                                 quickBookController.dateCont.clear();
                                 quickBookController.timeCont.clear();
                                 quickBookController.getClinicList();
@@ -84,13 +91,16 @@ class QuickBookComponent extends StatelessWidget {
                                 margin: const EdgeInsets.only(bottom: 12),
                                 decoration: boxDecorationDefault(
                                   borderRadius: BorderRadius.circular(6),
-                                  color: isDarkMode.value ? appScreenBackgroundDark : appScreenBackground,
+                                  color: isDarkMode.value
+                                      ? appScreenBackgroundDark
+                                      : appScreenBackground,
                                 ),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     CachedImageWidget(
-                                      url: quickBookController.serviceList[index].serviceImage,
+                                      url: quickBookController
+                                          .serviceList[index].serviceImage,
                                       width: 60,
                                       radius: 6,
                                       fit: BoxFit.cover,
@@ -98,12 +108,26 @@ class QuickBookComponent extends StatelessWidget {
                                     ),
                                     12.width,
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text(quickBookController.serviceList[index].name, style: boldTextStyle(size: 16, color: isDarkMode.value ? null : darkGrayTextColor)),
+                                        Text(
+                                            quickBookController
+                                                .serviceList[index]
+                                                .localizedName,
+                                            style: boldTextStyle(
+                                                size: 16,
+                                                color: isDarkMode.value
+                                                    ? null
+                                                    : darkGrayTextColor)),
                                         2.height,
-                                        Text(quickBookController.serviceList[index].description, style: primaryTextStyle(size: 12, color: dividerColor)),
+                                        Text(
+                                            quickBookController
+                                                .serviceList[index]
+                                                .localizedDescription,
+                                            style: primaryTextStyle(
+                                                size: 12, color: dividerColor)),
                                       ],
                                     ).expand(),
                                   ],
@@ -134,10 +158,13 @@ class QuickBookComponent extends StatelessWidget {
                   filled: true,
                   fillColor: context.cardColor,
                 ),
-                suffix: const Icon(Icons.arrow_drop_down_outlined, color: Colors.grey),
+                suffix: const Icon(Icons.arrow_drop_down_outlined,
+                    color: Colors.grey),
               ),
             ),
-            Obx(() => Text(quickBookController.serviceError.value, style: secondaryTextStyle(color: Colors.red)).visible(quickBookController.serviceError.value.isNotEmpty)),
+            Obx(() => Text(quickBookController.serviceError.value,
+                    style: secondaryTextStyle(color: Colors.red))
+                .visible(quickBookController.serviceError.value.isNotEmpty)),
             16.height,
             SizedBox(
               height: 40,
@@ -147,8 +174,10 @@ class QuickBookComponent extends StatelessWidget {
                   // Clear previous errors
                   quickBookController.clinicError.value = "";
                   if (quickBookController.selectedServiceId.value.isNegative) {
-                    quickBookController.serviceError.value = locale.value.kindlyChooseAServiceFirst;
-                    Future.delayed(const Duration(seconds: 2), () => quickBookController.serviceError.value = "");
+                    quickBookController.serviceError.value =
+                        locale.value.kindlyChooseAServiceFirst;
+                    Future.delayed(const Duration(seconds: 2),
+                        () => quickBookController.serviceError.value = "");
                     return;
                   }
                   quickBookController.getClinicList();
@@ -158,8 +187,10 @@ class QuickBookComponent extends StatelessWidget {
                       () => BottomSelectionSheet(
                         title: locale.value.chooseClinic,
                         hintText: locale.value.searchForClinic,
-                        hasError: quickBookController.hasErrorFetchingClinic.value,
-                        isEmpty: !quickBookController.isLoading.value && quickBookController.clinicList.isEmpty,
+                        hasError:
+                            quickBookController.hasErrorFetchingClinic.value,
+                        isEmpty: !quickBookController.isLoading.value &&
+                            quickBookController.clinicList.isEmpty,
                         isLoading: quickBookController.isLoading,
                         searchApiCall: (p0) {
                           quickBookController.searchClinic(p0);
@@ -168,7 +199,9 @@ class QuickBookComponent extends StatelessWidget {
                         onRetry: () {
                           quickBookController.getClinicList();
                         },
-                        listWidget: ClinicListWidget(clinicList: quickBookController.clinicList).expand(),
+                        listWidget: ClinicListWidget(
+                                clinicList: quickBookController.clinicList)
+                            .expand(),
                       ),
                     ),
                   );
@@ -182,10 +215,13 @@ class QuickBookComponent extends StatelessWidget {
                   filled: true,
                   fillColor: context.cardColor,
                 ),
-                suffix: const Icon(Icons.arrow_drop_down_outlined, color: Colors.grey),
+                suffix: const Icon(Icons.arrow_drop_down_outlined,
+                    color: Colors.grey),
               ),
             ),
-            Obx(() => Text(quickBookController.clinicError.value, style: secondaryTextStyle(color: Colors.red)).visible(quickBookController.clinicError.value.isNotEmpty)),
+            Obx(() => Text(quickBookController.clinicError.value,
+                    style: secondaryTextStyle(color: Colors.red))
+                .visible(quickBookController.clinicError.value.isNotEmpty)),
             16.height,
             SizedBox(
               height: 40,
@@ -194,13 +230,17 @@ class QuickBookComponent extends StatelessWidget {
                 onTap: () async {
                   quickBookController.dateError.value = "";
                   if (quickBookController.selectedServiceId.value.isNegative) {
-                    quickBookController.serviceError.value = locale.value.kindlyChooseAServiceFirst;
-                    Future.delayed(const Duration(seconds: 2), () => quickBookController.serviceError.value = "");
+                    quickBookController.serviceError.value =
+                        locale.value.kindlyChooseAServiceFirst;
+                    Future.delayed(const Duration(seconds: 2),
+                        () => quickBookController.serviceError.value = "");
                     return;
                   }
                   if (quickBookController.selectedClinicId.value.isNegative) {
-                    quickBookController.clinicError.value = locale.value.kindlyChooseAClinicFirst;
-                    Future.delayed(const Duration(seconds: 2), () => quickBookController.clinicError.value = "");
+                    quickBookController.clinicError.value =
+                        locale.value.kindlyChooseAClinicFirst;
+                    Future.delayed(const Duration(seconds: 2),
+                        () => quickBookController.clinicError.value = "");
                     return;
                   }
 
@@ -211,12 +251,16 @@ class QuickBookComponent extends StatelessWidget {
                     lastDate: DateTime(2101),
                   );
                   if (selectedDate != null) {
-                    quickBookController.dateCont.text = selectedDate.formatDateYYYYmmdd();
-                    quickBookController.selectedDate.value = selectedDate.formatDateYYYYmmdd();
+                    quickBookController.dateCont.text =
+                        selectedDate.formatDateYYYYmmdd();
+                    quickBookController.selectedDate.value =
+                        selectedDate.formatDateYYYYmmdd();
                     quickBookController.getTimeSlot();
                   } else {
-                    quickBookController.dateError.value = locale.value.dateIsNotSelected;
-                    Future.delayed(const Duration(seconds: 2), () => quickBookController.dateError.value = "");
+                    quickBookController.dateError.value =
+                        locale.value.dateIsNotSelected;
+                    Future.delayed(const Duration(seconds: 2),
+                        () => quickBookController.dateError.value = "");
                   }
                 },
                 controller: quickBookController.dateCont,
@@ -234,7 +278,9 @@ class QuickBookComponent extends StatelessWidget {
                 ),
               ),
             ),
-            Obx(() => Text(quickBookController.dateError.value, style: secondaryTextStyle(color: Colors.red)).visible(quickBookController.dateError.value.isNotEmpty)),
+            Obx(() => Text(quickBookController.dateError.value,
+                    style: secondaryTextStyle(color: Colors.red))
+                .visible(quickBookController.dateError.value.isNotEmpty)),
             16.height,
             SizedBox(
               height: 40,
@@ -242,18 +288,24 @@ class QuickBookComponent extends StatelessWidget {
                 onTap: () {
                   quickBookController.timeError.value = "";
                   if (quickBookController.selectedServiceId.value.isNegative) {
-                    quickBookController.serviceError.value = locale.value.kindlyChooseAServiceFirst;
-                    Future.delayed(const Duration(seconds: 2), () => quickBookController.serviceError.value = "");
+                    quickBookController.serviceError.value =
+                        locale.value.kindlyChooseAServiceFirst;
+                    Future.delayed(const Duration(seconds: 2),
+                        () => quickBookController.serviceError.value = "");
                     return;
                   }
                   if (quickBookController.selectedClinicId.value.isNegative) {
-                    quickBookController.clinicError.value = locale.value.kindlyChooseAClinicFirst;
-                    Future.delayed(const Duration(seconds: 2), () => quickBookController.clinicError.value = "");
+                    quickBookController.clinicError.value =
+                        locale.value.kindlyChooseAClinicFirst;
+                    Future.delayed(const Duration(seconds: 2),
+                        () => quickBookController.clinicError.value = "");
                     return;
                   }
                   if (quickBookController.dateCont.text.isEmpty) {
-                    quickBookController.dateError.value = locale.value.chooseDate;
-                    Future.delayed(const Duration(seconds: 2), () => quickBookController.dateError.value = "");
+                    quickBookController.dateError.value =
+                        locale.value.chooseDate;
+                    Future.delayed(const Duration(seconds: 2),
+                        () => quickBookController.dateError.value = "");
                     return;
                   }
                   quickBookController.getTimeSlot();
@@ -274,7 +326,9 @@ class QuickBookComponent extends StatelessWidget {
                 ),
               ),
             ),
-            Obx(() => Text(quickBookController.timeError.value, style: secondaryTextStyle(color: Colors.red)).visible(quickBookController.timeError.value.isNotEmpty)),
+            Obx(() => Text(quickBookController.timeError.value,
+                    style: secondaryTextStyle(color: Colors.red))
+                .visible(quickBookController.timeError.value.isNotEmpty)),
 
             Obx(
               () {
@@ -290,10 +344,18 @@ class QuickBookComponent extends StatelessWidget {
                       },
                     ).paddingSymmetric(horizontal: 32);
                   },
-                  loadingWidget: quickBookController.isLoading.value ? const Offstage() : const LoaderWidget(),
+                  loadingWidget: quickBookController.isLoading.value
+                      ? const Offstage()
+                      : const LoaderWidget(),
                   onSuccess: (p0) {
-                    if (quickBookController.slots.isEmpty && quickBookController.isLoading.value == false) {
-                      return NoDataWidget(title: quickBookController.timeSlotsMessage.value).paddingBottom(12).visible(quickBookController.dateCont.text.isNotEmpty && quickBookController.serviceCont.text.isNotEmpty);
+                    if (quickBookController.slots.isEmpty &&
+                        quickBookController.isLoading.value == false) {
+                      return NoDataWidget(
+                              title: quickBookController.timeSlotsMessage.value)
+                          .paddingBottom(12)
+                          .visible(quickBookController
+                                  .dateCont.text.isNotEmpty &&
+                              quickBookController.serviceCont.text.isNotEmpty);
                     }
 
                     return Obx(
@@ -301,13 +363,20 @@ class QuickBookComponent extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           16.height,
-                          ViewAllLabel(label: locale.value.chooseTime, isShowAll: false).paddingOnly(right: 8).visible(quickBookController.isLoading.value == false),
-                          const LoaderWidget().visible(quickBookController.isLoading.value),
+                          ViewAllLabel(
+                                  label: locale.value.chooseTime,
+                                  isShowAll: false)
+                              .paddingOnly(right: 8)
+                              .visible(
+                                  quickBookController.isLoading.value == false),
+                          const LoaderWidget()
+                              .visible(quickBookController.isLoading.value),
                           Container(
                             padding: const EdgeInsets.all(16),
                             width: Get.width,
                             alignment: Alignment.center,
-                            decoration: boxDecorationDefault(color: context.cardColor),
+                            decoration:
+                                boxDecorationDefault(color: context.cardColor),
                             child: AnimatedWrap(
                               spacing: 12,
                               runSpacing: 12,
@@ -316,27 +385,40 @@ class QuickBookComponent extends StatelessWidget {
                               children: List.generate(
                                 quickBookController.slots.length,
                                 (i) {
-                                  final String slot = quickBookController.slots[i];
+                                  final String slot =
+                                      quickBookController.slots[i];
                                   return Obx(
                                     () => GestureDetector(
                                       onTap: () {
                                         quickBookController.selectedSlot(slot);
                                         quickBookController.onDateTimeChange();
-                                        quickBookController.timeCont.text = slot;
+                                        quickBookController.timeCont.text =
+                                            slot;
                                       },
                                       child: Container(
                                         width: Get.width / 3 - 32,
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        decoration: boxDecorationWithRoundedCorners(
-                                          backgroundColor: quickBookController.selectedSlot.value == slot ? appColorPrimary : context.scaffoldBackgroundColor,
-                                          borderRadius: BorderRadius.circular(defaultRadius / 2),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12),
+                                        decoration:
+                                            boxDecorationWithRoundedCorners(
+                                          backgroundColor: quickBookController
+                                                      .selectedSlot.value ==
+                                                  slot
+                                              ? appColorPrimary
+                                              : context.scaffoldBackgroundColor,
+                                          borderRadius: BorderRadius.circular(
+                                              defaultRadius / 2),
                                         ),
                                         child: Text(
                                           slot,
                                           textAlign: TextAlign.center,
                                           style: primaryTextStyle(
                                             size: 12,
-                                            color: (quickBookController.selectedSlot.value == slot) ? Colors.white : appColorPrimary,
+                                            color: (quickBookController
+                                                        .selectedSlot.value ==
+                                                    slot)
+                                                ? Colors.white
+                                                : appColorPrimary,
                                           ),
                                         ),
                                       ),
@@ -368,7 +450,8 @@ class QuickBookComponent extends StatelessWidget {
                       });
                     },
                     width: Get.width,
-                    shapeBorder: RoundedRectangleBorder(borderRadius: radius(defaultRadius)),
+                    shapeBorder: RoundedRectangleBorder(
+                        borderRadius: radius(defaultRadius)),
                   ),
                 ],
               ).visible(quickBookController.selectedSlot.value != ""),
@@ -381,7 +464,8 @@ class QuickBookComponent extends StatelessWidget {
   }
 }
 
-void serviceCommonBottomSheet(BuildContext context, {required Widget child, final Function(dynamic)? onSheetClose}) {
+void serviceCommonBottomSheet(BuildContext context,
+    {required Widget child, final Function(dynamic)? onSheetClose}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,

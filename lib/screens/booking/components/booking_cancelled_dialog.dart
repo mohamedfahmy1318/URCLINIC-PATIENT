@@ -39,9 +39,17 @@ class BookingCancelledDialog extends StatelessWidget {
                       16.height,
                       Image.asset(Assets.iconsIcCheck, height: 62),
                       32.height,
-                      Text(locale.value.yourAppointmentHasBeenSuccessfullyCancelled, style: boldTextStyle(size: 16)),
+                      Text(
+                          locale.value
+                              .yourAppointmentHasBeenSuccessfullyCancelled,
+                          style: boldTextStyle(size: 16)),
                       4.height,
-                      Text(locale.value.appointmentRefundWillBeProcessedWithingHoursIfApplicable, textAlign: TextAlign.center, style: primaryTextStyle(size: 12, color: textSecondaryColor)),
+                      Text(
+                          locale.value
+                              .appointmentRefundWillBeProcessedWithingHoursIfApplicable,
+                          textAlign: TextAlign.center,
+                          style: primaryTextStyle(
+                              size: 12, color: textSecondaryColor)),
                       32.height,
                       Container(
                         padding: const EdgeInsets.all(14),
@@ -51,20 +59,25 @@ class BookingCancelledDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          locale.value.noteCheckYourAppointmentHistoryForRefundDetailsIfApplicable,
-                          style: boldTextStyle(color: appColorSecondary, size: 12),
+                          locale.value
+                              .noteCheckYourAppointmentHistoryForRefundDetailsIfApplicable,
+                          style:
+                              boldTextStyle(color: appColorSecondary, size: 12),
                         ),
                       ),
                       24.height,
-      
+
                       // Buttons in Row
                       Row(
                         children: [
                           // Cancel Button - Goes to appointments list
                           Expanded(
                             child: AppButton(
-                              shapeBorder: RoundedRectangleBorder(borderRadius: radius(4)),
-                              color: isDarkMode.value ? Colors.grey.withValues(alpha: 0.1) : extraLightPrimaryColor,
+                              shapeBorder: RoundedRectangleBorder(
+                                  borderRadius: radius(4)),
+                              color: isDarkMode.value
+                                  ? Colors.grey.withValues(alpha: 0.1)
+                                  : extraLightPrimaryColor,
                               height: 40,
                               text: locale.value.cancel,
                               textStyle: appButtonPrimaryColorText,
@@ -73,11 +86,14 @@ class BookingCancelledDialog extends StatelessWidget {
                                 Get.back();
                                 // Navigate to appointments tab (index 1) in dashboard
                                 try {
-                                  final DashboardController dashboardController = Get.find();
+                                  final DashboardController
+                                      dashboardController = Get.find();
                                   dashboardController.currentIndex(1);
-                                  dashboardController.selectedBottomNav(bottomNavItems[1]);
+                                  dashboardController
+                                      .selectedBottomNav(bottomNavItems[1]);
                                   // Refresh appointments list
-                                  final AppointmentsController appointmentsController = Get.find();
+                                  final AppointmentsController
+                                      appointmentsController = Get.find();
                                   appointmentsController.getAppointmentList();
                                 } catch (e) {
                                   log('Error navigating to appointments: $e');
@@ -89,17 +105,19 @@ class BookingCancelledDialog extends StatelessWidget {
                           // Go to History Button - Goes to appointment details
                           Expanded(
                             child: AppButton(
-                              shapeBorder: RoundedRectangleBorder(borderRadius: radius(4)),
-                              color: appColorSecondary,
+                              shapeBorder: RoundedRectangleBorder(
+                                  borderRadius: radius(4)),
+                              color: Colors.white,
                               height: 40,
-                              text: "Go to History",
+                              text: locale.value.goToHistory,
                               textStyle: boldTextStyle(),
                               onTap: () {
                                 // Close the bottom sheet
                                 Get.back();
                                 // Navigate to appointment details
                                 try {
-                                  Get.to(() => AppointmentDetail(), arguments: status);
+                                  Get.to(() => AppointmentDetail(),
+                                      arguments: status);
                                 } catch (e) {
                                   log('Error navigating to appointment details: $e');
                                 }

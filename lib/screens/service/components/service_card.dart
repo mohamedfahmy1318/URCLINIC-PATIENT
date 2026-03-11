@@ -19,7 +19,10 @@ class ServiceCard extends StatelessWidget {
   final ServiceElement serviceElement;
   final bool isFromClinicDetail;
 
-  const ServiceCard({super.key, required this.serviceElement, this.isFromClinicDetail = false});
+  const ServiceCard(
+      {super.key,
+      required this.serviceElement,
+      this.isFromClinicDetail = false});
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +31,20 @@ class ServiceCard extends StatelessWidget {
         if (isFromClinicDetail) {
           Get.delete<ServiceDetailController>();
         }
-        Get.to(() => ServiceDetailScreen(isFromClinicDetail: isFromClinicDetail), arguments: serviceElement);
+        Get.to(
+            () => ServiceDetailScreen(isFromClinicDetail: isFromClinicDetail),
+            arguments: serviceElement);
       },
       child: Container(
-        decoration: boxDecorationDefault(color: context.cardColor, borderRadius: radius(8)),
+        decoration: boxDecorationDefault(
+            color: context.cardColor, borderRadius: radius(8)),
         width: Get.width / 2 - 24,
         child: Column(
           children: [
             Hero(
-              tag: serviceElement.serviceImage.trim().isNotEmpty ? "${serviceElement.id}${serviceElement.serviceImage}" : UniqueKey(),
+              tag: serviceElement.serviceImage.trim().isNotEmpty
+                  ? "${serviceElement.id}${serviceElement.serviceImage}"
+                  : UniqueKey(),
               child: Stack(
                 children: [
                   CachedImageWidget(
@@ -46,18 +54,26 @@ class ServiceCard extends StatelessWidget {
                     height: Get.height * 0.15,
                     topLeftRadius: 8,
                     topRightRadius: 8,
-                    bottomRightRadius: serviceElement.isVideoConsultancy ? 6 : 0,
+                    bottomRightRadius:
+                        serviceElement.isVideoConsultancy ? 6 : 0,
                   ),
                   if (serviceElement.isVideoConsultancy)
                     Positioned(
                       bottom: 0,
                       right: 0,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: boxDecorationDefault(
                           color: completedStatusColor,
-                          borderRadius: BorderRadius.only(topLeft: radiusCircular(), bottomRight: radiusCircular(6)),
-                          border: Border(left: BorderSide(color: context.cardColor, width: 6), top: BorderSide(color: context.cardColor, width: 6)),
+                          borderRadius: BorderRadius.only(
+                              topLeft: radiusCircular(),
+                              bottomRight: radiusCircular(6)),
+                          border: Border(
+                              left: BorderSide(
+                                  color: context.cardColor, width: 6),
+                              top: BorderSide(
+                                  color: context.cardColor, width: 6)),
                         ),
                         child: CachedImageWidget(
                           url: Assets.imagesVideoCamera,
@@ -76,7 +92,7 @@ class ServiceCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      serviceElement.name,
+                      serviceElement.localizedName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: boldTextStyle(size: 16),
@@ -91,13 +107,16 @@ class ServiceCard extends StatelessWidget {
                     children: [
                       // Main price: discounted payableAmount when discount applied, else charges
                       PriceWidget(
-                        price: serviceElement.isDiscount ? serviceElement.payableAmount : serviceElement.charges,
+                        price: serviceElement.isDiscount
+                            ? serviceElement.payableAmount
+                            : serviceElement.charges,
                         size: 18,
                       ),
                       // Original price with strikethrough when discounted
                       if (serviceElement.isDiscount)
                         PriceWidget(
-                          price: serviceElement.charges + serviceElement.totalInclusiveTax,
+                          price: serviceElement.charges +
+                              serviceElement.totalInclusiveTax,
                           isLineThroughEnabled: true,
                           size: 14,
                           color: textSecondaryColorGlobal,
@@ -117,7 +136,8 @@ class ServiceCard extends StatelessWidget {
                 ),
                 6.height,
                 AppButton(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                   margin: EdgeInsets.zero,
                   width: Get.width,
                   elevation: 0,
@@ -129,13 +149,15 @@ class ServiceCard extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                         builder: (context) {
                           return AppCustomDialog(
-                            title: locale.value.doYouWantToReplaceThePreviousServiceWithTheCu,
+                            title: locale.value
+                                .doYouWantToReplaceThePreviousServiceWithTheCu,
                             negativeText: locale.value.no,
                             positiveText: locale.value.yes,
                             onTap: () {
                               currentSelectedService(serviceElement);
                               Get.back();
-                              Get.to(() => DoctorsListScreen(), arguments: currentSelectedClinic.value.id);
+                              Get.to(() => DoctorsListScreen(),
+                                  arguments: currentSelectedClinic.value.id);
                             },
                           );
                         },
@@ -143,10 +165,15 @@ class ServiceCard extends StatelessWidget {
                     } else {
                       /// Store select service in global variable
                       currentSelectedService(serviceElement);
-                      Get.to(() => ClinicListScreen(), arguments: serviceElement);
+                      Get.to(() => ClinicListScreen(),
+                          arguments: serviceElement);
                     }
                   },
-                  child: Text(locale.value.bookNow, style: boldTextStyle(size: 12, color: whiteTextColor, weight: FontWeight.w400)),
+                  child: Text(locale.value.bookNow,
+                      style: boldTextStyle(
+                          size: 12,
+                          color: whiteTextColor,
+                          weight: FontWeight.w400)),
                 ),
                 // const Spacer()
               ],

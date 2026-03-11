@@ -16,8 +16,14 @@ import '../../service/service_list_controller.dart';
 class PopularClinicCard extends StatelessWidget {
   final Clinic clinicElement;
   final double? width;
+  final bool showLogo;
 
-  const PopularClinicCard({super.key, required this.clinicElement, this.width});
+  const PopularClinicCard({
+    super.key,
+    required this.clinicElement,
+    this.width,
+    this.showLogo = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +50,7 @@ class PopularClinicCard extends StatelessWidget {
                 Get.to(() => ClinicDetailScreen(), arguments: clinicElement);
               }),
               // Clinic Logo
-              if (clinicElement.logo.isNotEmpty)
+              if (showLogo && clinicElement.logo.isNotEmpty)
                 Positioned(
                   bottom: -16,
                   left: 12,

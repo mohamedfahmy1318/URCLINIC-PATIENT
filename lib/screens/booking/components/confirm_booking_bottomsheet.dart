@@ -94,20 +94,6 @@ class ConfirmBookingBottomSheet extends StatelessWidget {
                             ).expand(flex: 3),
                           ],
                         ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              locale.value.price.suffixText(value: ': '),
-                              style: secondaryTextStyle(),
-                            ).expand(),
-                            PriceWidget(
-                              price: price,
-                              isSemiBoldText: true,
-                              size: 12,
-                            ).expand(flex: 3),
-                          ],
-                        ),
                       ],
                     ),
                   ),

@@ -1,3 +1,4 @@
+import '../../../utils/app_common.dart';
 import '../../clinic/model/clinics_res_model.dart';
 
 class ServiceListRes {
@@ -14,7 +15,10 @@ class ServiceListRes {
   factory ServiceListRes.fromJson(Map<String, dynamic> json) {
     return ServiceListRes(
       status: json['status'] is bool ? json['status'] : false,
-      data: json['data'] is List ? List<ServiceElement>.from(json['data'].map((x) => ServiceElement.fromJson(x))) : [],
+      data: json['data'] is List
+          ? List<ServiceElement>.from(
+              json['data'].map((x) => ServiceElement.fromJson(x)))
+          : [],
       message: json['message'] is String ? json['message'] : "",
     );
   }
@@ -42,7 +46,9 @@ class PopularServiceListRes {
   factory PopularServiceListRes.fromJson(Map<String, dynamic> json) {
     return PopularServiceListRes(
       status: json['status'] is bool ? json['status'] : false,
-      data: json['data'] != null ? PopularServicesData.fromJson(json['data']['popular_services'] ?? {}) : null,
+      data: json['data'] != null
+          ? PopularServicesData.fromJson(json['data']['popular_services'] ?? {})
+          : null,
       message: json['message'] is String ? json['message'] : "",
     );
   }
@@ -93,16 +99,20 @@ class PopularServicesData {
 class ServiceElement {
   int id;
   String name;
+  String nameAr;
   int systemServiceId;
   String slug;
   String description;
+  String descriptionAr;
   num charges;
   int status;
   int categoryId;
   int subcategoryId;
   int vendorId;
   String categoryName;
+  String categoryNameAr;
   String subcategoryName;
+  String subcategoryNameAr;
   int duration;
   bool isDiscount;
   int featured;
@@ -129,18 +139,37 @@ class ServiceElement {
 
   bool get isInclusiveTaxesAvailable => totalInclusiveTax > 0;
 
+  String get localizedName =>
+      selectedLanguageCode.value == 'ar' && nameAr.isNotEmpty ? nameAr : name;
+  String get localizedDescription =>
+      selectedLanguageCode.value == 'ar' && descriptionAr.isNotEmpty
+          ? descriptionAr
+          : description;
+  String get localizedCategoryName =>
+      selectedLanguageCode.value == 'ar' && categoryNameAr.isNotEmpty
+          ? categoryNameAr
+          : categoryName;
+  String get localizedSubcategoryName =>
+      selectedLanguageCode.value == 'ar' && subcategoryNameAr.isNotEmpty
+          ? subcategoryNameAr
+          : subcategoryName;
+
   ServiceElement({
     this.id = -1,
     this.name = "",
+    this.nameAr = "",
     this.slug = "",
     this.description = "",
+    this.descriptionAr = "",
     this.charges = 0,
     this.status = -1,
     this.categoryId = -1,
     this.subcategoryId = -1,
     this.vendorId = -1,
     this.categoryName = "",
+    this.categoryNameAr = "",
     this.subcategoryName = "",
+    this.subcategoryNameAr = "",
     this.duration = -1,
     this.isDiscount = false,
     this.featured = -1,
@@ -168,35 +197,66 @@ class ServiceElement {
     return ServiceElement(
       id: json['id'] is int ? json['id'] : -1,
       name: json['name'] is String ? json['name'] : "",
+      nameAr: json['name_ar'] is String ? json['name_ar'] : "",
       slug: json['slug'] is String ? json['slug'] : "",
       description: json['description'] is String ? json['description'] : "",
+      descriptionAr:
+          json['description_ar'] is String ? json['description_ar'] : "",
       charges: json['charges'] is num ? json['charges'] : 0,
       status: json['status'] is int ? json['status'] : -1,
       categoryId: json['category_id'] is int ? json['category_id'] : -1,
-      subcategoryId: json['subcategory_id'] is int ? json['subcategory_id'] : -1,
+      subcategoryId:
+          json['subcategory_id'] is int ? json['subcategory_id'] : -1,
       vendorId: json['vendor_id'] is int ? json['vendor_id'] : -1,
-      categoryName: json['category_name'] is String ? json['category_name'] : "",
-      subcategoryName: json['subcategory_name'] is String ? json['subcategory_name'] : "",
+      categoryName:
+          json['category_name'] is String ? json['category_name'] : "",
+      categoryNameAr:
+          json['category_name_ar'] is String ? json['category_name_ar'] : "",
+      subcategoryName:
+          json['subcategory_name'] is String ? json['subcategory_name'] : "",
+      subcategoryNameAr: json['subcategory_name_ar'] is String
+          ? json['subcategory_name_ar']
+          : "",
       duration: json['duration'] is int ? json['duration'] : -1,
-      isDiscount: json['discount'] is bool ? json['discount'] : json['discount'] == 1,
+      isDiscount:
+          json['discount'] is bool ? json['discount'] : json['discount'] == 1,
       featured: json['featured'] is int ? json['featured'] : -1,
-      discountType: json['discount_type'] is String ? json['discount_type'] : "",
+      discountType:
+          json['discount_type'] is String ? json['discount_type'] : "",
       discountValue: json['discount_value'] is num ? json['discount_value'] : 0,
-      discountAmount: json['discount_amount'] is num ? json['discount_amount'] : 0,
+      discountAmount:
+          json['discount_amount'] is num ? json['discount_amount'] : 0,
       payableAmount: json['payable_amount'] is num ? json['payable_amount'] : 0,
-      isEnableAdvancePayment: json['is_enable_advance_payment'] is bool ? json['is_enable_advance_payment'] : json['is_enable_advance_payment'] == 1,
-      advancePaymentAmount: json['advance_payment_amount'] is num ? json['advance_payment_amount'] : 0,
-      assignDoctor: json['assign_doctor'] is List ? List<AssignDoctor>.from(json['assign_doctor'].map((x) => AssignDoctor.fromJson(x))) : [],
-      clinics: json['clinics'] is List ? List<Clinic>.from(json['clinics'].map((x) => Clinic.fromJson(x))) : [],
+      isEnableAdvancePayment: json['is_enable_advance_payment'] is bool
+          ? json['is_enable_advance_payment']
+          : json['is_enable_advance_payment'] == 1,
+      advancePaymentAmount: json['advance_payment_amount'] is num
+          ? json['advance_payment_amount']
+          : 0,
+      assignDoctor: json['assign_doctor'] is List
+          ? List<AssignDoctor>.from(
+              json['assign_doctor'].map((x) => AssignDoctor.fromJson(x)))
+          : [],
+      clinics: json['clinics'] is List
+          ? List<Clinic>.from(json['clinics'].map((x) => Clinic.fromJson(x)))
+          : [],
       timeSlot: json['time_slot'] is String ? json['time_slot'] : "",
-      isVideoConsultancy: json['is_video_consultancy'] is bool ? json['is_video_consultancy'] : json['is_video_consultancy'] == 1,
+      isVideoConsultancy: json['is_video_consultancy'] is bool
+          ? json['is_video_consultancy']
+          : json['is_video_consultancy'] == 1,
       type: json['type'] is String ? json['type'] : "",
-      serviceImage: json['service_image'] is String ? json['service_image'] : "",
-      systemServiceId: json['system_service_id'] is int ? json['system_service_id'] : -1,
+      serviceImage:
+          json['service_image'] is String ? json['service_image'] : "",
+      systemServiceId:
+          json['system_service_id'] is int ? json['system_service_id'] : -1,
       serviceName: json['service_name'] is String ? json['service_name'] : "",
-      totalAppointments: json['total_appointments'] is int ? json['total_appointments'] : -1,
-      clinicName: json['clinic_name'] is List ? List<String>.from(json['clinic_name'].map((x) => x)) : [],
-      totalInclusiveTax: json['total_inclusive_tax'] is num ? json['total_inclusive_tax'] : 0,
+      totalAppointments:
+          json['total_appointments'] is int ? json['total_appointments'] : -1,
+      clinicName: json['clinic_name'] is List
+          ? List<String>.from(json['clinic_name'].map((x) => x))
+          : [],
+      totalInclusiveTax:
+          json['total_inclusive_tax'] is num ? json['total_inclusive_tax'] : 0,
       price: json['price'] is num ? json['price'] : 0,
     );
   }
@@ -205,15 +265,19 @@ class ServiceElement {
     return {
       'id': id,
       'name': name,
+      'name_ar': nameAr,
       'slug': slug,
       'description': description,
+      'description_ar': descriptionAr,
       'charges': charges,
       'status': status,
       'category_id': categoryId,
       'subcategory_id': subcategoryId,
       'vendor_id': vendorId,
       'category_name': categoryName,
+      'category_name_ar': categoryNameAr,
       'subcategory_name': subcategoryName,
+      'subcategory_name_ar': subcategoryNameAr,
       'duration': duration,
       'discount': isDiscount,
       'featured': featured,
@@ -274,8 +338,11 @@ class AssignDoctor {
       name: json['name'] is String ? json['name'] : "",
       doctorName: json['doctor_name'] is String ? json['doctor_name'] : "",
       clinicName: json['clinic_name'] is String ? json['clinic_name'] : "",
-      doctorProfile: json['doctor_profile'] is String ? json['doctor_profile'] : "",
-      priceDetail: json['price_detail'] is Map ? PriceDetail.fromJson(json['price_detail']) : PriceDetail(),
+      doctorProfile:
+          json['doctor_profile'] is String ? json['doctor_profile'] : "",
+      priceDetail: json['price_detail'] is Map
+          ? PriceDetail.fromJson(json['price_detail'])
+          : PriceDetail(),
     );
   }
 
@@ -331,12 +398,18 @@ class PriceDetail {
       serviceAmount: json['service_amount'] is num ? json['service_amount'] : 0,
       totalAmount: json['total_amount'] is num ? json['total_amount'] : 0,
       duration: json['duration'] is int ? json['duration'] : -1,
-      discountType: json['discount_type'] is String ? json['discount_type'] : "",
+      discountType:
+          json['discount_type'] is String ? json['discount_type'] : "",
       discountValue: json['discount_value'] is num ? json['discount_value'] : 0,
-      discountAmount: json['discount_amount'] is num ? json['discount_amount'] : 0,
-      totalInclusiveTax: json['total_inclusive_tax'] is num ? json['total_inclusive_tax'] : 0,
-      totalExclusiveTax: json['total_exclusive_tax'] is num ? json['total_exclusive_tax'] : 0,
-      inclusiveTaxJson: json['service_inclusive_tax'] is String ? json['service_inclusive_tax'] : "",
+      discountAmount:
+          json['discount_amount'] is num ? json['discount_amount'] : 0,
+      totalInclusiveTax:
+          json['total_inclusive_tax'] is num ? json['total_inclusive_tax'] : 0,
+      totalExclusiveTax:
+          json['total_exclusive_tax'] is num ? json['total_exclusive_tax'] : 0,
+      inclusiveTaxJson: json['service_inclusive_tax'] is String
+          ? json['service_inclusive_tax']
+          : "",
     );
   }
 

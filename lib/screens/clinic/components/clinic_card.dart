@@ -81,34 +81,6 @@ class ClinicCard extends StatelessWidget {
                         color: appColorPrimary, padding: 8),
                   ).visible(
                       clinicData.id == clinicListCont.selectedClinic.value.id),
-                  // Clinic Logo
-                  if (clinicData.logo.isNotEmpty)
-                    Positioned(
-                      bottom: -16,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: context.cardColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: CachedImageWidget(
-                            url: clinicData.logo,
-                            width: 36,
-                            height: 36,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
               Column(
