@@ -36,11 +36,11 @@ class _AIChatScreenState extends State<AIChatScreen>
   ];
 
   List<String> get _suggestionChips => [
-    locale.value.aiChatSuggestion1,
-    locale.value.aiChatSuggestion2,
-    locale.value.aiChatSuggestion3,
-    locale.value.aiChatSuggestion4,
-  ];
+        locale.value.aiChatSuggestion1,
+        locale.value.aiChatSuggestion2,
+        locale.value.aiChatSuggestion3,
+        locale.value.aiChatSuggestion4,
+      ];
 
   GenerativeModel? _model;
   ChatSession? _chat;
@@ -225,7 +225,9 @@ class _AIChatScreenState extends State<AIChatScreen>
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         return _MessageBubbleAnimated(
-                          key: ValueKey(_messages[index].timestamp.millisecondsSinceEpoch),
+                          key: ValueKey(_messages[index]
+                              .timestamp
+                              .millisecondsSinceEpoch),
                           child: _buildMessageBubble(_messages[index]),
                         );
                       },
@@ -281,8 +283,8 @@ class _AIChatScreenState extends State<AIChatScreen>
                       label: Text(locale.value.reload),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: appColorPrimary,
-                        side: BorderSide(
-                            color: appColorPrimary.withOpacity(0.4)),
+                        side:
+                            BorderSide(color: appColorPrimary.withOpacity(0.4)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20)),
                       ),
@@ -307,8 +309,7 @@ class _AIChatScreenState extends State<AIChatScreen>
                           label: Text(_suggestionChips[index],
                               style: secondaryTextStyle(
                                   size: 12, color: appColorPrimary)),
-                          backgroundColor:
-                              appColorPrimary.withOpacity(0.08),
+                          backgroundColor: appColorPrimary.withOpacity(0.08),
                           side: BorderSide(
                               color: appColorPrimary.withOpacity(0.2)),
                           shape: RoundedRectangleBorder(
@@ -404,8 +405,8 @@ class _AIChatScreenState extends State<AIChatScreen>
               color: appColorPrimary.withOpacity(0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.smart_toy_rounded,
-                color: appColorPrimary, size: 48),
+            child:
+                Icon(Icons.smart_toy_rounded, color: appColorPrimary, size: 48),
           ),
           20.height,
           Text(
@@ -427,12 +428,11 @@ class _AIChatScreenState extends State<AIChatScreen>
                 .map((chip) => ActionChip(
                       label: Text(chip, style: primaryTextStyle(size: 13)),
                       backgroundColor: appColorPrimary.withOpacity(0.06),
-                      side: BorderSide(
-                          color: appColorPrimary.withOpacity(0.15)),
+                      side:
+                          BorderSide(color: appColorPrimary.withOpacity(0.15)),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
-                      onPressed: () =>
-                          _sendMessage(overrideText: chip),
+                      onPressed: () => _sendMessage(overrideText: chip),
                     ))
                 .toList(),
           ),
