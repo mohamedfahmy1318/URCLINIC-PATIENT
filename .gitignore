@@ -32,3 +32,9 @@ ios/Flutter/flutter_export_environment.sh
 Thumbs.db
 nul
 tmpclaude-*
+
+# Secrets (local only)
+.env
+.env.*
+!.env.example
+dart_define.json
