@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/screens/clinic/search_clinic_widget.dart';
@@ -8,12 +11,14 @@ import '../../components/app_scaffold.dart';
 import '../../components/cached_image_widget.dart';
 import '../../components/loader_widget.dart';
 import '../../main.dart';
+import '../../network/location_service.dart';
 import '../../utils/empty_error_state_widget.dart';
 import '../doctor/doctor_list_screen.dart';
 import 'clinic_detail_screen.dart';
 import 'clinic_list_controller.dart';
-import 'clinic_map_screen.dart';
 import 'model/clinics_res_model.dart';
+
+enum ClinicSortOption { none, nameAZ, nameZA, ratingHigh, ratingLow, nearest }
 
 class ClinicListScreen extends StatefulWidget {
   const ClinicListScreen({super.key});
@@ -25,111 +30,167 @@ class ClinicListScreen extends StatefulWidget {
 class _ClinicListScreenState extends State<ClinicListScreen> {
   final ClinicListController clinicListCont = Get.put(ClinicListController());
 
-  // Sort: 0: Default, 1: Name A-Z, 2: Name Z-A, 3: Rating High-Low, 4: Rating Low-High
-  int selectedSort = 0;
-  // Filter: 0: All, 1: Top Rated
-  int selectedFilter = 0;
+  ClinicSortOption _currentSort = ClinicSortOption.none;
+  Position? _userPosition;
+  bool _loadingLocation = false;
+
+  String _getSortLabel(ClinicSortOption option) {
+    switch (option) {
+      case ClinicSortOption.none:
+        return locale.value.sortBy;
+      case ClinicSortOption.nameAZ:
+        return locale.value.nameAZ;
+      case ClinicSortOption.nameZA:
+        return locale.value.nameZA;
+      case ClinicSortOption.ratingHigh:
+        return locale.value.ratingHighToLow;
+      case ClinicSortOption.ratingLow:
+        return locale.value.ratingLowToHigh;
+      case ClinicSortOption.nearest:
+        return locale.value.nearestClinics;
+    }
+  }
+
+  IconData _getSortIcon(ClinicSortOption option) {
+    switch (option) {
+      case ClinicSortOption.none:
+        return Icons.sort_rounded;
+      case ClinicSortOption.nameAZ:
+        return Icons.sort_by_alpha_rounded;
+      case ClinicSortOption.nameZA:
+        return Icons.sort_by_alpha_rounded;
+      case ClinicSortOption.ratingHigh:
+        return Icons.star_rounded;
+      case ClinicSortOption.ratingLow:
+        return Icons.star_outline_rounded;
+      case ClinicSortOption.nearest:
+        return Icons.near_me_rounded;
+    }
+  }
+
+  Future<void> _onSortChanged(ClinicSortOption option) async {
+    if (option == ClinicSortOption.nearest && _userPosition == null) {
+      setState(() => _loadingLocation = true);
+      try {
+        _userPosition = await getUserLocationPosition();
+      } catch (e) {
+        toast(e.toString());
+        setState(() => _loadingLocation = false);
+        return;
+      }
+      setState(() => _loadingLocation = false);
+    }
+    setState(() => _currentSort = option);
+  }
+
+  double _distanceTo(Clinic clinic) {
+    if (_userPosition == null) return double.infinity;
+    final lat = double.tryParse(clinic.latitude) ?? 0;
+    final lng = double.tryParse(clinic.longitude) ?? 0;
+    if (lat == 0 && lng == 0) return double.infinity;
+    const R = 6371.0;
+    final dLat = (lat - _userPosition!.latitude) * pi / 180;
+    final dLon = (lng - _userPosition!.longitude) * pi / 180;
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_userPosition!.latitude * pi / 180) *
+            cos(lat * pi / 180) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c;
+  }
 
   List<Clinic> _getFilteredClinics() {
-    List<Clinic> clinics = List<Clinic>.from(clinicListCont.clinics);
-
-    // Apply filter
-    if (selectedFilter == 1) {
-      clinics.sort((a, b) =>
-          b.satisfactionPercentage.compareTo(a.satisfactionPercentage));
-      return clinics;
+    final sorted = List<Clinic>.from(clinicListCont.clinics);
+    switch (_currentSort) {
+      case ClinicSortOption.none:
+        break;
+      case ClinicSortOption.nameAZ:
+        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case ClinicSortOption.nameZA:
+        sorted.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        break;
+      case ClinicSortOption.ratingHigh:
+        sorted.sort((a, b) => b.satisfactionPercentage.compareTo(a.satisfactionPercentage));
+        break;
+      case ClinicSortOption.ratingLow:
+        sorted.sort((a, b) => a.satisfactionPercentage.compareTo(b.satisfactionPercentage));
+        break;
+      case ClinicSortOption.nearest:
+        if (_userPosition != null) {
+          sorted.sort((a, b) {
+            final distA = _distanceTo(a);
+            final distB = _distanceTo(b);
+            return distA.compareTo(distB);
+          });
+        }
+        break;
     }
-
-    // Apply sort (only for filter 0)
-    switch (selectedSort) {
-      case 1:
-        clinics.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 2:
-        clinics.sort((a, b) => b.name.compareTo(a.name));
-        break;
-      case 3:
-        clinics.sort((a, b) =>
-            b.satisfactionPercentage.compareTo(a.satisfactionPercentage));
-        break;
-      case 4:
-        clinics.sort((a, b) =>
-            a.satisfactionPercentage.compareTo(b.satisfactionPercentage));
-        break;
-    }
-
-    return clinics;
+    return sorted;
   }
 
   void _showSortBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
-        decoration: boxDecorationDefault(
-          color: context.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: boxDecorationDefault(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
                   color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2)),
-            ),
-            16.height,
-            Text(locale.value.sortBy, style: boldTextStyle(size: 18)),
-            8.height,
-            Text(locale.value.clinics, style: secondaryTextStyle(size: 14)),
-            16.height,
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildSortOption(
-                        0, locale.value.defaultSort, Icons.restore),
-                    _buildSortOption(
-                        1, locale.value.nameAZ, Icons.sort_by_alpha),
-                    _buildSortOption(
-                        2, locale.value.nameZA, Icons.sort_by_alpha),
-                    _buildSortOption(
-                        3, locale.value.ratingHighToLow, Icons.star),
-                    _buildSortOption(
-                        4, locale.value.ratingLowToHigh, Icons.star_border),
-                  ],
+                  borderRadius: radius(2),
                 ),
               ),
-            ),
-            24.height,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSortOption(int index, String label, IconData icon) {
-    final isSelected = selectedSort == index;
-    return ListTile(
-      onTap: () {
-        setState(() => selectedSort = index);
-        Get.back();
+              16.height,
+              Text(locale.value.sortBy, style: boldTextStyle(size: 18)),
+              16.height,
+              ...ClinicSortOption.values.where((o) => o != ClinicSortOption.none).map(
+                (option) => ListTile(
+                  leading: Icon(
+                    _getSortIcon(option),
+                    color: _currentSort == option ? appColorPrimary : iconColor,
+                  ),
+                  title: Text(
+                    _getSortLabel(option),
+                    style: _currentSort == option
+                        ? boldTextStyle(color: appColorPrimary)
+                        : primaryTextStyle(),
+                  ),
+                  trailing: _currentSort == option
+                      ? const Icon(Icons.check_circle, color: appColorPrimary)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _onSortChanged(option);
+                  },
+                ),
+              ),
+              if (_currentSort != ClinicSortOption.none)
+                ListTile(
+                  leading: const Icon(Icons.clear_rounded, color: cancelStatusColor),
+                  title: Text(
+                    locale.value.clearAll,
+                    style: primaryTextStyle(color: cancelStatusColor),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() => _currentSort = ClinicSortOption.none);
+                  },
+                ),
+              16.height,
+            ],
+          ),
+        );
       },
-      leading: Icon(icon, color: isSelected ? appColorPrimary : Colors.grey),
-      title: Text(label,
-          style: isSelected
-              ? boldTextStyle(color: appColorPrimary)
-              : primaryTextStyle()),
-      trailing:
-          isSelected ? Icon(Icons.check_circle, color: appColorPrimary) : null,
     );
   }
 
@@ -151,34 +212,72 @@ class _ClinicListScreenState extends State<ClinicListScreen> {
             },
           ).paddingAll(16),
 
-          // Sort & Filter chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          // Title & Sort Dropdown
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildSortByChip(),
-                12.width,
-                _buildFilterChip(
-                  index: 1,
-                  icon: Icons.star,
-                  label: locale.value.ratingHighToLow,
-                  color: const Color(0xFFFF9800),
-                  isIconData: true,
-                ),
-                12.width,
-                _buildFilterChip(
-                  index: 2,
-                  icon: Icons.location_on,
-                  label: locale.value.nearestClinics,
-                  color: const Color(0xFF2196F3),
-                  showMapIcon: true,
-                  isIconData: true,
+                Text(
+                  locale.value.clinics,
+                  style: boldTextStyle(size: 18),
+                ).expand(),
+                GestureDetector(
+                  onTap: () => _showSortBottomSheet(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: boxDecorationDefault(
+                      color: _currentSort != ClinicSortOption.none
+                          ? appColorPrimary.withValues(alpha: 0.1)
+                          : context.cardColor,
+                      borderRadius: radius(20),
+                      border: Border.all(
+                        color: _currentSort != ClinicSortOption.none
+                            ? appColorPrimary
+                            : Colors.grey.shade300,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getSortIcon(_currentSort),
+                          size: 16,
+                          color: _currentSort != ClinicSortOption.none
+                              ? appColorPrimary
+                              : iconColor,
+                        ),
+                        6.width,
+                        Text(
+                          _currentSort == ClinicSortOption.none
+                              ? locale.value.sortBy
+                              : _getSortLabel(_currentSort),
+                          style: boldTextStyle(
+                            size: 12,
+                            color: _currentSort != ClinicSortOption.none
+                                ? appColorPrimary
+                                : null,
+                          ),
+                        ),
+                        4.width,
+                        Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 18,
+                          color: _currentSort != ClinicSortOption.none
+                              ? appColorPrimary
+                              : iconColor,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          12.height,
+          8.height,
+
+          if (_loadingLocation)
+            const Center(child: CircularProgressIndicator()).paddingSymmetric(vertical: 20),
 
           // Clinics Grid
           Obx(() {
@@ -253,6 +352,8 @@ class _ClinicListScreenState extends State<ClinicListScreen> {
                     itemCount: clinics.length,
                     itemBuilder: (context, index) {
                       final clinic = clinics[index];
+                      // Re-use the card locally without passing distance to avoid editing card code too much,
+                      // we can leave the card as it was in Clinics list (no distance shown for simplicity as it's not requested).
                       return _buildClinicListCard(clinic)
                           .paddingOnly(bottom: 12);
                     },
@@ -275,103 +376,6 @@ class _ClinicListScreenState extends State<ClinicListScreen> {
           child: const Icon(Icons.arrow_forward_ios, color: Colors.white),
         ).visible(clinicListCont.clinics.isNotEmpty &&
             (!clinicListCont.selectedClinic.value.id.isNegative)),
-      ),
-    );
-  }
-
-  // Sort By chip
-  Widget _buildSortByChip() {
-    final isSelected = selectedFilter == 0;
-    const color = Color(0xFF00BFA5);
-    return GestureDetector(
-      onTap: () {
-        setState(() => selectedFilter = 0);
-        _showSortBottomSheet(context);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: boxDecorationDefault(
-          color: isSelected ? color : color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-              color: isSelected ? color : color.withOpacity(0.3), width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.sort,
-                size: 18, color: isSelected ? Colors.white : color),
-            8.width,
-            Text(locale.value.sortBy,
-                style: boldTextStyle(
-                    size: 12, color: isSelected ? Colors.white : color)),
-            4.width,
-            Icon(Icons.keyboard_arrow_down,
-                size: 18, color: isSelected ? Colors.white : color),
-            if (selectedSort != 0) ...[
-              4.width,
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : color,
-                    shape: BoxShape.circle),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required int index,
-    required dynamic icon,
-    required String label,
-    required Color color,
-    bool showMapIcon = false,
-    bool isIconData = false,
-  }) {
-    final isSelected = selectedFilter == index;
-    return GestureDetector(
-      onTap: () {
-        if (index == 2) {
-          Get.to(() => ClinicMapScreen());
-        } else {
-          setState(() => selectedFilter = index);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: boxDecorationDefault(
-          color: isSelected ? color : color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-              color: isSelected ? color : color.withOpacity(0.3), width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isIconData)
-              Icon(icon as IconData,
-                  size: 18, color: isSelected ? Colors.white : color)
-            else
-              CachedImageWidget(
-                  url: icon as String,
-                  height: 18,
-                  width: 18,
-                  color: isSelected ? Colors.white : color),
-            8.width,
-            Text(label,
-                style: boldTextStyle(
-                    size: 12, color: isSelected ? Colors.white : color)),
-            if (showMapIcon) ...[
-              6.width,
-              Icon(Icons.map_outlined,
-                  size: 16, color: isSelected ? Colors.white : color),
-            ],
-          ],
-        ),
       ),
     );
   }

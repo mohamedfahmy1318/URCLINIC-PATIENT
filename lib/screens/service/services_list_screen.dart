@@ -3,130 +3,239 @@ import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../components/app_scaffold.dart';
-import '../../components/cached_image_widget.dart';
 import '../../components/loader_widget.dart';
-import '../../generated/assets.dart';
 import '../../main.dart';
 import '../../utils/app_common.dart';
 import '../../utils/colors.dart';
 import '../../utils/empty_error_state_widget.dart';
-import '../booking/filter/filter_screen.dart';
+
 import 'components/service_card.dart';
 import 'model/service_list_model.dart';
 import 'search_service_widget.dart';
 import 'service_list_controller.dart';
 
-class ServiceListScreen extends StatelessWidget {
+enum ServiceSortOption { none, nameAZ, nameZA, priceHigh, priceLow }
+
+class ServiceListScreen extends StatefulWidget {
   final String? title;
   final bool isFromClinicDetail;
   final bool isFromDashboard;
 
-  ServiceListScreen(
-      {super.key,
-      this.title,
-      this.isFromClinicDetail = false,
-      this.isFromDashboard = false});
+  const ServiceListScreen({
+    super.key,
+    this.title,
+    this.isFromClinicDetail = false,
+    this.isFromDashboard = false,
+  });
 
+  @override
+  State<ServiceListScreen> createState() => _ServiceListScreenState();
+}
+
+class _ServiceListScreenState extends State<ServiceListScreen> {
   final ServiceListController serviceListCont =
       Get.put(ServiceListController());
+
+  ServiceSortOption _currentSort = ServiceSortOption.none;
+
+  String _getSortLabel(ServiceSortOption option) {
+    switch (option) {
+      case ServiceSortOption.none:
+        return locale.value.sortBy;
+      case ServiceSortOption.nameAZ:
+        return locale.value.nameAZ;
+      case ServiceSortOption.nameZA:
+        return locale.value.nameZA;
+      case ServiceSortOption.priceHigh:
+        return 'Price - High to Low';
+      case ServiceSortOption.priceLow:
+        return 'Price - Low to High';
+    }
+  }
+
+  IconData _getSortIcon(ServiceSortOption option) {
+    switch (option) {
+      case ServiceSortOption.none:
+        return Icons.sort_rounded;
+      case ServiceSortOption.nameAZ:
+      case ServiceSortOption.nameZA:
+        return Icons.sort_by_alpha_rounded;
+      case ServiceSortOption.priceHigh:
+      case ServiceSortOption.priceLow:
+        return Icons.attach_money_rounded;
+    }
+  }
+
+  void _onSortChanged(ServiceSortOption option) {
+    setState(() => _currentSort = option);
+  }
+
+  List<ServiceElement> _getFilteredServices() {
+    final sorted = List<ServiceElement>.from(serviceListCont.serviceList);
+    switch (_currentSort) {
+      case ServiceSortOption.none:
+        break;
+      case ServiceSortOption.nameAZ:
+        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case ServiceSortOption.nameZA:
+        sorted.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        break;
+      case ServiceSortOption.priceHigh:
+        sorted.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case ServiceSortOption.priceLow:
+        sorted.sort((a, b) => a.price.compareTo(b.price));
+        break;
+    }
+    return sorted;
+  }
+
+  void _showSortBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: radius(2),
+                ),
+              ),
+              16.height,
+              Text(locale.value.sortBy, style: boldTextStyle(size: 18)),
+              16.height,
+              ...ServiceSortOption.values.where((o) => o != ServiceSortOption.none).map(
+                (option) => ListTile(
+                  leading: Icon(
+                    _getSortIcon(option),
+                    color: _currentSort == option ? appColorPrimary : iconColor,
+                  ),
+                  title: Text(
+                    _getSortLabel(option),
+                    style: _currentSort == option
+                        ? boldTextStyle(color: appColorPrimary)
+                        : primaryTextStyle(),
+                  ),
+                  trailing: _currentSort == option
+                      ? const Icon(Icons.check_circle, color: appColorPrimary)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _onSortChanged(option);
+                  },
+                ),
+              ),
+              if (_currentSort != ServiceSortOption.none)
+                ListTile(
+                  leading: const Icon(Icons.clear_rounded, color: cancelStatusColor),
+                  title: Text(
+                    locale.value.clearAll,
+                    style: primaryTextStyle(color: cancelStatusColor),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() => _currentSort = ServiceSortOption.none);
+                  },
+                ),
+              16.height,
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return AppScaffoldNew(
-      appBartitleText: title ?? appbarTitle,
+      appBartitleText: widget.title ?? appbarTitle,
       appBarVerticalSize: Get.height * 0.12,
       isLoading: serviceListCont.isLoading,
       body: Obx(
         () => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                SearchServiceWidget(
-                  servicesController: serviceListCont,
-                  onFieldSubmitted: (p0) {
-                    hideKeyboard(context);
-                  },
-                ).expand(),
-                12.width,
-                InkWell(
-                  onTap: () async {
-                    serviceListCont.searchCont.clear();
-                    serviceListCont.page(1);
-                    log('-----------------------1--------------------');
-                    log(
-                      [
-                        serviceListCont.clinicId.value,
-                        serviceListCont.serviceType.value,
-                        serviceListCont.priceMin,
-                        serviceListCont.priceMax,
-                        "category",
-                        serviceListCont.category.value.id,
-                      ],
-                    );
-                    await Get.to(
-                      () => FilterScreen(displayName: 'category'),
-                      arguments: [
-                        serviceListCont.clinicId.value,
-                        serviceListCont.serviceType.value,
-                        serviceListCont.priceMin.value,
-                        serviceListCont.priceMax.value,
-                        "category",
-                        serviceListCont.category.value.id,
-                      ],
-                      binding: BindingsBuilder(
-                        () {
-                          setStatusBarColor(
-                            transparentColor,
-                            statusBarIconBrightness: Brightness.light,
-                            statusBarBrightness: Brightness.light,
-                            systemNavigationBarColor: whiteTextColor,
-                          );
-                        },
-                      ),
-                    )?.then((value) {
-                      if (value is int) {
-                        serviceListCont.selectedFilterCount.value = value;
-                      }
-                    });
-                  },
-                  child: Stack(
-                    children: [
-                      Container(
-                        height: 46,
-                        width: 46,
-                        alignment: Alignment.center,
-                        decoration: boxDecorationDefault(
-                            color: appColorPrimary,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: const CachedImageWidget(
-                          url: Assets.iconsIcFilter,
-                          height: 28,
-                          color: white,
+            SearchServiceWidget(
+              servicesController: serviceListCont,
+              onFieldSubmitted: (p0) {
+                hideKeyboard(context);
+              },
+            ).paddingAll(16),
+
+            // Title & Sort Dropdown
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Text(
+                    locale.value.services,
+                    style: boldTextStyle(size: 18),
+                  ).expand(),
+                  GestureDetector(
+                    onTap: () => _showSortBottomSheet(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: boxDecorationDefault(
+                        color: _currentSort != ServiceSortOption.none
+                            ? appColorPrimary.withValues(alpha: 0.1)
+                            : context.cardColor,
+                        borderRadius: radius(20),
+                        border: Border.all(
+                          color: _currentSort != ServiceSortOption.none
+                              ? appColorPrimary
+                              : Colors.grey.shade300,
+                          width: 1,
                         ),
                       ),
-                      if (serviceListCont.selectedFilterCount.value > 0)
-                        Positioned(
-                          top: -4,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${serviceListCont.selectedFilterCount.value}',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getSortIcon(_currentSort),
+                            size: 16,
+                            color: _currentSort != ServiceSortOption.none
+                                ? appColorPrimary
+                                : iconColor,
+                          ),
+                          6.width,
+                          Text(
+                            _currentSort == ServiceSortOption.none
+                                ? locale.value.sortBy
+                                : _getSortLabel(_currentSort),
+                            style: boldTextStyle(
+                              size: 12,
+                              color: _currentSort != ServiceSortOption.none
+                                  ? appColorPrimary
+                                  : null,
                             ),
                           ),
-                        ),
-                    ],
+                          4.width,
+                          Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 18,
+                            color: _currentSort != ServiceSortOption.none
+                                ? appColorPrimary
+                                : iconColor,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ).paddingAll(16),
+                ],
+              ),
+            ),
+            8.height,
+
             SnapHelperWidget(
               future: serviceListCont.serviceListFuture.value,
               errorBuilder: (error) {
@@ -144,11 +253,13 @@ class ServiceListScreen extends StatelessWidget {
                   ? const Offstage()
                   : const LoaderWidget(),
               onSuccess: (p0) {
-                if (serviceListCont.serviceList.isEmpty) {
+                final services = _getFilteredServices();
+
+                if (services.isEmpty) {
                   return NoDataWidget(
                     title: locale.value.noServicesFoundAtAMoment,
                     subTitle:
-                        '${locale.value.looksLikeThereIsNoServicesForThis}$appbarTitle, ${locale.value.wellKeepYouPostedWhenTheresAnUpdate}',
+                        '${locale.value.looksLikeThereIsNoServicesForThis}${widget.title ?? appbarTitle}, ${locale.value.wellKeepYouPostedWhenTheresAnUpdate}',
                     titleTextStyle: primaryTextStyle(),
                     imageWidget: const EmptyStateWidget(),
                     retryText: locale.value.reload,
@@ -170,7 +281,6 @@ class ServiceListScreen extends StatelessWidget {
                   onNextPage: () async {
                     if (!serviceListCont.isLastPage.value) {
                       serviceListCont.page(serviceListCont.page.value + 1);
-
                       serviceListCont.getServiceList();
                     }
                   },
@@ -178,14 +288,14 @@ class ServiceListScreen extends StatelessWidget {
                     AnimatedWrap(
                       runSpacing: 16,
                       spacing: 16,
-                      itemCount: serviceListCont.serviceList.length,
+                      itemCount: services.length,
                       listAnimationType: ListAnimationType.FadeIn,
                       itemBuilder: (ctx, index) {
                         final ServiceElement serviceElement =
-                            serviceListCont.serviceList[index];
+                            services[index];
                         return ServiceCard(
                             serviceElement: serviceElement,
-                            isFromClinicDetail: isFromClinicDetail);
+                            isFromClinicDetail: widget.isFromClinicDetail);
                       },
                     ),
                   ],
@@ -198,7 +308,7 @@ class ServiceListScreen extends StatelessWidget {
     );
   }
 
-  String get appbarTitle => isFromDashboard
+  String get appbarTitle => widget.isFromDashboard
       ? ''
       : serviceListCont.category.value.name.isNotEmpty
           ? " ${serviceListCont.category.value.name}"

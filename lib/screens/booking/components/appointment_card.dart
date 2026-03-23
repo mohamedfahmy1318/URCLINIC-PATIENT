@@ -11,7 +11,7 @@ import '../../../../utils/common_base.dart';
 import '../../../main.dart';
 import '../../../utils/app_common.dart';
 import '../../../utils/constants.dart';
-import '../../../utils/price_widget.dart';
+
 import '../appointment_detail_screen.dart';
 import '../appointments_controller.dart';
 import '../model/appointments_res_model.dart';
@@ -132,11 +132,7 @@ class AppointmentCard extends StatelessWidget {
                           ),
                         ],
                       ).expand(),
-                      PriceWidget(
-                        price: appointment.totalAmount,
-                        color: appColorPrimary,
-                        size: 18,
-                      ),
+                      /// Price hidden from patient view
                     ],
                   ),
                 ),

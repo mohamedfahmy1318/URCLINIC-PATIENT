@@ -4,14 +4,15 @@ import 'package:get/get.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../../../components/app_scaffold.dart';
 import '../../../main.dart';
 import '../../../utils/colors.dart';
 
-const _geminiApiKey = String.fromEnvironment(
-  'GEMINI_API_KEY',
-  defaultValue: 'AIzaSyCgTZeMFDXrHx6aKPu_Xs431sZ0C77m-is',
-);
+String get _geminiApiKey => 
+    dotenv.env['GEMINI_API_KEY'] ?? 
+    const String.fromEnvironment('GEMINI_API_KEY');
 
 class AIChatScreen extends StatefulWidget {
   const AIChatScreen({super.key});

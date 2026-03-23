@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/screens/doctor/components/doctor_card.dart';
@@ -7,16 +10,188 @@ import 'package:kivicare_patient/screens/doctor/search_doctor_widget.dart';
 import '../../../components/app_scaffold.dart';
 import '../../components/loader_widget.dart';
 import '../../main.dart';
+import '../../network/location_service.dart';
 import '../../utils/colors.dart';
 import '../../utils/empty_error_state_widget.dart';
 import '../slots/booking_form_screen.dart';
 import 'doctor_list_controller.dart';
 import 'model/doctor_list_res.dart';
 
-class DoctorsListScreen extends StatelessWidget {
-  DoctorsListScreen({super.key});
+enum DoctorSortOption { none, nameAZ, nameZA, ratingHigh, ratingLow, nearest }
 
+class DoctorsListScreen extends StatefulWidget {
+  const DoctorsListScreen({super.key});
+
+  @override
+  State<DoctorsListScreen> createState() => _DoctorsListScreenState();
+}
+
+class _DoctorsListScreenState extends State<DoctorsListScreen> {
   final DoctorListController doctorsListCont = Get.put(DoctorListController());
+
+  DoctorSortOption _currentSort = DoctorSortOption.none;
+  Position? _userPosition;
+  bool _loadingLocation = false;
+
+  String _getSortLabel(DoctorSortOption option) {
+    switch (option) {
+      case DoctorSortOption.none:
+        return locale.value.sortBy;
+      case DoctorSortOption.nameAZ:
+        return locale.value.nameAZ;
+      case DoctorSortOption.nameZA:
+        return locale.value.nameZA;
+      case DoctorSortOption.ratingHigh:
+        return locale.value.ratingHighToLow;
+      case DoctorSortOption.ratingLow:
+        return locale.value.ratingLowToHigh;
+      case DoctorSortOption.nearest:
+        return locale.value.nearestClinics; // Actually nearest doctors, but using same string
+    }
+  }
+
+  IconData _getSortIcon(DoctorSortOption option) {
+    switch (option) {
+      case DoctorSortOption.none:
+        return Icons.sort_rounded;
+      case DoctorSortOption.nameAZ:
+        return Icons.sort_by_alpha_rounded;
+      case DoctorSortOption.nameZA:
+        return Icons.sort_by_alpha_rounded;
+      case DoctorSortOption.ratingHigh:
+        return Icons.star_rounded;
+      case DoctorSortOption.ratingLow:
+        return Icons.star_outline_rounded;
+      case DoctorSortOption.nearest:
+        return Icons.near_me_rounded;
+    }
+  }
+
+  Future<void> _onSortChanged(DoctorSortOption option) async {
+    if (option == DoctorSortOption.nearest && _userPosition == null) {
+      setState(() => _loadingLocation = true);
+      try {
+        _userPosition = await getUserLocationPosition();
+      } catch (e) {
+        toast(e.toString());
+        setState(() => _loadingLocation = false);
+        return;
+      }
+      setState(() => _loadingLocation = false);
+    }
+    setState(() => _currentSort = option);
+  }
+
+  double _distanceTo(Doctor doctor) {
+    if (_userPosition == null) return double.infinity;
+    final lat = double.tryParse(doctor.latitude) ?? 0;
+    final lng = double.tryParse(doctor.longitude) ?? 0;
+    if (lat == 0 && lng == 0) return double.infinity;
+    const R = 6371.0;
+    final dLat = (lat - _userPosition!.latitude) * pi / 180;
+    final dLon = (lng - _userPosition!.longitude) * pi / 180;
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_userPosition!.latitude * pi / 180) *
+            cos(lat * pi / 180) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c;
+  }
+
+  List<Doctor> _getFilteredDoctors() {
+    final sorted = List<Doctor>.from(doctorsListCont.doctors);
+    switch (_currentSort) {
+      case DoctorSortOption.none:
+        break;
+      case DoctorSortOption.nameAZ:
+        sorted.sort((a, b) => a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
+        break;
+      case DoctorSortOption.nameZA:
+        sorted.sort((a, b) => b.fullName.toLowerCase().compareTo(a.fullName.toLowerCase()));
+        break;
+      case DoctorSortOption.ratingHigh:
+        sorted.sort((a, b) => b.averageRating.compareTo(a.averageRating));
+        break;
+      case DoctorSortOption.ratingLow:
+        sorted.sort((a, b) => a.averageRating.compareTo(b.averageRating));
+        break;
+      case DoctorSortOption.nearest:
+        if (_userPosition != null) {
+          sorted.sort((a, b) {
+            final distA = _distanceTo(a);
+            final distB = _distanceTo(b);
+            return distA.compareTo(distB);
+          });
+        }
+        break;
+    }
+    return sorted;
+  }
+
+  void _showSortBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: radius(2),
+                ),
+              ),
+              16.height,
+              Text(locale.value.sortBy, style: boldTextStyle(size: 18)),
+              16.height,
+              ...DoctorSortOption.values.where((o) => o != DoctorSortOption.none).map(
+                (option) => ListTile(
+                  leading: Icon(
+                    _getSortIcon(option),
+                    color: _currentSort == option ? appColorPrimary : iconColor,
+                  ),
+                  title: Text(
+                    _getSortLabel(option),
+                    style: _currentSort == option
+                        ? boldTextStyle(color: appColorPrimary)
+                        : primaryTextStyle(),
+                  ),
+                  trailing: _currentSort == option
+                      ? const Icon(Icons.check_circle, color: appColorPrimary)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _onSortChanged(option);
+                  },
+                ),
+              ),
+              if (_currentSort != DoctorSortOption.none)
+                ListTile(
+                  leading: const Icon(Icons.clear_rounded, color: cancelStatusColor),
+                  title: Text(
+                    locale.value.clearAll,
+                    style: primaryTextStyle(color: cancelStatusColor),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() => _currentSort = DoctorSortOption.none);
+                  },
+                ),
+              16.height,
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +209,74 @@ class DoctorsListScreen extends StatelessWidget {
               hideKeyboard(context);
             },
           ).paddingAll(16),
+
+          // Title & Sort Dropdown
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Text(
+                  locale.value.doctors,
+                  style: boldTextStyle(size: 18),
+                ).expand(),
+                GestureDetector(
+                  onTap: () => _showSortBottomSheet(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: boxDecorationDefault(
+                      color: _currentSort != DoctorSortOption.none
+                          ? appColorPrimary.withValues(alpha: 0.1)
+                          : context.cardColor,
+                      borderRadius: radius(20),
+                      border: Border.all(
+                        color: _currentSort != DoctorSortOption.none
+                            ? appColorPrimary
+                            : Colors.grey.shade300,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getSortIcon(_currentSort),
+                          size: 16,
+                          color: _currentSort != DoctorSortOption.none
+                              ? appColorPrimary
+                              : iconColor,
+                        ),
+                        6.width,
+                        Text(
+                          _currentSort == DoctorSortOption.none
+                              ? locale.value.sortBy
+                              : _getSortLabel(_currentSort),
+                          style: boldTextStyle(
+                            size: 12,
+                            color: _currentSort != DoctorSortOption.none
+                                ? appColorPrimary
+                                : null,
+                          ),
+                        ),
+                        4.width,
+                        Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 18,
+                          color: _currentSort != DoctorSortOption.none
+                              ? appColorPrimary
+                              : iconColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          8.height,
+
+          if (_loadingLocation)
+            const Center(child: CircularProgressIndicator()).paddingSymmetric(vertical: 20),
+
           Obx(
             () => SnapHelperWidget(
               future: doctorsListCont.doctorsFuture.value,
@@ -50,22 +293,9 @@ class DoctorsListScreen extends StatelessWidget {
               },
               loadingWidget: doctorsListCont.isLoading.value ? const Offstage() : const LoaderWidget(),
               onSuccess: (p0) {
-                // Auto-select doctor if only one available - run after build is complete
-                /*WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (doctorsListCont.doctors.length == 1 && doctorsListCont.selectedDoctor.value.doctorId.isNegative) {
-                    doctorsListCont.selectedDoctor(doctorsListCont.doctors[0]);
-                    // Set global variable for booking form
-                    currentSelectedDoctor(doctorsListCont.doctors[0]);
-                    log('Auto-selected doctor: ${doctorsListCont.doctors[0].fullName}');
-                    
-                    // Navigate directly to booking form screen
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      Get.to(() => BookingFormScreen());
-                    });
-                  }
-                });*/
+                final doctors = _getFilteredDoctors();
                 
-                if (doctorsListCont.doctors.isEmpty) {
+                if (doctors.isEmpty) {
                   return NoDataWidget(
                     title: locale.value.noDoctorsFoundAtAMoment,
                     subTitle: locale.value.looksLikeThereIsNoDoctorsForThisClinicWellKee,
@@ -88,9 +318,9 @@ class DoctorsListScreen extends StatelessWidget {
                       runSpacing: 16,
                       listAnimationType: ListAnimationType.FadeIn,
                       children: List.generate(
-                        doctorsListCont.doctors.length,
+                        doctors.length,
                         (index) {
-                          final Doctor doctorData = doctorsListCont.doctors[index];
+                          final Doctor doctorData = doctors[index];
                           return DoctorCard(doctorData: doctorData);
                         },
                       ),

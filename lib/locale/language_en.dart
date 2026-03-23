@@ -1839,7 +1839,7 @@ class LanguageEn extends BaseLanguage {
       'Search for doctors, clinics, or services';
 
   @override
-  String get pinnedClinics => 'Pinned Clinics';
+  String get pinnedClinics => 'Top Searched';
 
   @override
   String get browseBy => 'Browse By';

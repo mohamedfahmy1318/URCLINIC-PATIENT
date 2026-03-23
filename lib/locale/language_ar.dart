@@ -1826,7 +1826,7 @@ class LanguageAr extends BaseLanguage {
       'ابحث عن أطباء أو عيادات أو خدمات';
 
   @override
-  String get pinnedClinics => 'العيادات المثبتة';
+  String get pinnedClinics => ' الأكثر بحثاً';
 
   @override
   String get browseBy => 'تصفح حسب';

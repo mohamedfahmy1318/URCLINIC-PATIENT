@@ -61,14 +61,11 @@ class ClinicDetailScreen extends StatelessWidget {
                       // Clinic Name + Status + Select Branch
                       _buildClinicInfo(context),
 
-                      // Services horizontal list
-                      _buildServicesSection(context),
-
                       // Contact Info
                       _buildContactInfo(context),
 
-                      // Working Hours (inline schedule)
-                      _buildWorkingHours(context),
+                      // Services horizontal list
+                      _buildServicesSection(context),
 
                       // Gallery
                       _buildGalleryCard(context),
@@ -232,7 +229,7 @@ class ClinicDetailScreen extends StatelessWidget {
                   children: [
                     Text(
                       clinicDetailCont.clinicData.value.name,
-                      style: boldTextStyle(size: 20),
+                      style: boldTextStyle(size: 16),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ).visible(
@@ -248,6 +245,21 @@ class ClinicDetailScreen extends StatelessWidget {
                       ),
                     ],
                   ],
+                ),
+              ),
+              8.width,
+              // Working Hours icon button
+              GestureDetector(
+                onTap: () => _showWorkingHoursDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: boxDecorationDefault(
+                    color: appColorSecondary.withOpacity(0.1),
+                    borderRadius: radius(20),
+                    border: Border.all(color: appColorSecondary, width: 1),
+                  ),
+                  child: const Icon(Icons.access_time_rounded,
+                      color: appColorSecondary, size: 18),
                 ),
               ),
               8.width,
@@ -459,141 +471,142 @@ class ClinicDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Working Hours - compact summary: "مواعيد العمل من X إلى Y ماعدا يوم Z"
-  Widget _buildWorkingHours(BuildContext context) {
+  /// Localize day name to Arabic or English
+  String _localizeDay(String day) {
+    final Map<String, String> arDays = {
+      'monday': 'الإثنين',
+      'tuesday': 'الثلاثاء',
+      'wednesday': 'الأربعاء',
+      'thursday': 'الخميس',
+      'friday': 'الجمعة',
+      'saturday': 'السبت',
+      'sunday': 'الأحد',
+    };
+    final Map<String, String> enDays = {
+      'monday': 'Monday',
+      'tuesday': 'Tuesday',
+      'wednesday': 'Wednesday',
+      'thursday': 'Thursday',
+      'friday': 'Friday',
+      'saturday': 'Saturday',
+      'sunday': 'Sunday',
+    };
+    final key = day.toLowerCase().trim();
+    if (selectedLanguageCode.value == 'ar') {
+      return arDays[key] ?? day;
+    }
+    return enDays[key] ?? day;
+  }
+
+  /// Show a friendly working hours dialog
+  void _showWorkingHoursDialog(BuildContext context) {
     final openDays = clinicDetailCont.clinicData.value.clinicSession.openDays;
     final closeDays = clinicDetailCont.clinicData.value.clinicSession.closeDays;
 
-    if (openDays.isEmpty && closeDays.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // Get the most common schedule (majority hours)
+    // Get the most common schedule
     final String startTime =
         openDays.isNotEmpty ? _formatTime(openDays.first.startTime) : '';
     final String endTime =
         openDays.isNotEmpty ? _formatTime(openDays.first.endTime) : '';
 
-    // Find days with different hours than the majority
-    final Map<String, String> differentHours = {};
-    for (final day in openDays) {
-      final s = _formatTime(day.startTime);
-      final e = _formatTime(day.endTime);
-      if (s != startTime || e != endTime) {
-        differentHours[day.day] = '$s - $e';
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: boxDecorationDefault(
-          color: context.cardColor,
-          borderRadius: radius(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row with icon and title
-            Row(
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: radius(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                // Icon
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: appColorSecondary.withOpacity(0.1),
-                    borderRadius: radius(8),
+                    shape: BoxShape.circle,
                   ),
-                  child: const CachedImageWidget(
-                    url: Assets.iconsIcClock,
-                    height: 20,
-                    width: 20,
-                    color: appColorSecondary,
-                  ),
+                  child: const Icon(Icons.access_time_rounded,
+                      color: appColorSecondary, size: 32),
                 ),
-                12.width,
+                16.height,
                 Text(
                   locale.value.workingHours,
-                  style: boldTextStyle(size: 16),
+                  style: boldTextStyle(size: 18),
                 ),
-              ],
-            ),
-            14.height,
+                16.height,
 
-            // Main schedule line: من X إلى Y
-            if (startTime.isNotEmpty && endTime.isNotEmpty)
-              RichText(
-                text: TextSpan(
-                  style: primaryTextStyle(size: 14),
-                  children: [
-                    TextSpan(
-                      text: '${locale.value.fromTime} ',
-                      style: secondaryTextStyle(size: 14),
-                    ),
-                    TextSpan(
-                      text: startTime,
-                      style: boldTextStyle(size: 14, color: appColorPrimary),
-                    ),
-                    TextSpan(
-                      text: ' ${locale.value.toTime} ',
-                      style: secondaryTextStyle(size: 14),
-                    ),
-                    TextSpan(
-                      text: endTime,
-                      style: boldTextStyle(size: 14, color: appColorPrimary),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Closed days line: ماعدا يوم X
-            if (closeDays.isNotEmpty) ...[
-              8.height,
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: closeDays.length == 1
-                          ? '${locale.value.exceptDay} '
-                          : '${locale.value.exceptDays} ',
-                      style: secondaryTextStyle(size: 13),
-                    ),
-                    TextSpan(
-                      text: closeDays.join(', '),
-                      style: boldTextStyle(size: 13, color: cancelStatusColor),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            // Days with different hours than the majority
-            if (differentHours.isNotEmpty) ...[
-              8.height,
-              ...differentHours.entries.map(
-                (entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: RichText(
+                // Main schedule
+                if (startTime.isNotEmpty && endTime.isNotEmpty)
+                  RichText(
+                    textAlign: TextAlign.center,
                     text: TextSpan(
+                      style: primaryTextStyle(size: 15),
                       children: [
                         TextSpan(
-                          text: '${entry.key}: ',
-                          style: primaryTextStyle(size: 13),
+                          text: '${locale.value.fromTime} ',
+                          style: secondaryTextStyle(size: 15),
                         ),
                         TextSpan(
-                          text: entry.value,
+                          text: startTime,
                           style:
-                              boldTextStyle(size: 13, color: appColorSecondary),
+                              boldTextStyle(size: 15, color: appColorPrimary),
+                        ),
+                        TextSpan(
+                          text: ' ${locale.value.toTime} ',
+                          style: secondaryTextStyle(size: 15),
+                        ),
+                        TextSpan(
+                          text: endTime,
+                          style:
+                              boldTextStyle(size: 15, color: appColorPrimary),
                         ),
                       ],
                     ),
                   ),
+
+                // Closed days
+                if (closeDays.isNotEmpty) ...[
+                  12.height,
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: closeDays.length == 1
+                              ? '${locale.value.exceptDay} '
+                              : '${locale.value.exceptDays} ',
+                          style: secondaryTextStyle(size: 14),
+                        ),
+                        TextSpan(
+                          text: closeDays
+                              .map((d) => _localizeDay(d))
+                              .join(', '),
+                          style: boldTextStyle(
+                              size: 14, color: cancelStatusColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                20.height,
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    color: appColorPrimary,
+                    shapeBorder:
+                        RoundedRectangleBorder(borderRadius: radius(12)),
+                    onTap: () => Navigator.pop(ctx),
+                    text: locale.value.close,
+                    textStyle: boldTextStyle(size: 14, color: Colors.white),
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
-      ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

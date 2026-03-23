@@ -515,34 +515,8 @@ class AppointmentDetail extends StatelessWidget {
                               ),
                     ),
                   ),
-                  paymentDetails(context),
-                  Obx(
-                    () => SizedBox(
-                      //// ADD THIS CONTAINER WITH WIDTH
-                      width: Get.width,
-                      child: payNowBtn(context).visible(
-                        (appointmentDetailCont
-                                        .appointmentDetail.value.paymentStatus
-                                        .toLowerCase()
-                                        .contains(PaymentStatus.pending) ||
-                                    appointmentDetailCont
-                                        .appointmentDetail.value.paymentStatus
-                                        .toLowerCase()
-                                        .contains(PaymentStatus.failed) ||
-                                    appointmentDetailCont
-                                        .appointmentDetail.value.paymentStatus
-                                        .toLowerCase()
-                                        .contains(
-                                            PaymentStatus.ADVANCE_PAID)) &&
-                                appointmentDetailCont
-                                    .appointmentDetail.value.status
-                                    .toLowerCase()
-                                    .contains(
-                                        StatusConst.checkIn.toLowerCase()) ||
-                            appointmentDetailCont.isAdvancePaymentFailed,
-                      ),
-                    ),
-                  ),
+                  /// Payment details hidden from patient view
+                  /// Pay now button hidden from patient view
                   if (appointmentDetailCont.appointmentDetail.value.status
                       .contains(StatusConst.pending)) ...[
                     24.height,

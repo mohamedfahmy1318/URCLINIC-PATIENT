@@ -101,57 +101,6 @@ class HomeSearchComponent extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildSearchChip(
-    BuildContext context, {
-    required String icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: boxDecorationDefault(
-              color: appColorPrimary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CachedImageWidget(
-                  url: icon,
-                  height: 18,
-                  width: 18,
-                  color: appColorPrimary,
-                ),
-                6.width,
-                Text(
-                  label,
-                  style: boldTextStyle(size: 12, color: appColorPrimary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSearchBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const _SearchBottomSheet(),
-    );
-  }
 }
 
 class _SearchBottomSheet extends StatefulWidget {
