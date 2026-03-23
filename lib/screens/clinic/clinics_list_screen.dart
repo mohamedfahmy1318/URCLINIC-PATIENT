@@ -16,7 +16,7 @@ import 'clinic_map_screen.dart';
 import 'model/clinics_res_model.dart';
 
 class ClinicListScreen extends StatefulWidget {
-  ClinicListScreen({super.key});
+  const ClinicListScreen({super.key});
 
   @override
   State<ClinicListScreen> createState() => _ClinicListScreenState();

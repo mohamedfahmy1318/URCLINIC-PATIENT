@@ -11,7 +11,6 @@ import 'package:kivicare_patient/utils/app_common.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../components/cached_image_widget.dart';
-import '../../../generated/assets.dart';
 import '../../../main.dart';
 import '../../../utils/colors.dart';
 
@@ -28,7 +27,8 @@ class HomeSearchComponent extends StatelessWidget {
           // Search Bar
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => Get.to(() => ClinicListScreen(), arguments: {'isFromSearch': true}),
+            onTap: () => Get.to(() => ClinicListScreen(),
+                arguments: {'isFromSearch': true}),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: boxDecorationDefault(

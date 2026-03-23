@@ -10,7 +10,7 @@ import '../../../utils/colors.dart';
 
 const _geminiApiKey = String.fromEnvironment(
   'GEMINI_API_KEY',
-  defaultValue: '',
+  defaultValue: 'AIzaSyCgTZeMFDXrHx6aKPu_Xs431sZ0C77m-is',
 );
 
 class AIChatScreen extends StatefulWidget {

@@ -8,7 +8,6 @@ import '../../generated/assets.dart';
 import '../../main.dart';
 import '../../utils/colors.dart';
 import '../../utils/common_base.dart';
-import '../../utils/price_widget.dart';
 import '../booking/model/save_booking_res.dart';
 
 class BookingSuccessScreen extends StatelessWidget {

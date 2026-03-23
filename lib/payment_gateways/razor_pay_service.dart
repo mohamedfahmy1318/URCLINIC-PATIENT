@@ -2,10 +2,6 @@ import 'package:nb_utils/nb_utils.dart';
 
 import 'dart:io';
 
-import '../configs.dart';
-import '../utils/app_common.dart';
-import '../utils/colors.dart';
-
 class RazorPayService {
   static late String razorKeys;
   num totalAmount = 0;

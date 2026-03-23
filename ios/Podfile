@@ -42,6 +42,9 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
 
     target.build_configurations.each do |config|
+      # Keep pods aligned with app minimum iOS target and modern plugin requirements.
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.6'
+
           config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
             '$(inherited)',
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/utils/common_base.dart';
-import '../../../../main.dart';
 import '../../../../utils/app_common.dart';
 import '../../../components/cached_image_widget.dart';
 import '../../../generated/assets.dart';

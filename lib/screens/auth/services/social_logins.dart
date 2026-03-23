@@ -39,10 +39,12 @@ class GoogleSignInAuthService {
 
       String firstName = '';
       String lastName = '';
-      if (currentUser.displayName.validate().split(' ').isNotEmpty)
+      if (currentUser.displayName.validate().split(' ').isNotEmpty) {
         firstName = currentUser.displayName.splitBefore(' ');
-      if (currentUser.displayName.validate().split(' ').length >= 2)
+      }
+      if (currentUser.displayName.validate().split(' ').length >= 2) {
         lastName = currentUser.displayName.splitAfter(' ');
+      }
 
       // Fall back to email prefix if displayName is empty
       if (firstName.trim().isEmpty) {
@@ -111,8 +113,9 @@ class GoogleSignInAuthService {
             final displayName = currentUser.displayName.validate();
             if (displayName.isNotEmpty) {
               firstName = displayName.splitBefore(' ');
-              if (displayName.split(' ').length >= 2)
+              if (displayName.split(' ').length >= 2) {
                 lastName = displayName.splitAfter(' ');
+              }
             } else {
               firstName = currentUser.email.validate().split('@').first;
             }

@@ -4,13 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/utils/colors.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../components/cached_image_widget.dart';
-import '../../../utils/common_base.dart';
-import '../../../utils/constants.dart';
-import '../../category/category_screen.dart';
-import '../../service/service_detail_screen.dart';
 import '../home_controller.dart';
 
 class SliderComponent extends StatefulWidget {

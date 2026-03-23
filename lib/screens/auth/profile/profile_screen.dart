@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/configs.dart';
-import 'package:kivicare_patient/utils/price_widget.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../../components/app_scaffold.dart';
 import '../../../generated/assets.dart';
@@ -12,7 +11,6 @@ import '../../incident_management/incident_management_list_screen.dart';
 import '../../other_patient/manage_other_patient_screen.dart';
 import 'common_horizontal_profile_widget.dart';
 import 'edit_user_profile_controller.dart';
-import 'patient_wallet_history_screen.dart';
 import 'profile_controller.dart';
 import '../../../utils/app_common.dart';
 import '../../../utils/colors.dart';
