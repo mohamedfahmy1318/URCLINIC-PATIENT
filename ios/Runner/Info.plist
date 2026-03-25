@@ -38,6 +38,14 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>mailto</string>
+		<string>http</string>
+		<string>https</string>
+		<string>sms</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -57,16 +65,15 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>URCLINIC requires access to the Camera to upload your profile photo.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>URCLINIC requires address permission access to get the current location of the user instead of typing address manually.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>URCLINIC requires address permission access to get the current location of the user instead of typing address manually.</string>
+
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>URCLINIC requires address permission access to get the current location of the user instead of typing address manually.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>URCLINIC requires access to the photo library to upload your profile photo.</string>
 	<key>NSLocationUsageDescription</key>
 	<string>URCLINIC requires address permission access to get the current location of the user instead of typing address manually.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>URCLINIC requires your permission to track in order to provide personalized ads and analytics.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

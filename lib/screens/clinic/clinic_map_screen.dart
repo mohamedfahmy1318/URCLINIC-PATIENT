@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:kivicare_patient/components/app_scaffold.dart';
 import 'package:kivicare_patient/components/cached_image_widget.dart';
 import 'package:kivicare_patient/components/loader_widget.dart';
 import 'package:kivicare_patient/main.dart';
@@ -19,10 +18,7 @@ class ClinicMapScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffoldNew(
-      appBartitleText: locale.value.clinicsNearYou,
-      appBarVerticalSize: Get.height * 0.12,
-      isLoading: controller.isLoading,
+    return Scaffold(
       body: Obx(() {
         if (controller.isLoading.value && controller.clinics.isEmpty) {
           return const LoaderWidget();
@@ -30,7 +26,7 @@ class ClinicMapScreen extends StatelessWidget {
 
         return Stack(
           children: [
-            // Google Map
+            // ─── Google Map (full screen) ───
             Obx(() => GoogleMap(
                   initialCameraPosition: controller.initialCameraPosition,
                   onMapCreated: controller.onMapCreated,
@@ -39,10 +35,134 @@ class ClinicMapScreen extends StatelessWidget {
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
                   mapToolbarEnabled: false,
-                  compassEnabled: true,
+                  compassEnabled: false,
+                  onTap: controller.onMapTap,
                 )),
 
-            // Current Location Button
+            // ─── Top bar: Back + Search ───
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        // Back button
+                        GestureDetector(
+                          onTap: () => Get.back(),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: boxDecorationDefault(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                                size: 18, color: appColorPrimary),
+                          ),
+                        ),
+                        12.width,
+
+                        // Search bar
+                        Expanded(
+                          child: Container(
+                            decoration: boxDecorationDefault(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              controller: controller.searchTextController,
+                              decoration: InputDecoration(
+                                hintText:
+                                    locale.value.searchForDoctorsClinicsServices,
+                                hintStyle: secondaryTextStyle(size: 13),
+                                prefixIcon: const Icon(Icons.search,
+                                    color: appColorPrimary, size: 20),
+                                suffixIcon: Obx(
+                                    () => controller.searchQuery.value.isNotEmpty
+                                        ? IconButton(
+                                            onPressed: () {
+                                              controller.searchTextController.clear();
+                                              controller.updateSearch('');
+                                            },
+                                            icon: const Icon(Icons.close,
+                                                size: 18, color: Colors.grey),
+                                          )
+                                        : const SizedBox.shrink()),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                              ),
+                              onChanged: controller.updateSearch,
+                              onSubmitted: controller.onSearchSubmitted,
+                              style: primaryTextStyle(size: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Dropdown for predictions
+                    Obx(() {
+                      if (controller.placePredictions.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      
+                      return Container(
+                        margin: const EdgeInsets.only(top: 8, left: 45),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: boxDecorationDefault(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: controller.placePredictions.length,
+                          separatorBuilder: (context, index) => const Divider(height: 0),
+                          itemBuilder: (context, index) {
+                            final prediction = controller.placePredictions[index];
+                            final description = prediction['description'] as String;
+                            
+                            return ListTile(
+                              leading: const Icon(Icons.location_on_outlined, color: Colors.grey),
+                              title: Text(description, style: primaryTextStyle(size: 14)),
+                              onTap: () {
+                                final placeId = prediction['place_id'] as String;
+                                controller.onPlaceSelected(placeId, description);
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+
+            // ─── Current Location Button ───
             Positioned(
               right: 16,
               bottom: 200,
@@ -54,121 +174,18 @@ class ClinicMapScreen extends StatelessWidget {
               ),
             ),
 
-            // Clinics List Bottom Sheet
-            DraggableScrollableSheet(
-              initialChildSize: 0.25,
-              minChildSize: 0.15,
-              maxChildSize: 0.6,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: context.cardColor,
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(20)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, -5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Handle bar
-                      Container(
-                        margin: const EdgeInsets.only(top: 8, bottom: 4),
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-
-                      // Title
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                '${locale.value.clinics} (${controller.clinics.length})',
-                                style: boldTextStyle(size: 16),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            // Refresh button
-                            IconButton(
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () => controller.getAllClinics(),
-                              icon: const Icon(Icons.refresh,
-                                  color: appColorPrimary, size: 22),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Clinics List
-                      Expanded(
-                        child: Obx(() {
-                          if (controller.clinics.isEmpty) {
-                            return SingleChildScrollView(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.location_off_outlined,
-                                      size: 20,
-                                      color: secondaryTextColor,
-                                    ),
-                                    8.width,
-                                    Text(
-                                      locale.value.noClinicsFoundAtAMoment,
-                                      style: secondaryTextStyle(size: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-
-                          return ListView.separated(
-                            controller: scrollController,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            itemCount: controller.clinics.length,
-                            separatorBuilder: (_, __) => 12.height,
-                            itemBuilder: (context, index) {
-                              final clinic = controller.clinics[index];
-                              return _ClinicMapCard(
-                                clinic: clinic,
-                                distance:
-                                    controller.getDistanceToClinic(clinic),
-                                onTap: () {
-                                  controller.goToClinic(clinic);
-                                },
-                                onDetailTap: () {
-                                  Get.to(() => ClinicDetailScreen(),
-                                      arguments: clinic);
-                                },
-                              );
-                            },
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+            // ─── Selected Clinic Bottom Card ───
+            Obx(() {
+              final clinic = controller.selectedClinic.value;
+              if (clinic == null) return const SizedBox.shrink();
+              return _SelectedClinicCard(
+                clinic: clinic,
+                distance: controller.getDistanceToClinic(clinic),
+                onTap: () {
+                  Get.to(() => ClinicDetailScreen(), arguments: clinic);
+                },
+              );
+            }),
           ],
         );
       }),
@@ -176,140 +193,127 @@ class ClinicMapScreen extends StatelessWidget {
   }
 }
 
-class _ClinicMapCard extends StatelessWidget {
+/// Bottom card that appears when a marker is tapped.
+class _SelectedClinicCard extends StatelessWidget {
   final Clinic clinic;
   final String distance;
   final VoidCallback onTap;
-  final VoidCallback onDetailTap;
 
-  const _ClinicMapCard({
+  const _SelectedClinicCard({
     required this.clinic,
     required this.distance,
     required this.onTap,
-    required this.onDetailTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: boxDecorationDefault(
-        color: context.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: MediaQuery.of(context).padding.bottom + 16,
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Clinic Image
-              CachedImageWidget(
-                url: clinic.clinicImage,
-                height: 70,
-                width: 70,
-                fit: BoxFit.cover,
-                radius: 10,
+        child: Container(
+          decoration: boxDecorationDefault(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-              12.width,
-
-              // Clinic Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      clinic.name,
-                      style: boldTextStyle(size: 14),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Clinic Image with Favorite icon ──
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: CachedImageWidget(
+                      url: clinic.clinicImage.isNotEmpty
+                          ? clinic.clinicImage
+                          : clinic.logo,
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-                    6.height,
-                    if (clinic.address.isNotEmpty)
-                      Row(
+                  ),
+                ],
+              ),
+
+              // ── Clinic Info ──
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.location_on,
-                              size: 14, color: Colors.grey),
-                          4.width,
-                          Expanded(
-                            child: Text(
-                              clinic.address,
-                              style: secondaryTextStyle(size: 12),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          Text(
+                            clinic.name,
+                            style: boldTextStyle(size: 16),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                    6.height,
-                    Row(
-                      children: [
-                        if (distance.isNotEmpty) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: appColorPrimary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.directions_walk,
-                                    size: 12, color: appColorPrimary),
-                                4.width,
+                          6.height,
+                          Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              8.width,
+                              Expanded(
+                                child: Text(
+                                  clinic.address.isNotEmpty
+                                      ? clinic.address
+                                      : clinic.cityName,
+                                  style: secondaryTextStyle(size: 12),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (distance.isNotEmpty) ...[
+                                8.width,
                                 Text(
                                   distance,
-                                  style: primaryTextStyle(
+                                  style: secondaryTextStyle(
                                       size: 11, color: appColorPrimary),
                                 ),
                               ],
-                            ),
+                            ],
                           ),
-                          8.width,
                         ],
-                        if (clinic.totalDoctors > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.medical_services,
-                                    size: 12, color: Colors.green),
-                                4.width,
-                                Text(
-                                  '${clinic.totalDoctors} ${locale.value.doctors}',
-                                  style: primaryTextStyle(
-                                      size: 11, color: Colors.green),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
+                      ),
+                    ),
+                    12.width,
+
+                    // ── Navigate arrow ──
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: appColorPrimary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.arrow_upward_rounded,
+                        color: appColorPrimary,
+                        size: 22,
+                      ),
                     ),
                   ],
-                ),
-              ),
-
-              // Arrow Button
-              IconButton(
-                onPressed: onDetailTap,
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: appColorPrimary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: Colors.white,
-                  ),
                 ),
               ),
             ],

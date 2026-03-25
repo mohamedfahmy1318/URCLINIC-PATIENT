@@ -1,9 +1,14 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/api/core_apis.dart';
+import 'package:flutter/material.dart';
 import 'package:kivicare_patient/network/location_service.dart';
+import 'package:kivicare_patient/utils/app_common.dart';
 import 'model/clinics_res_model.dart';
 
 class ClinicMapController extends GetxController {
@@ -11,6 +16,13 @@ class ClinicMapController extends GetxController {
   RxList<Clinic> clinics = RxList();
   Rx<Position?> currentPosition = Rx<Position?>(null);
   RxSet<Marker> markers = RxSet<Marker>();
+  Rxn<Clinic> selectedClinic = Rxn<Clinic>();
+  RxString searchQuery = ''.obs;
+  final TextEditingController searchTextController = TextEditingController();
+
+  RxList<dynamic> placePredictions = <dynamic>[].obs;
+  Timer? _debounce;
+  final String _placesApiKey = 'AIzaSyD_z-jvWRKp9YCTrOmDXlnrqkTLV0k9zH8';
 
   GoogleMapController? mapController;
 
@@ -90,7 +102,8 @@ class ClinicMapController extends GetxController {
     }
 
     // Add clinic markers
-    for (var clinic in clinics) {
+    final clinicsToShow = filteredClinics;
+    for (var clinic in clinicsToShow) {
       if (clinic.latitude.isNotEmpty && clinic.longitude.isNotEmpty) {
         try {
           final lat = double.tryParse(clinic.latitude);
@@ -102,7 +115,7 @@ class ClinicMapController extends GetxController {
                 markerId: MarkerId('clinic_${clinic.id}'),
                 position: LatLng(lat, lng),
                 icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueRed),
+                    BitmapDescriptor.hueGreen),
                 infoWindow: InfoWindow(
                   title: clinic.name,
                   snippet: clinic.address.isNotEmpty
@@ -125,8 +138,128 @@ class ClinicMapController extends GetxController {
   }
 
   void _onClinicMarkerTap(Clinic clinic) {
-    // This is called when marker info window is tapped
-    log("Clinic tapped: ${clinic.name}");
+    selectedClinic.value = clinic;
+    // Center camera on selected clinic
+    goToClinic(clinic);
+  }
+
+  void onMapTap(LatLng position) {
+    selectedClinic.value = null;
+  }
+
+  List<Clinic> get filteredClinics {
+    if (searchQuery.value.isEmpty) return clinics;
+    final q = searchQuery.value.toLowerCase();
+    return clinics
+        .where((c) =>
+            c.name.toLowerCase().contains(q) ||
+            c.address.toLowerCase().contains(q) ||
+            c.cityName.toLowerCase().contains(q))
+        .toList();
+  }
+
+  void updateSearch(String query) {
+    searchQuery.value = query;
+    selectedClinic.value = null;
+    _createMarkers();
+
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _getPlacePredictions(query);
+    });
+  }
+
+  Future<void> _getPlacePredictions(String query) async {
+    if (query.isEmpty) {
+      placePredictions.clear();
+      return;
+    }
+
+    try {
+      final url = Uri.parse(
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$_placesApiKey&language=${selectedLanguageCode.value}');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'OK') {
+          placePredictions.value = data['predictions'];
+        } else {
+          placePredictions.clear();
+        }
+      }
+    } catch (e) {
+      log('Error getting predictions: $e');
+    }
+  }
+
+  Future<void> onPlaceSelected(String placeId, String description) async {
+    searchTextController.text = description;
+    searchQuery.value = description;
+    placePredictions.clear();
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    try {
+      if (mapController == null) return;
+      
+      final url = Uri.parse(
+          'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_placesApiKey');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'OK') {
+          final loc = data['result']['geometry']['location'];
+          mapController!.animateCamera(
+            CameraUpdate.newLatLngZoom(
+              LatLng(loc['lat'], loc['lng']),
+              12,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      log('Error getting place details: $e');
+    }
+  }
+
+  void onSearchSubmitted(String query) {
+    if (mapController == null) return;
+    
+    final searchClinics = filteredClinics;
+    if (searchClinics.isEmpty) return;
+
+    if (searchClinics.length == 1) {
+      goToClinic(searchClinics.first);
+      selectedClinic.value = searchClinics.first;
+      return;
+    }
+
+    double minLat = double.infinity;
+    double maxLat = -double.infinity;
+    double minLng = double.infinity;
+    double maxLng = -double.infinity;
+
+    for (var clinic in searchClinics) {
+      if (clinic.latitude.isNotEmpty && clinic.longitude.isNotEmpty) {
+        final lat = double.tryParse(clinic.latitude);
+        final lng = double.tryParse(clinic.longitude);
+        if (lat != null && lng != null) {
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+        }
+      }
+    }
+
+    if (minLat != double.infinity) {
+      final bounds = LatLngBounds(
+        southwest: LatLng(minLat, minLng),
+        northeast: LatLng(maxLat, maxLng),
+      );
+      mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 50),
+      );
+    }
   }
 
   void onMapCreated(GoogleMapController controller) {
