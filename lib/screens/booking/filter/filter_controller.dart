@@ -31,9 +31,13 @@ import 'components/service_type_filter/filter_service_type_component.dart';
 
 class FilterController extends GetxController {
   RxString filterType = "".obs;
+  StreamSubscription<String>? _searchClinicSubscription;
+  StreamSubscription<String>? _searchServiceSubscription;
+  StreamSubscription<String>? _searchCategorySubscription;
 
   //Clinic List
-  Rx<Future<RxList<Clinic>>> clinicListFuture = Future(() => RxList<Clinic>()).obs;
+  Rx<Future<RxList<Clinic>>> clinicListFuture =
+      Future(() => RxList<Clinic>()).obs;
   RxBool isClinicLoading = false.obs;
   RxList<Clinic> clinicList = RxList();
   RxBool isClinicLastPage = false.obs;
@@ -45,8 +49,10 @@ class FilterController extends GetxController {
   Rx<Clinic> selectedClinicData = Clinic(clinicSession: ClinicSession()).obs;
 
   // Service
-  Rx<Future<RxList<ServiceElement>>> serviceListFuture = Future(() => RxList<ServiceElement>()).obs;
-  Rx<Future<RxList<Doctor>>> doctorListFuture = Future(() => RxList<Doctor>()).obs;
+  Rx<Future<RxList<ServiceElement>>> serviceListFuture =
+      Future(() => RxList<ServiceElement>()).obs;
+  Rx<Future<RxList<Doctor>>> doctorListFuture =
+      Future(() => RxList<Doctor>()).obs;
   RxList<Doctor> doctorList = RxList();
   RxInt doctorPage = 1.obs;
   RxBool isDoctorLoading = false.obs;
@@ -61,7 +67,8 @@ class FilterController extends GetxController {
   Rx<CategoryElement> selectedCategoryData = CategoryElement().obs;
 
   // Service
-  Rx<Future<RxList<CategoryElement>>> categoryListFuture = Future(() => RxList<CategoryElement>()).obs;
+  Rx<Future<RxList<CategoryElement>>> categoryListFuture =
+      Future(() => RxList<CategoryElement>()).obs;
   RxBool isCategoryLoading = false.obs;
   RxList<CategoryElement> categoryList = RxList();
   RxBool isCategoryLastPage = false.obs;
@@ -77,7 +84,10 @@ class FilterController extends GetxController {
     {'slug': PaymentStatus.pending, 'value': locale.value.pending},
     {'slug': PaymentStatus.ADVANCE_PAID, 'value': locale.value.advancePaid},
     {'slug': PaymentStatus.failed, 'value': locale.value.failed},
-    {'slug': PaymentStatus.ADVANCE_REFUNDED, 'value': locale.value.advanceRefunded},
+    {
+      'slug': PaymentStatus.ADVANCE_REFUNDED,
+      'value': locale.value.advanceRefunded
+    },
     {'slug': PaymentStatus.REFUNDED, 'value': locale.value.refunded},
   ].obs;
 
@@ -96,8 +106,13 @@ class FilterController extends GetxController {
   Rx<RangeValues> rangeValues = const RangeValues(1, 5000).obs;
   Rx<RangeValues> rangeRatingValues = const RangeValues(1, 5).obs;
 
-  RxList filterList = [locale.value.clinic, locale.value.filterService, locale.value.filterRating].obs;
-  RxList serviceFilterList = [locale.value.clinic, locale.value.price, locale.value.category].obs;
+  RxList filterList = [
+    locale.value.clinic,
+    locale.value.filterService,
+    locale.value.filterRating
+  ].obs;
+  RxList serviceFilterList =
+      [locale.value.clinic, locale.value.price, locale.value.category].obs;
   RxList clinicFilterList = [locale.value.filterService].obs;
   RxList categoryFilterList = [locale.value.clinic, locale.value.price].obs;
   RxList appointmentFiterList = [
@@ -122,7 +137,8 @@ class FilterController extends GetxController {
   void onInit() {
     if (Get.arguments is List) {
       if (Get.arguments[0] is int) {
-        selectedClinicData(Clinic(id: Get.arguments[0], clinicSession: ClinicSession()));
+        selectedClinicData(
+            Clinic(id: Get.arguments[0], clinicSession: ClinicSession()));
         seleClinicFilterCount(1);
       }
 
@@ -131,11 +147,15 @@ class FilterController extends GetxController {
       }
 
       if (Get.arguments[2] is String) {
-        minimumPrice((Get.arguments[2] as String).toDouble() > 0 ? (Get.arguments[2] as String).toDouble() : 1);
+        minimumPrice((Get.arguments[2] as String).toDouble() > 0
+            ? (Get.arguments[2] as String).toDouble()
+            : 1);
       }
 
       if (Get.arguments[3] is String) {
-        maximumPrice((Get.arguments[3] as String).toDouble() > 0 ? (Get.arguments[3] as String).toDouble() : 5000);
+        maximumPrice((Get.arguments[3] as String).toDouble() > 0
+            ? (Get.arguments[3] as String).toDouble()
+            : 5000);
       }
 
       rangeValues(RangeValues(minimumPrice.value, maximumPrice.value));
@@ -184,29 +204,38 @@ class FilterController extends GetxController {
 
   //get Clinic Info
   void getClinic() {
-    searchClinicStream.stream.debounce(const Duration(seconds: 1)).listen((s) {
+    _searchClinicSubscription = searchClinicStream.stream
+        .debounce(const Duration(seconds: 1))
+        .listen((s) {
       getClinicsList();
     });
     getClinicsList();
   }
 
   void getService() {
-    scrollServiceController.addListener(() => Get.context != null ? hideKeyboard(Get.context) : null);
-    searchServiceStream.stream.debounce(const Duration(seconds: 1)).listen((s) {
+    scrollServiceController.addListener(
+        () => Get.context != null ? hideKeyboard(Get.context) : null);
+    _searchServiceSubscription = searchServiceStream.stream
+        .debounce(const Duration(seconds: 1))
+        .listen((s) {
       getServicesList();
     });
     getServicesList();
   }
 
   void getCategory() {
-    _scrollCategoryController.addListener(() => Get.context != null ? hideKeyboard(Get.context) : null);
-    searchCategoryStream.stream.debounce(const Duration(seconds: 1)).listen((s) {
+    _scrollCategoryController.addListener(
+        () => Get.context != null ? hideKeyboard(Get.context) : null);
+    _searchCategorySubscription = searchCategoryStream.stream
+        .debounce(const Duration(seconds: 1))
+        .listen((s) {
       getCategoryList();
     });
     getCategoryList();
   }
 
-  Future<void> getClinicsList({bool showLoader = true, String search = ""}) async {
+  Future<void> getClinicsList(
+      {bool showLoader = true, String search = ""}) async {
     if (showLoader) {
       isClinicLoading(true);
     }
@@ -227,7 +256,8 @@ class FilterController extends GetxController {
     }).whenComplete(() => isClinicLoading(false));
   }
 
-  Future<void> getServicesList({bool showLoader = true, String search = ""}) async {
+  Future<void> getServicesList(
+      {bool showLoader = true, String search = ""}) async {
     if (showLoader) {
       isServiceLoading(true);
     }
@@ -265,7 +295,8 @@ class FilterController extends GetxController {
     }).whenComplete(() => isServiceLoading(false));
   }
 
-  Future<void> getCategoryList({bool showLoader = true, String search = ""}) async {
+  Future<void> getCategoryList(
+      {bool showLoader = true, String search = ""}) async {
     if (showLoader) {
       isCategoryLoading(true);
     }
@@ -288,7 +319,7 @@ class FilterController extends GetxController {
   RxInt appliedFilterCount = 0.obs;
 
   void resetFilter(String moduleType, String filterType) {
-    selectedClinicData(Clinic(clinicSession: ClinicSession(),id: -1));
+    selectedClinicData(Clinic(clinicSession: ClinicSession(), id: -1));
     selectedDoctorDate(Doctor());
     totalServiceCount(0).obs;
     totalDoctorCount(0).obs;
@@ -325,27 +356,59 @@ class FilterController extends GetxController {
     log("filter type--------------${filterType.value}");
     switch (filterType.value) {
       case "Price":
-        return displayValue == 'service' || displayValue == 'category' ? FilterPriceComponent().expand(flex: 3).visible(displayValue == 'service' || displayValue == 'category') : const SizedBox();
+        return displayValue == 'service' || displayValue == 'category'
+            ? FilterPriceComponent().expand(flex: 3).visible(
+                displayValue == 'service' || displayValue == 'category')
+            : const SizedBox();
       case "Clinic":
-        return FilterClinicComponent(filterCont: filterCont).expand(flex: 3).visible(displayValue == "doctor" || displayValue == "service" || displayValue == 'category' || displayValue == 'appointment');
+        return FilterClinicComponent(filterCont: filterCont)
+            .expand(flex: 3)
+            .visible(displayValue == "doctor" ||
+                displayValue == "service" ||
+                displayValue == 'category' ||
+                displayValue == 'appointment');
       case "Service Type":
-        return FilterServiceTypeComponent(filterCont: filterCont).expand(flex: 3);
+        return FilterServiceTypeComponent(filterCont: filterCont)
+            .expand(flex: 3);
       case "Category":
-        return FilterCategoryComponent(filterCont: filterCont).expand(flex: 3).visible(displayValue == "service" || displayValue == 'appointment');
+        return FilterCategoryComponent(filterCont: filterCont)
+            .expand(flex: 3)
+            .visible(
+                displayValue == "service" || displayValue == 'appointment');
       case "Service":
-        return displayValue == 'doctor' || displayValue == 'clinic' || displayValue == 'category' || displayValue == 'appointment'
-            ? FilterServiceComponent(filterCont: filterCont).expand(flex: 3).visible(displayValue == 'doctor' || displayValue == 'clinic' || displayValue == 'category' || displayValue == 'appointment')
-            : const SizedBox().expand(flex: 3).visible(displayValue == 'doctor');
+        return displayValue == 'doctor' ||
+                displayValue == 'clinic' ||
+                displayValue == 'category' ||
+                displayValue == 'appointment'
+            ? FilterServiceComponent(filterCont: filterCont)
+                .expand(flex: 3)
+                .visible(displayValue == 'doctor' ||
+                    displayValue == 'clinic' ||
+                    displayValue == 'category' ||
+                    displayValue == 'appointment')
+            : const SizedBox()
+                .expand(flex: 3)
+                .visible(displayValue == 'doctor');
       case "Rating":
-        return FilterRatingComponent(filterCont: filterCont).expand(flex: 3).visible(displayValue == 'doctor');
+        return FilterRatingComponent(filterCont: filterCont)
+            .expand(flex: 3)
+            .visible(displayValue == 'doctor');
       case "Doctor":
-        return FilterDoctor(filterCont: filterCont).expand(flex: 3).visible(displayValue == 'doctor' || displayValue == 'appointment');
+        return FilterDoctor(filterCont: filterCont)
+            .expand(flex: 3)
+            .visible(displayValue == 'doctor' || displayValue == 'appointment');
       case "Payment Status":
-        return FilterPaymentStatus(filterCont: filterCont).expand(flex: 3).visible(displayValue == 'doctor' || displayValue == 'appointment');
+        return FilterPaymentStatus(filterCont: filterCont)
+            .expand(flex: 3)
+            .visible(displayValue == 'doctor' || displayValue == 'appointment');
       case "Consultation Type":
-        return FilterConsolationType(filterCont: filterCont).expand(flex: 3).visible(displayValue == 'doctor' || displayValue == 'appointment');
+        return FilterConsolationType(filterCont: filterCont)
+            .expand(flex: 3)
+            .visible(displayValue == 'doctor' || displayValue == 'appointment');
       case "Date":
-        return FilterDate(filterCont: filterCont).expand(flex: 3).visible(displayValue == 'doctor' || displayValue == 'appointment');
+        return FilterDate(filterCont: filterCont)
+            .expand(flex: 3)
+            .visible(displayValue == 'doctor' || displayValue == 'appointment');
       default:
         return FilterServiceComponent(filterCont: filterCont).expand(flex: 3);
     }
@@ -388,7 +451,10 @@ class FilterController extends GetxController {
     if (seleClinicFilterCount.value == 0) seleClinicFilterCount++;
   }
 
-  RxInt get totalDoctorCount => (seleFilterCount.value + seleClinicFilterCount.value + seleRatingFilterCount.value).obs;
+  RxInt get totalDoctorCount => (seleFilterCount.value +
+          seleClinicFilterCount.value +
+          seleRatingFilterCount.value)
+      .obs;
 
   RxInt get actualDoctorFilterCount {
     int count = 0;
@@ -420,7 +486,10 @@ class FilterController extends GetxController {
     if (seleCategoryFilterCount.value == 0) seleCategoryFilterCount++;
   }
 
-  RxInt get totalServiceCount => (seleCategoryFilterCount.value + seleClinicFilterCount.value + selePriceFilterCount.value).obs;
+  RxInt get totalServiceCount => (seleCategoryFilterCount.value +
+          seleClinicFilterCount.value +
+          selePriceFilterCount.value)
+      .obs;
 
   /// Proper count calculation for service filter
   RxInt get actualServiceFilterCount {
@@ -463,7 +532,8 @@ class FilterController extends GetxController {
     }
   }
 
-  RxInt get totalCategoryCount => (seleClinicFilterCount.value + selePriceFilterCount.value).obs;
+  RxInt get totalCategoryCount =>
+      (seleClinicFilterCount.value + selePriceFilterCount.value).obs;
 
   /// Proper count calculation that only counts actually applied filters
   RxInt get actualCategoryFilterCount {
@@ -487,14 +557,17 @@ class FilterController extends GetxController {
     return count.obs;
   }
 
-  Future<void> applyFilter(String type, {bool isReset = false, String newFilterType = ''}) async {
+  Future<void> applyFilter(String type,
+      {bool isReset = false, String newFilterType = ''}) async {
     if (type == "service") {
       final ServiceListController serviceCont = Get.find();
       serviceCont.clinicId(selectedClinicData.value.id);
       serviceCont.serviceType(selectedServiceType.value);
 
-      serviceCont.priceMin(minimumPrice.value > 0 ? minimumPrice.value.toString() : "");
-      serviceCont.priceMax(maximumPrice.value > 0 ? maximumPrice.value.toString() : "");
+      serviceCont.priceMin(
+          minimumPrice.value > 0 ? minimumPrice.value.toString() : "");
+      serviceCont.priceMax(
+          maximumPrice.value > 0 ? maximumPrice.value.toString() : "");
       serviceCont.serviceData(selectedServiceData.value);
       serviceCont.category(selectedCategoryData.value);
       serviceCont.categoryId(selectedCategoryData.value.id);
@@ -507,8 +580,10 @@ class FilterController extends GetxController {
       final DoctorListController doctorConte = Get.find();
       doctorConte.clinicId(selectedClinicData.value.id);
       doctorConte.serviceType(selectedServiceType.value);
-      doctorConte.ratingMin(minimumRating.value > 0 ? minimumRating.value.toString() : "");
-      doctorConte.ratingMax(maximumRating.value > 0 ? maximumRating.value.toString() : "");
+      doctorConte.ratingMin(
+          minimumRating.value > 0 ? minimumRating.value.toString() : "");
+      doctorConte.ratingMax(
+          maximumRating.value > 0 ? maximumRating.value.toString() : "");
       currentSelectedService(selectedServiceData.value);
       doctorConte.selectedServicesId(selectedServicesId);
 
@@ -525,8 +600,10 @@ class FilterController extends GetxController {
       clinicCont.clinicId(selectedClinicData.value.id);
       clinicCont.service(selectedServiceData.value);
 
-      clinicCont.priceMin(minimumPrice.value > 0 ? minimumPrice.value.toString() : "");
-      clinicCont.priceMax(maximumPrice.value > 0 ? maximumPrice.value.toString() : "");
+      clinicCont.priceMin(
+          minimumPrice.value > 0 ? minimumPrice.value.toString() : "");
+      clinicCont.priceMax(
+          maximumPrice.value > 0 ? maximumPrice.value.toString() : "");
       applyFilterCount();
       Get.back(result: actualCategoryFilterCount.value);
       clinicCont.page(1);
@@ -582,8 +659,10 @@ class FilterController extends GetxController {
       appointmentsCont.selectedServiceId(selectedServiceId.value);
       appointmentsCont.clinicId(selectedClinicData.value.id);
       appointmentsCont.paymentStatus(selectedPaymentStatus['slug']);
-      appointmentsCont.priceMin(minimumPrice.value > 0 ? minimumPrice.value.toString() : "");
-      appointmentsCont.priceMax(maximumPrice.value > 0 ? maximumPrice.value.toString() : "");
+      appointmentsCont.priceMin(
+          minimumPrice.value > 0 ? minimumPrice.value.toString() : "");
+      appointmentsCont.priceMax(
+          maximumPrice.value > 0 ? maximumPrice.value.toString() : "");
       applyFilterCount();
       Get.back(result: actualCategoryFilterCount.value);
       appointmentsCont.page(1);
@@ -593,7 +672,22 @@ class FilterController extends GetxController {
 
   @override
   void onClose() {
+    _searchClinicSubscription?.cancel();
+    _searchServiceSubscription?.cancel();
+    _searchCategorySubscription?.cancel();
+
     searchClinicStream.close();
+    searchServiceStream.close();
+    searchCategoryStream.close();
+
+    searchClinicCont.dispose();
+    searchServiceCont.dispose();
+    searchCategoryCont.dispose();
+    selectedFirstDateCont.dispose();
+    selectedLastDateCont.dispose();
+
+    scrollServiceController.dispose();
+    _scrollCategoryController.dispose();
     super.onClose();
   }
 }

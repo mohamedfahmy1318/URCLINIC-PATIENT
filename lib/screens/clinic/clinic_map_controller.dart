@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -22,7 +24,8 @@ class ClinicMapController extends GetxController {
 
   RxList<dynamic> placePredictions = <dynamic>[].obs;
   Timer? _debounce;
-  final String _placesApiKey = 'AIzaSyD_z-jvWRKp9YCTrOmDXlnrqkTLV0k9zH8';
+  final String _placesApiKey = dotenv.env['GOOGLE_PLACES_API_KEY'] ??
+      const String.fromEnvironment('GOOGLE_PLACES_API_KEY');
 
   GoogleMapController? mapController;
 
@@ -175,6 +178,14 @@ class ClinicMapController extends GetxController {
       return;
     }
 
+    if (_placesApiKey.trim().isEmpty) {
+      placePredictions.clear();
+      if (kDebugMode) {
+        log('Google Places API key is not configured');
+      }
+      return;
+    }
+
     try {
       final url = Uri.parse(
           'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$_placesApiKey&language=${selectedLanguageCode.value}');
@@ -200,7 +211,14 @@ class ClinicMapController extends GetxController {
 
     try {
       if (mapController == null) return;
-      
+
+      if (_placesApiKey.trim().isEmpty) {
+        if (kDebugMode) {
+          log('Google Places API key is not configured');
+        }
+        return;
+      }
+
       final url = Uri.parse(
           'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_placesApiKey');
       final response = await http.get(url);
@@ -223,7 +241,7 @@ class ClinicMapController extends GetxController {
 
   void onSearchSubmitted(String query) {
     if (mapController == null) return;
-    
+
     final searchClinics = filteredClinics;
     if (searchClinics.isEmpty) return;
 

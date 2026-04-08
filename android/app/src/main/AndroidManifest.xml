@@ -28,7 +28,6 @@
     <application
         android:label="URCLINIC"
         android:name="${applicationName}"
-        android:requestLegacyExternalStorage="true"
         tools:replace="android:label"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
@@ -37,7 +36,7 @@
                 android:resource="@drawable/ic_stat_notification" />
         <meta-data
                 android:name="com.google.android.geo.API_KEY"
-                android:value="AIzaSyD_z-jvWRKp9YCTrOmDXlnrqkTLV0k9zH8" />
+            android:value="${GOOGLE_MAPS_API_KEY}" />
 
         <activity
             android:name=".MainActivity"

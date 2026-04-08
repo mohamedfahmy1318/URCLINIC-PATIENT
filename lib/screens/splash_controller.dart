@@ -9,7 +9,8 @@ import '../main.dart';
 import '../api/auth_apis.dart';
 import '../utils/common_base.dart';
 import '../utils/constants.dart';
-import 'auth/model/login_response.dart';
+import '../utils/secure_storage.dart';
+import '../utils/session_guard.dart';
 import 'dashboard/dashboard_screen.dart';
 
 class SplashScreenController extends GetxController {
@@ -18,6 +19,7 @@ class SplashScreenController extends GetxController {
     super.onInit();
     //Get Package Info
     getPackageInfo().then((value) => currentPackageinfo(value));
+    migrateLegacySensitiveData();
     getAppConfigurations();
   }
 
@@ -64,32 +66,36 @@ class SplashScreenController extends GetxController {
 
   void navigationLogic() {
     if (getValueFromLocal(SharedPreferenceConst.IS_LOGGED_IN) == true) {
-      try {
-        final userData = getValueFromLocal(SharedPreferenceConst.USER_DATA);
-        isLoggedIn(true);
-        loginUserData(UserData.fromJson(userData));
-        Get.offAll(
-          () => DashboardScreen(),
-          binding: BindingsBuilder(() {
-            Get.put(HomeController());
-          }),
-        );
-      } catch (e) {
-        log('SplashScreenController Err: $e');
-        Get.offAll(
-          () => DashboardScreen(),
-          binding: BindingsBuilder(() {
-            Get.put(HomeController());
-          }),
-        );
-      }
+      getUserDataSecure().then((userData) async {
+        if (userData != null) {
+          isLoggedIn(true);
+          loginUserData(userData);
+
+          if (isSessionExpired()) {
+            await AuthServiceApis.clearData();
+          } else {
+            markSessionActivity();
+          }
+        } else {
+          isLoggedIn(false);
+          setValueToLocal(SharedPreferenceConst.IS_LOGGED_IN, false);
+        }
+
+        _openDashboard();
+      }).catchError((_) {
+        _openDashboard();
+      });
     } else {
-      Get.offAll(
-        () => DashboardScreen(),
-        binding: BindingsBuilder(() {
-          Get.put(HomeController());
-        }),
-      );
+      _openDashboard();
     }
+  }
+
+  void _openDashboard() {
+    Get.offAll(
+      () => DashboardScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController());
+      }),
+    );
   }
 }

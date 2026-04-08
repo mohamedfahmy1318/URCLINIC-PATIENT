@@ -5,6 +5,7 @@ import 'package:nb_utils/nb_utils.dart';
 
 import '../../components/app_scaffold.dart';
 import '../../components/cached_image_widget.dart';
+import '../../components/discount_badge_widget.dart';
 import '../../components/loader_widget.dart';
 import '../../generated/assets.dart';
 import '../../main.dart';
@@ -38,7 +39,9 @@ class ClinicDetailScreen extends StatelessWidget {
             future: clinicDetailCont.getClinicDetail.value,
             errorBuilder: (error) {
               return NoDataWidget(
-                title: error,
+                title: clinicDetailCont.clinicFetchError.value.isNotEmpty
+                    ? clinicDetailCont.clinicFetchError.value
+                    : error.toString(),
                 retryText: locale.value.reload,
                 imageWidget: const ErrorStateWidget(),
                 onRetry: () {
@@ -329,7 +332,7 @@ class ClinicDetailScreen extends StatelessWidget {
                   .paddingSymmetric(vertical: 20)
             else
               SizedBox(
-                height: 42,
+                height: 55,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -348,19 +351,43 @@ class ClinicDetailScreen extends StatelessWidget {
                         );
                       },
                       child: Container(
+                        constraints: BoxConstraints(
+                          minWidth: Get.width * 0.45,
+                          maxWidth: Get.width * 0.62,
+                        ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
+                            horizontal: 12, vertical: 10),
                         decoration: boxDecorationDefault(
                           color: appColorPrimary.withOpacity(0.08),
-                          borderRadius: radius(20),
+                          borderRadius: radius(14),
                           border: Border.all(
                               color: appColorPrimary.withOpacity(0.2),
                               width: 1),
                         ),
-                        child: Text(
-                          service.localizedName,
-                          style:
-                              boldTextStyle(size: 13, color: appColorPrimary),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                service.localizedName,
+                                style: boldTextStyle(
+                                    size: 13, color: appColorPrimary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (service.hasDiscount)
+                              Padding(
+                                padding:
+                                    const EdgeInsetsDirectional.only(start: 8),
+                                child: DiscountBadgeWidget.pill(
+                                  label: service.discountBadgeText,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     );
@@ -579,11 +606,10 @@ class ClinicDetailScreen extends StatelessWidget {
                           style: secondaryTextStyle(size: 14),
                         ),
                         TextSpan(
-                          text: closeDays
-                              .map((d) => _localizeDay(d))
-                              .join(', '),
-                          style: boldTextStyle(
-                              size: 14, color: cancelStatusColor),
+                          text:
+                              closeDays.map((d) => _localizeDay(d)).join(', '),
+                          style:
+                              boldTextStyle(size: 14, color: cancelStatusColor),
                         ),
                       ],
                     ),

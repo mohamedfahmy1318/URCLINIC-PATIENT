@@ -33,8 +33,6 @@ class GoogleSignInAuthService {
       final User currentUser = auth.currentUser!;
       assert(user.uid == currentUser.uid);
 
-      log('CURRENTUSER: $currentUser');
-
       await googleSignIn.signOut();
 
       String firstName = '';
@@ -93,15 +91,10 @@ class GoogleSignInAuthService {
           final User currentUser = auth.currentUser!;
           assert(user.uid == currentUser.uid);
 
-          log('CURRENTUSER: $currentUser');
-
           // await googleSignIn.signOut();
 
           String firstName = '';
           String lastName = '';
-          log('result.credential ==> ${result.credential?.toMap()}');
-          log('result.credential!.fullName ==> ${result.credential!.fullName!.toMap()}');
-
           if (result.credential != null &&
               result.credential!.fullName != null) {
             firstName = result.credential!.fullName!.givenName.validate();

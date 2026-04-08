@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -102,76 +104,84 @@ class BookingFormScreen extends StatelessWidget {
                           }
 
                           return Obx(
-                            () => Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ViewAllLabel(
-                                        label: locale.value.chooseTime,
-                                        isShowAll: false)
-                                    .paddingOnly(right: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  width: Get.width,
-                                  alignment: Alignment.center,
-                                  decoration: boxDecorationDefault(
-                                      color: context.cardColor),
-                                  child: AnimatedWrap(
-                                    spacing: 12,
-                                    runSpacing: 12,
-                                    alignment: WrapAlignment.start,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.start,
-                                    children: List.generate(
-                                      timeSlotsCont.slots.length,
-                                      (i) {
-                                        final String slot =
-                                            timeSlotsCont.slots[i];
-                                        return Obx(
-                                          () => GestureDetector(
-                                            onTap: () {
-                                              timeSlotsCont.selectedSlot(slot);
-                                              timeSlotsCont.onDateTimeChange();
-                                            },
-                                            child: Container(
-                                              width: Get.width / 3 - 32,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 12),
-                                              decoration:
-                                                  boxDecorationWithRoundedCorners(
-                                                backgroundColor: timeSlotsCont
-                                                            .selectedSlot
-                                                            .value ==
-                                                        slot
-                                                    ? appColorPrimary
-                                                    : context
-                                                        .scaffoldBackgroundColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        defaultRadius / 2),
-                                              ),
-                                              child: Text(
-                                                slot,
-                                                textAlign: TextAlign.center,
-                                                style: primaryTextStyle(
-                                                  size: 12,
-                                                  color: (timeSlotsCont
+                            () {
+                              final double slotItemWidth = math
+                                  .max(88, ((Get.width - 80) / 3))
+                                  .toDouble();
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ViewAllLabel(
+                                          label: locale.value.chooseTime,
+                                          isShowAll: false)
+                                      .paddingOnly(right: 8),
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    width: Get.width,
+                                    alignment: Alignment.center,
+                                    decoration: boxDecorationDefault(
+                                        color: context.cardColor),
+                                    child: AnimatedWrap(
+                                      spacing: 12,
+                                      runSpacing: 12,
+                                      alignment: WrapAlignment.start,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.start,
+                                      children: List.generate(
+                                        timeSlotsCont.slots.length,
+                                        (i) {
+                                          final String slot =
+                                              timeSlotsCont.slots[i];
+                                          return Obx(
+                                            () => GestureDetector(
+                                              onTap: () {
+                                                timeSlotsCont
+                                                    .selectedSlot(slot);
+                                                timeSlotsCont
+                                                    .onDateTimeChange();
+                                              },
+                                              child: Container(
+                                                width: slotItemWidth,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 12),
+                                                decoration:
+                                                    boxDecorationWithRoundedCorners(
+                                                  backgroundColor: timeSlotsCont
                                                               .selectedSlot
                                                               .value ==
-                                                          slot)
-                                                      ? Colors.white
-                                                      : appColorPrimary,
+                                                          slot
+                                                      ? appColorPrimary
+                                                      : context
+                                                          .scaffoldBackgroundColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          defaultRadius / 2),
+                                                ),
+                                                child: Text(
+                                                  slot,
+                                                  textAlign: TextAlign.center,
+                                                  style: primaryTextStyle(
+                                                    size: 12,
+                                                    color: (timeSlotsCont
+                                                                .selectedSlot
+                                                                .value ==
+                                                            slot)
+                                                        ? Colors.white
+                                                        : appColorPrimary,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      },
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              );
+                            },
                           );
                         },
                       );

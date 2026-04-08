@@ -25,8 +25,9 @@ class MapScreen extends StatefulWidget {
 }
 
 class MapScreenState extends State<MapScreen> {
-  final CameraPosition _initialLocation = const CameraPosition(target: LatLng(0.0, 0.0));
-  late GoogleMapController mapController;
+  final CameraPosition _initialLocation =
+      const CameraPosition(target: LatLng(0.0, 0.0));
+  GoogleMapController? mapController;
 
   String _currentAddress = '';
 
@@ -51,41 +52,44 @@ class MapScreenState extends State<MapScreen> {
   // Method for retrieving the current location
   Future<void> _getCurrentLocation() async {
     isLoading(true);
-    await getUserLocationPosition().then((position) async {
+    try {
+      final position = await getUserLocationPosition();
       setAddress();
 
-      mapController.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 18.0),
-        ),
-      );
+      if (mapController != null) {
+        mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+                target: LatLng(position.latitude, position.longitude),
+                zoom: 18.0),
+          ),
+        );
+      }
 
       markers.clear();
       markers.add(
         Marker(
           markerId: MarkerId(_currentAddress),
           position: LatLng(position.latitude, position.longitude),
-          infoWindow: InfoWindow(title: 'Start $_currentAddress', snippet: _destinationAddress),
+          infoWindow: InfoWindow(
+              title: 'Start $_currentAddress', snippet: _destinationAddress),
         ),
       );
 
       setState(() {});
-    }).catchError((e) {
+    } catch (e) {
       toast("$e");
-    });
-
-    isLoading(false);
+    } finally {
+      isLoading(false);
+    }
   }
 
   // Method for retrieving the address
   Future<void> setAddress() async {
     try {
-      final Position position = await getUserLocationPosition().catchError((e) {
-        //
-      });
-      _currentAddress = await buildFullAddressFromLatLong(position.latitude, position.longitude).catchError((e) {
-        log(e);
-      });
+      final Position position = await getUserLocationPosition();
+      _currentAddress = await buildFullAddressFromLatLong(
+          position.latitude, position.longitude);
       destinationAddressController.text = _currentAddress;
       setValueToLocal(LocatinKeys.LATITUDE, position.latitude);
       setValueToLocal(LocatinKeys.LONGITUDE, position.longitude);
@@ -107,9 +111,12 @@ class MapScreenState extends State<MapScreen> {
       ),
     );
 
-    destinationAddressController.text = await buildFullAddressFromLatLong(point.latitude, point.longitude).catchError((e) {
-      log(e);
-    });
+    try {
+      destinationAddressController.text =
+          await buildFullAddressFromLatLong(point.latitude, point.longitude);
+    } catch (_) {
+      destinationAddressController.text = '';
+    }
 
     _destinationAddress = destinationAddressController.text;
 
@@ -119,6 +126,9 @@ class MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    destinationAddressController.dispose();
+    destinationAddressFocusNode.dispose();
+    mapController?.dispose();
     super.dispose();
   }
 
@@ -161,10 +171,12 @@ class MapScreenState extends State<MapScreen> {
                     child: Material(
                       color: Colors.blue.shade100,
                       child: InkWell(
-                        splashColor: context.primaryColor.withValues(alpha: 0.8),
-                        child: const SizedBox(width: 50, height: 50, child: Icon(Icons.add)),
+                        splashColor:
+                            context.primaryColor.withValues(alpha: 0.8),
+                        child: const SizedBox(
+                            width: 50, height: 50, child: Icon(Icons.add)),
                         onTap: () {
-                          mapController.animateCamera(CameraUpdate.zoomIn());
+                          mapController?.animateCamera(CameraUpdate.zoomIn());
                         },
                       ),
                     ),
@@ -174,10 +186,12 @@ class MapScreenState extends State<MapScreen> {
                     child: Material(
                       color: Colors.blue.shade100,
                       child: InkWell(
-                        splashColor: context.primaryColor.withValues(alpha: 0.8),
-                        child: const SizedBox(width: 50, height: 50, child: Icon(Icons.remove)),
+                        splashColor:
+                            context.primaryColor.withValues(alpha: 0.8),
+                        child: const SizedBox(
+                            width: 50, height: 50, child: Icon(Icons.remove)),
                         onTap: () {
-                          mapController.animateCamera(CameraUpdate.zoomOut());
+                          mapController?.animateCamera(CameraUpdate.zoomOut());
                         },
                       ),
                     ),
@@ -195,14 +209,17 @@ class MapScreenState extends State<MapScreen> {
                   ClipOval(
                     child: Material(
                       color: Colors.orange.shade100, // button color
-                      child: const Icon(Icons.my_location, size: 25).paddingAll(10),
+                      child: const Icon(Icons.my_location, size: 25)
+                          .paddingAll(10),
                     ),
                   ).paddingRight(8).onTap(() async {
                     isLoading(true);
                     await getUserLocationPosition().then((value) {
-                      mapController.animateCamera(
+                      mapController?.animateCamera(
                         CameraUpdate.newCameraPosition(
-                          CameraPosition(target: LatLng(value.latitude, value.longitude), zoom: 18.0),
+                          CameraPosition(
+                              target: LatLng(value.latitude, value.longitude),
+                              zoom: 18.0),
                         ),
                       );
 

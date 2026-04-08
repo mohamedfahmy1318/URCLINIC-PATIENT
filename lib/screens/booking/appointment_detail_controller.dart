@@ -1,5 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/api/auth_apis.dart';
@@ -25,11 +26,13 @@ class AppointmentDetailController extends GetxController {
   RxBool hasReview = false.obs;
   RxBool showWriteReview = false.obs;
 
-  Rx<Future<AppointmentDetailRes>> getAppointmentDetails = Future(() => AppointmentDetailRes(data: AppointmentData())).obs;
+  Rx<Future<AppointmentDetailRes>> getAppointmentDetails =
+      Future(() => AppointmentDetailRes(data: AppointmentData())).obs;
   Rx<DoctorReviewData> yourReview = DoctorReviewData().obs;
 
   /// Reschedule Booking
-  Rx<Future<RxList<String>>> timeSlotsFuture = Future(() => RxList<String>()).obs;
+  Rx<Future<RxList<String>>> timeSlotsFuture =
+      Future(() => RxList<String>()).obs;
   RxList<String> slots = RxList();
   RxString selectedDate = DateTime.now().formatDateYYYYmmdd().obs;
   RxString selectedSlot = "".obs;
@@ -38,7 +41,8 @@ class AppointmentDetailController extends GetxController {
   BookingReq bookingReq = BookingReq();
 
   /// Invoice
-  Rx<Future<Rx<AppointmentInvoiceResp>>> appointmentInvoiceFuture = Future(() => AppointmentInvoiceResp().obs).obs;
+  Rx<Future<Rx<AppointmentInvoiceResp>>> appointmentInvoiceFuture =
+      Future(() => AppointmentInvoiceResp().obs).obs;
   Rx<AppointmentInvoiceResp> appointmentInvoice = AppointmentInvoiceResp().obs;
 
   RxDouble selectedRating = 0.0.obs;
@@ -60,25 +64,37 @@ class AppointmentDetailController extends GetxController {
   }
 
   bool get isAdvancePaymentFailed =>
-      (appointmentDetail.value.paymentStatus.toLowerCase().contains(PaymentStatus.failed) && appointmentDetail.value.isEnableAdvancePayment) && appointmentDetail.value.status.toLowerCase().contains(StatusConst.pending.toLowerCase());
+      (appointmentDetail.value.paymentStatus
+              .toLowerCase()
+              .contains(PaymentStatus.failed) &&
+          appointmentDetail.value.isEnableAdvancePayment) &&
+      appointmentDetail.value.status
+          .toLowerCase()
+          .contains(StatusConst.pending.toLowerCase());
 
   num get payNowAmount {
     final appointment = appointmentDetail.value;
-    final num bedCharge = appointment.bedDetails.fold(0, (sum, item) => sum! + item.charge.validate())?? 0;
+    final num bedCharge = appointment.bedDetails
+            .fold(0, (sum, item) => sum! + item.charge.validate()) ??
+        0;
 
     num baseAmount = isAdvancePaymentFailed
         ? (appointment.enableFinalBillingDiscount
-        ? (appointment.advancePaymentAmount * appointment.finalTotalAmount) / 100
-        : (appointment.advancePaymentAmount * appointment.totalAmount) / 100)
-        : appointment.paymentStatus.toLowerCase().contains(PaymentStatus.ADVANCE_PAID.toLowerCase())
-        ? appointment.remainingPayableAmount
-        : (appointment.enableFinalBillingDiscount
-        ? appointment.finalTotalAmount
-        : appointment.totalAmount);
+            ? (appointment.advancePaymentAmount *
+                    appointment.finalTotalAmount) /
+                100
+            : (appointment.advancePaymentAmount * appointment.totalAmount) /
+                100)
+        : appointment.paymentStatus
+                .toLowerCase()
+                .contains(PaymentStatus.ADVANCE_PAID.toLowerCase())
+            ? appointment.remainingPayableAmount
+            : (appointment.enableFinalBillingDiscount
+                ? appointment.finalTotalAmount
+                : appointment.totalAmount);
 
     return baseAmount + bedCharge;
   }
-
 
   ///Get Appointment Detail
   Future<void> init({bool showLoader = true}) async {
@@ -93,7 +109,8 @@ class AppointmentDetailController extends GetxController {
       ),
     );
     await getAppointmentDetails.value.then((value) {
-      if (appointmentDetail.value.notificationId.trim().isNotEmpty && unreadNotificationCount.value > 0) {
+      if (appointmentDetail.value.notificationId.trim().isNotEmpty &&
+          unreadNotificationCount.value > 0) {
         unreadNotificationCount(unreadNotificationCount.value - 1);
       }
       appointmentDetail(value.data);
@@ -113,9 +130,12 @@ class AppointmentDetailController extends GetxController {
     if (showLoader) {
       isLoading(true);
     }
-    await appointmentInvoiceFuture(CoreServiceApis.appointmentInvoice(appointmentDetail.value.id)).then((appointmentInvoices) {
+    await appointmentInvoiceFuture(
+            CoreServiceApis.appointmentInvoice(appointmentDetail.value.id))
+        .then((appointmentInvoices) {
       appointmentInvoice(appointmentInvoices.value);
-      if (appointmentInvoice.value.status == true && appointmentInvoice.value.link.isNotEmpty) {
+      if (appointmentInvoice.value.status == true &&
+          appointmentInvoice.value.link.isNotEmpty) {
         viewFiles(appointmentInvoice.value.link);
       } else {
         toast(locale.value.somethingWentWrongPleaseTryAgainLater);
@@ -156,7 +176,9 @@ class AppointmentDetailController extends GetxController {
     };
 
     await CoreServiceApis.updateReview(request: req).then((value) async {
-      log('updateReview: ${value.toJson()}');
+      if (kDebugMode) {
+        log('Review updated successfully');
+      }
       showWriteReview(false);
       hasReview(true);
       yourReview(
@@ -172,9 +194,11 @@ class AppointmentDetailController extends GetxController {
       );
       init();
       isLoading(false);
-    }).catchError((e) {
+    }).catchError((_) {
       isLoading(false);
-      log(e.toString());
+      if (kDebugMode) {
+        log('Review update failed');
+      }
     });
   }
 
@@ -192,8 +216,11 @@ class AppointmentDetailController extends GetxController {
   ///Delete Review Api
   Future<void> deleteReview() async {
     isLoading(true);
-    await CoreServiceApis.deleteReview(id: yourReview.value.id).then((value) async {
-      log('updateReview: ${value.toJson()}');
+    await CoreServiceApis.deleteReview(id: yourReview.value.id)
+        .then((value) async {
+      if (kDebugMode) {
+        log('Review deleted successfully');
+      }
       showWriteReview(false);
       hasReview(false);
       title.text = "";
@@ -201,9 +228,11 @@ class AppointmentDetailController extends GetxController {
       selectedRating(0);
       yourReview(DoctorReviewData());
       isLoading(false);
-    }).catchError((e) {
+    }).catchError((_) {
       isLoading(false);
-      log(e.toString());
+      if (kDebugMode) {
+        log('Review deletion failed');
+      }
     });
   }
 
@@ -276,7 +305,10 @@ class AppointmentDetailController extends GetxController {
     }).whenComplete(() => isLoading(false));
   }
 
-  Future<void> updateStatus({required int appointmentId, required String status, VoidCallback? onUpdateBooking}) async {
+  Future<void> updateStatus(
+      {required int appointmentId,
+      required String status,
+      VoidCallback? onUpdateBooking}) async {
     isLoading(true);
     hideKeyBoardWithoutContext();
 
@@ -284,7 +316,9 @@ class AppointmentDetailController extends GetxController {
       "status": status,
     };
 
-    await CoreServiceApis.updateStatus(request: req, appointmentId: appointmentId).then((value) async {
+    await CoreServiceApis.updateStatus(
+            request: req, appointmentId: appointmentId)
+        .then((value) async {
       if (onUpdateBooking != null) {
         onUpdateBooking.call();
         toast(locale.value.appointmentCancelSuccessfully);

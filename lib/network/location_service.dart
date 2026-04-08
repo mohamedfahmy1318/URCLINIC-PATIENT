@@ -31,18 +31,12 @@ Future<Position> getUserLocationPosition() async {
     locationSettings: const LocationSettings(
       accuracy: LocationAccuracy.high,
     ),
-  ).then((value) {
-    return value;
-  }).catchError((e) async {
-    return Geolocator.getLastKnownPosition().then((value) async {
-      if (value != null) {
-        return value;
-      } else {
-        throw locale.value.enableLocation;
-      }
-    }).catchError((e) {
-      toast(e.toString());
-    });
+  ).catchError((_) async {
+    final Position? value = await Geolocator.getLastKnownPosition();
+    if (value != null) {
+      return value;
+    }
+    throw locale.value.enableLocation;
   });
 }
 
@@ -56,18 +50,22 @@ Future<String> getUserLocation() async {
 
 Future<String> buildFullAddressFromLatLong(
     double latitude, double longitude) async {
-  final List<Placemark> placeMark =
-      await placemarkFromCoordinates(latitude, longitude).catchError((e) async {
+  final List<Placemark> placeMark = await placemarkFromCoordinates(
+    latitude,
+    longitude,
+  ).catchError((e) async {
     log(e);
     throw errorSomethingWentWrong;
   });
+
+  if (placeMark.isEmpty) {
+    throw errorSomethingWentWrong;
+  }
 
   setValueToLocal(LocatinKeys.LATITUDE, latitude);
   setValueToLocal(LocatinKeys.LONGITUDE, longitude);
 
   final Placemark place = placeMark[0];
-
-  log(place.toJson());
 
   String address = '';
 

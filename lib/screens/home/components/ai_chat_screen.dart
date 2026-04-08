@@ -10,8 +10,8 @@ import '../../../components/app_scaffold.dart';
 import '../../../main.dart';
 import '../../../utils/colors.dart';
 
-String get _geminiApiKey => 
-    dotenv.env['GEMINI_API_KEY'] ?? 
+String get _geminiApiKey =>
+    dotenv.env['GEMINI_API_KEY'] ??
     const String.fromEnvironment('GEMINI_API_KEY');
 
 class AIChatScreen extends StatefulWidget {
@@ -428,7 +428,7 @@ class _AIChatScreenState extends State<AIChatScreen>
             children: _suggestionChips
                 .map((chip) => ActionChip(
                       label: Text(chip, style: primaryTextStyle(size: 13)),
-                      backgroundColor: appColorPrimary.withOpacity(0.06),
+                      backgroundColor: appColorPrimary,
                       side:
                           BorderSide(color: appColorPrimary.withOpacity(0.15)),
                       shape: RoundedRectangleBorder(

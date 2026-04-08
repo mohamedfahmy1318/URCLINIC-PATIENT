@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -16,146 +18,204 @@ import 'common_base.dart';
 import 'constants.dart';
 
 class PushNotificationService {
-// It is assumed that all messages contain a data field with the key 'type'
-  Future<void> setupFirebaseMessaging() async {
-    await initFirebaseMessaging();
+  final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
+  final Set<String> _handledMessageIds = <String>{};
+  StreamSubscription<String>? _tokenRefreshSubscription;
+
+  bool _listenersRegistered = false;
+  bool _localNotificationsInitialized = false;
+
+  Future<void> setupFirebaseMessaging() async {
+    await _initializeLocalNotifications();
+    await initFirebaseMessaging();
     await enableIOSNotifications();
   }
 
   Future<void> initFirebaseMessaging() async {
-    // ignore: body_might_complete_normally_catch_error
-    final NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(provisional: true).catchError((e) {
-      log('------Request Notification Permission ERROR-----------');
-    });
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      log('------Request Notification Permission COMPLETED-----------');
-      await registerNotificationListeners().then((value) {
-        log('------Notification Listener REGISTRATION COMPLETED-----------');
-      }).catchError((e) {
-        log('------Notification Listener REGISTRATION ERROR-----------');
-      });
-
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(alert: true, badge: true, sound: true).then((value) {
-        log('------setForegroundNotificationPresentationOptions COMPLETED-----------');
-      }).catchError((e) {
-        log('------setForegroundNotificationPresentationOptions ERROR-----------');
-      });
+    NotificationSettings settings;
+    try {
+      settings = await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: Platform.isIOS,
+      );
+    } catch (_) {
+      return;
     }
+
+    final bool canHandleNotifications =
+        settings.authorizationStatus == AuthorizationStatus.authorized ||
+            settings.authorizationStatus == AuthorizationStatus.provisional;
+
+    if (!canHandleNotifications) return;
+
+    await registerNotificationListeners();
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
   }
 
   Future<void> registerFCMAndTopics() async {
-    if (isLoggedIn.value) {
-      if (Platform.isIOS) {
-        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-        if (apnsToken != null) {
-          subScribeToTopic();
-        } else {
-          Future.delayed(const Duration(seconds: 3), () async {
-            apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-            if (apnsToken != null) {
-              subScribeToTopic();
-            }
-          });
-        }
-        log("===============${FirebaseTopicConst.apnsNotificationTokenKey}===============\n$apnsToken");
+    if (!isLoggedIn.value) return;
+
+    if (Platform.isIOS) {
+      String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      if (apnsToken == null) {
+        await Future.delayed(const Duration(seconds: 3));
+        apnsToken = await FirebaseMessaging.instance.getAPNSToken();
       }
-      FirebaseMessaging.instance.getToken().then((token) {
-        log("===============${FirebaseTopicConst.fcmNotificationTokenKey}===============\n$token");
-      });
-      subScribeToTopic();
+      if (kDebugMode) {
+        log(
+          "===============${FirebaseTopicConst.apnsNotificationTokenKey}===============\n${apnsToken != null}",
+        );
+      }
     }
+
+    await subScribeToTopic();
+
+    final String? token = await FirebaseMessaging.instance.getToken();
+    if (kDebugMode) {
+      log(
+        "===============${FirebaseTopicConst.fcmNotificationTokenKey}===============\n${token != null}",
+      );
+    }
+
+    _tokenRefreshSubscription ??=
+        FirebaseMessaging.instance.onTokenRefresh.listen((_) async {
+      await subScribeToTopic();
+    });
   }
 
   Future<void> subScribeToTopic() async {
-    await FirebaseMessaging.instance.subscribeToTopic(appNameTopic).whenComplete(() {
-      log("${FirebaseTopicConst.topicSubscribed}$appNameTopic");
-    });
-    await FirebaseMessaging.instance.subscribeToTopic("${FirebaseTopicConst.userWithUnderscoreKey}${loginUserData.value.id}").then((value) {
-      log("${FirebaseTopicConst.topicSubscribed}${FirebaseTopicConst.userWithUnderscoreKey}${loginUserData.value.id}");
-    });
+    await FirebaseMessaging.instance.subscribeToTopic(appNameTopic);
+    await FirebaseMessaging.instance.subscribeToTopic(
+      "${FirebaseTopicConst.userWithUnderscoreKey}${loginUserData.value.id}",
+    );
   }
 
   Future<void> unsubscribeFirebaseTopic() async {
-    await FirebaseMessaging.instance.unsubscribeFromTopic(appNameTopic).then((value) {
-      log("${FirebaseTopicConst.topicUnSubscribed}$appNameTopic");
-    });
-    await FirebaseMessaging.instance.unsubscribeFromTopic('${FirebaseTopicConst.userWithUnderscoreKey}${loginUserData.value.id}').then((value) {
-      log("${FirebaseTopicConst.topicUnSubscribed}${FirebaseTopicConst.userWithUnderscoreKey}${loginUserData.value.id}");
-    });
+    await _tokenRefreshSubscription?.cancel();
+    _tokenRefreshSubscription = null;
+
+    await FirebaseMessaging.instance.unsubscribeFromTopic(appNameTopic);
+    if (loginUserData.value.id > 0) {
+      await FirebaseMessaging.instance.unsubscribeFromTopic(
+        '${FirebaseTopicConst.userWithUnderscoreKey}${loginUserData.value.id}',
+      );
+    }
   }
 
-  void handleNotificationClick(RemoteMessage message, {bool isForeGround = false}) {
-    if (message.data['url'] != null && message.data['url'] is String) {
-      commonLaunchUrl(message.data['url'], launchMode: LaunchMode.externalApplication);
+  void handleNotificationClick(RemoteMessage message,
+      {bool isForeGround = false}) {
+    final String messageId =
+        message.messageId ?? message.data['message_id']?.toString() ?? '';
+
+    if (messageId.isNotEmpty && _handledMessageIds.contains(messageId)) {
+      return;
     }
-    printLogsNotificationData(message);
-    final NotificationData notificationData = NotificationData.fromJson(message.data);
-    log("===============${FirebaseTopicConst.notificationDataKey}===============\n${notificationData.toJson()}");
-    if (isForeGround) {
-      showNotification(currentTimeStamp(), message.notification!.title.validate(), message.notification!.body.validate(), message);
-    } else {
-      log('======== ELSE PART ===============');
-      try {
-        final Map<String, dynamic> additionalData = jsonDecode(message.data[FirebaseTopicConst.additionalDataKey]) ?? {};
-        if (additionalData.isNotEmpty) {
-          final int? notId = additionalData[FirebaseTopicConst.idKey];
-          log("notId=== $notId");
-          if (notId != null) {
-            log("additionalData[FirebaseTopicConst.notificationGroupKey]=== ${additionalData[FirebaseTopicConst.notificationGroupKey]}");
-            log("============ IN APPOINTMENT ================");
-            Get.to(
-              () => AppointmentDetail(),
-              arguments: AppointmentData(id: notId),
-            );
-          }
-        }
-      } catch (e) {
-        log('${FirebaseTopicConst.notificationErrorKey}: $e');
+
+    if (messageId.isNotEmpty) {
+      _handledMessageIds.add(messageId);
+      if (_handledMessageIds.length > 300) {
+        _handledMessageIds.remove(_handledMessageIds.first);
       }
+    }
+
+    final dynamic rawUrl = message.data['url'];
+    if (rawUrl is String && rawUrl.trim().isNotEmpty) {
+      final Uri? parsed = Uri.tryParse(rawUrl.trim());
+      if (parsed != null &&
+          (parsed.scheme == 'https' || parsed.scheme == 'http')) {
+        commonLaunchUrl(rawUrl, launchMode: LaunchMode.externalApplication);
+      }
+    }
+
+    if (kDebugMode) {
+      printLogsNotificationData(message);
+    }
+
+    NotificationData.fromJson(message.data);
+
+    if (isForeGround) {
+      final String title = message.notification?.title?.trim() ?? '';
+      final String body = message.notification?.body?.trim() ?? '';
+      if (title.isNotEmpty || body.isNotEmpty) {
+        showNotification(currentTimeStamp(), title, body, message);
+      }
+      return;
+    }
+
+    _handleAdditionalData(message.data);
+  }
+
+  void _handleAdditionalData(Map<String, dynamic> data) {
+    try {
+      final dynamic additionalRaw = data[FirebaseTopicConst.additionalDataKey];
+      Map<String, dynamic> additionalData = <String, dynamic>{};
+
+      if (additionalRaw is String && additionalRaw.trim().isNotEmpty) {
+        final dynamic parsed = jsonDecode(additionalRaw);
+        if (parsed is Map<String, dynamic>) {
+          additionalData = parsed;
+        }
+      } else if (additionalRaw is Map<String, dynamic>) {
+        additionalData = additionalRaw;
+      }
+
+      if (additionalData.isEmpty) return;
+
+      final dynamic notIdRaw = additionalData[FirebaseTopicConst.idKey];
+      final int? notificationId =
+          notIdRaw is int ? notIdRaw : int.tryParse(notIdRaw?.toString() ?? '');
+
+      if (notificationId != null) {
+        Get.to(
+          () => AppointmentDetail(),
+          arguments: AppointmentData(id: notificationId),
+        );
+      }
+    } catch (_) {
+      // Keep push payload parsing resilient.
     }
   }
 
   Future<void> registerNotificationListeners() async {
+    if (_listenersRegistered) return;
+
+    _listenersRegistered = true;
+
     FirebaseMessaging.onMessage.listen(
       (RemoteMessage message) {
         handleNotificationClick(message, isForeGround: true);
       },
-      onError: (e) {
-        log("${FirebaseTopicConst.onMessageListen} $e");
-      },
     );
 
-    // replacement for onResume: When the app is in the background and opened directly from the push notification.
     FirebaseMessaging.onMessageOpenedApp.listen(
       (RemoteMessage message) {
         handleNotificationClick(message);
       },
-      onError: (e) {
-        log("${FirebaseTopicConst.onMessageOpened} $e");
-      },
     );
 
-    // workaround for onLaunch: When the app is completely closed (not in the background) and opened directly from the push notification
     FirebaseMessaging.instance.getInitialMessage().then(
       (RemoteMessage? message) {
         if (message != null) {
           handleNotificationClick(message);
         }
       },
-      onError: (e) {
-        log("${FirebaseTopicConst.onGetInitialMessage} $e");
-      },
     );
   }
 
-  Future<void> showNotification(int id, String title, String message, RemoteMessage remoteMessage) async {
-    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  Future<void> _initializeLocalNotifications() async {
+    if (_localNotificationsInitialized) return;
 
-    //code for background notification channel
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       FirebaseTopicConst.notificationChannelIdKey,
       FirebaseTopicConst.notificationChannelNameKey,
@@ -163,27 +223,55 @@ class PushNotificationService {
       enableLights: true,
     );
 
-    await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
+    await _localNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
 
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@drawable/ic_stat_notification');
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@drawable/ic_stat_notification');
 
-    const iOS = DarwinInitializationSettings(
+    const DarwinInitializationSettings iOS = DarwinInitializationSettings(
       requestSoundPermission: false,
       requestBadgePermission: false,
       requestAlertPermission: false,
     );
 
-    const macOS = iOS;
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: iOS,
+      macOS: iOS,
+    );
 
-    const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: iOS, macOS: macOS);
-    await flutterLocalNotificationsPlugin.initialize(
+    await _localNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (details) {
-        handleNotificationClick(remoteMessage);
+        final String? payload = details.payload;
+        if (payload == null || payload.trim().isEmpty) return;
+
+        try {
+          final dynamic decoded = jsonDecode(payload);
+          if (decoded is Map<String, dynamic>) {
+            _handleAdditionalData(decoded);
+          }
+        } catch (_) {
+          // Ignore malformed payloads.
+        }
       },
     );
 
-    const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    _localNotificationsInitialized = true;
+  }
+
+  Future<void> showNotification(
+    int id,
+    String title,
+    String message,
+    RemoteMessage remoteMessage,
+  ) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
       FirebaseTopicConst.notificationChannelIdKey,
       FirebaseTopicConst.notificationChannelNameKey,
       importance: Importance.high,
@@ -193,36 +281,44 @@ class PushNotificationService {
       colorized: true,
     );
 
-    const darwinPlatformChannelSpecifics = DarwinNotificationDetails(
+    const DarwinNotificationDetails darwinPlatformChannelSpecifics =
+        DarwinNotificationDetails(
       presentSound: true,
       presentBanner: true,
       presentBadge: true,
     );
 
-    const platformChannelSpecifics = NotificationDetails(
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: darwinPlatformChannelSpecifics,
       macOS: darwinPlatformChannelSpecifics,
     );
 
-    flutterLocalNotificationsPlugin.show(id, title, message, platformChannelSpecifics);
+    await _localNotificationsPlugin.show(
+      id,
+      title,
+      message,
+      platformChannelSpecifics,
+      payload: jsonEncode(remoteMessage.data),
+    );
   }
 
   Future<void> enableIOSNotifications() async {
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true, // Required to display a heads up notification
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
       badge: true,
       sound: true,
     );
   }
 
   void printLogsNotificationData(RemoteMessage message) {
+    if (!kDebugMode) return;
+
     log("====================");
-    log('${FirebaseTopicConst.notificationDataKey} : ${message.data}');
-    log('${FirebaseTopicConst.notificationTitleKey} : ${message.notification?.title}');
-    log('${FirebaseTopicConst.notificationBodyKey} : ${message.notification?.body}');
-    log('${FirebaseTopicConst.messageDataCollapseKey} : ${message.collapseKey}');
+    log('${FirebaseTopicConst.notificationDataKey} keys: ${message.data.keys.toList()}');
+    log('${FirebaseTopicConst.notificationTitleKey} available: ${message.notification?.title != null}');
+    log('${FirebaseTopicConst.notificationBodyKey} available: ${message.notification?.body != null}');
     log('${FirebaseTopicConst.messageDataMessageIdKey} : ${message.messageId}');
-    log('${FirebaseTopicConst.messageDataMessageTypeKey} : ${message.messageType}');
   }
 }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../components/cached_image_widget.dart';
+import '../../../components/discount_badge_widget.dart';
 import '../../../main.dart';
 import '../../../utils/colors.dart';
 import '../../../utils/view_all_label_component.dart';
@@ -18,11 +19,22 @@ class PinnedClinicsComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final allClinics =
-          homeController.dashboardData.value.popularClinic.selectedClinic;
+      final allClinics = <Clinic>[
+        ...homeController.dashboardData.value.popularClinic.selectedClinic,
+        ...homeController.dashboardData.value.nearByClinic,
+      ];
+
+      final Map<int, Clinic> uniqueClinicsById = <int, Clinic>{};
+      for (final clinic in allClinics) {
+        if (clinic.id > 0) {
+          uniqueClinicsById[clinic.id] = clinic;
+        }
+      }
 
       /// Filter only pinned clinics (is_pending == 1)
-      final pinnedClinics = allClinics.where((c) => c.isPending == 1).toList();
+      final pinnedClinics =
+          uniqueClinicsById.values.where((c) => c.isPinned).toList();
+      homeController.prefetchClinicDiscountAvailability(pinnedClinics);
 
       if (pinnedClinics.isEmpty) {
         return const Offstage();
@@ -47,7 +59,11 @@ class PinnedClinicsComponent extends StatelessWidget {
                 separatorBuilder: (_, __) => 12.width,
                 itemBuilder: (context, index) {
                   final clinic = pinnedClinics[index];
-                  return _PinnedClinicCard(clinic: clinic);
+                  return _PinnedClinicCard(
+                    clinic: clinic,
+                    hasDiscountAvailable:
+                        homeController.hasDiscountForClinic(clinic.id),
+                  );
                 },
               ),
             ),
@@ -60,8 +76,12 @@ class PinnedClinicsComponent extends StatelessWidget {
 
 class _PinnedClinicCard extends StatelessWidget {
   final Clinic clinic;
+  final bool hasDiscountAvailable;
 
-  const _PinnedClinicCard({required this.clinic});
+  const _PinnedClinicCard({
+    required this.clinic,
+    this.hasDiscountAvailable = false,
+  });
 
   String get _imageUrl =>
       clinic.logo.isNotEmpty ? clinic.logo : clinic.clinicImage;
@@ -86,13 +106,27 @@ class _PinnedClinicCard extends StatelessWidget {
                   width: 2,
                 ),
               ),
-              child: ClipOval(
-                child: CachedImageWidget(
-                  url: _imageUrl,
-                  fit: BoxFit.cover,
-                  width: 65,
-                  height: 65,
-                ),
+              child: Stack(
+                children: [
+                  ClipOval(
+                    child: CachedImageWidget(
+                      url: _imageUrl,
+                      fit: BoxFit.cover,
+                      width: 65,
+                      height: 65,
+                    ),
+                  ),
+                  if (hasDiscountAvailable)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: DiscountBadgeWidget.pill(
+                        label: locale.value.discount,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
+                      ),
+                    ),
+                ],
               ),
             ),
             6.height,

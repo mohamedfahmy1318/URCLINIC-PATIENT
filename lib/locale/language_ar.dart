@@ -534,6 +534,9 @@ class LanguageAr extends BaseLanguage {
   String get discount => "تخفيض";
 
   @override
+  String get discountAvailable => "يوجد خصم";
+
+  @override
   String get off => "أقل";
 
   @override

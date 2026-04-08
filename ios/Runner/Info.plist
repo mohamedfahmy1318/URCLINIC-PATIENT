@@ -68,12 +68,14 @@
 
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>URCLINIC requires address permission access to get the current location of the user instead of typing address manually.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>URCLINIC requires address permission access to get the current location of the user instead of typing address manually.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>URCLINIC requires access to the photo library to upload your profile photo.</string>
 	<key>NSLocationUsageDescription</key>
 	<string>URCLINIC requires address permission access to get the current location of the user instead of typing address manually.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>URCLINIC requires your permission to track in order to provide personalized ads and analytics.</string>
+	<key>GOOGLE_MAPS_API_KEY</key>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

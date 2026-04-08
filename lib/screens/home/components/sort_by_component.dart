@@ -7,6 +7,7 @@ import 'package:kivicare_patient/screens/clinic/clinic_detail_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../components/cached_image_widget.dart';
+import '../../../components/discount_badge_widget.dart';
 import '../../../main.dart';
 import '../../../network/location_service.dart';
 import '../../../utils/colors.dart';
@@ -14,7 +15,15 @@ import '../../../utils/common_base.dart';
 import '../../clinic/model/clinics_res_model.dart';
 import '../home_controller.dart';
 
-enum ClinicSortOption { none, nameAZ, nameZA, ratingHigh, ratingLow, nearest }
+enum ClinicSortOption {
+  none,
+  nameAZ,
+  nameZA,
+  ratingHigh,
+  ratingLow,
+  nearest,
+  discountOnly,
+}
 
 /// Browse Clinics Component for home screen
 /// Shows all clinics in a vertical list with sort dropdown
@@ -45,6 +54,8 @@ class _SortByComponentState extends State<SortByComponent> {
         return locale.value.ratingLowToHigh;
       case ClinicSortOption.nearest:
         return locale.value.nearestClinics;
+      case ClinicSortOption.discountOnly:
+        return locale.value.discountAvailable;
     }
   }
 
@@ -62,6 +73,8 @@ class _SortByComponentState extends State<SortByComponent> {
         return Icons.star_outline_rounded;
       case ClinicSortOption.nearest:
         return Icons.near_me_rounded;
+      case ClinicSortOption.discountOnly:
+        return Icons.local_offer_rounded;
     }
   }
 
@@ -82,20 +95,31 @@ class _SortByComponentState extends State<SortByComponent> {
 
   List<Clinic> _sortClinics(List<Clinic> clinics) {
     final sorted = List<Clinic>.from(clinics);
+
+    if (_currentSort == ClinicSortOption.discountOnly) {
+      return sorted
+          .where((clinic) => homeController.hasDiscountForClinic(clinic.id))
+          .toList();
+    }
+
     switch (_currentSort) {
       case ClinicSortOption.none:
         break;
       case ClinicSortOption.nameAZ:
-        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        sorted.sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
       case ClinicSortOption.nameZA:
-        sorted.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        sorted.sort(
+            (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
       case ClinicSortOption.ratingHigh:
-        sorted.sort((a, b) => b.satisfactionPercentage.compareTo(a.satisfactionPercentage));
+        sorted.sort((a, b) =>
+            b.satisfactionPercentage.compareTo(a.satisfactionPercentage));
         break;
       case ClinicSortOption.ratingLow:
-        sorted.sort((a, b) => a.satisfactionPercentage.compareTo(b.satisfactionPercentage));
+        sorted.sort((a, b) =>
+            a.satisfactionPercentage.compareTo(b.satisfactionPercentage));
         break;
       case ClinicSortOption.nearest:
         if (_userPosition != null) {
@@ -105,6 +129,8 @@ class _SortByComponentState extends State<SortByComponent> {
             return distA.compareTo(distB);
           });
         }
+        break;
+      case ClinicSortOption.discountOnly:
         break;
     }
     return sorted;
@@ -123,12 +149,16 @@ class _SortByComponentState extends State<SortByComponent> {
     );
   }
 
-  double _haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _haversineDistance(
+      double lat1, double lon1, double lat2, double lon2) {
     const R = 6371.0; // Earth radius in km
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
     final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_toRadians(lat1)) * cos(_toRadians(lat2)) * sin(dLon / 2) * sin(dLon / 2);
+        cos(_toRadians(lat1)) *
+            cos(_toRadians(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R * c;
   }
@@ -153,7 +183,8 @@ class _SortByComponentState extends State<SortByComponent> {
               GestureDetector(
                 onTap: () => _showSortBottomSheet(context),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: boxDecorationDefault(
                     color: _currentSort != ClinicSortOption.none
                         ? appColorPrimary.withValues(alpha: 0.1)
@@ -207,7 +238,8 @@ class _SortByComponentState extends State<SortByComponent> {
 
         // Loading indicator for location
         if (_loadingLocation)
-          const Center(child: CircularProgressIndicator()).paddingSymmetric(vertical: 20),
+          const Center(child: CircularProgressIndicator())
+              .paddingSymmetric(vertical: 20),
 
         // Clinics List
         Obx(() {
@@ -243,7 +275,38 @@ class _SortByComponentState extends State<SortByComponent> {
             );
           }
 
+          homeController.prefetchClinicDiscountAvailability(clinics);
+          final bool isResolvingDiscountFilter =
+              _currentSort == ClinicSortOption.discountOnly &&
+                  clinics.any((clinic) {
+                    return !homeController.clinicDiscountAvailability
+                            .containsKey(clinic.id) ||
+                        homeController.isClinicDiscountLoading(clinic.id);
+                  });
+
+          if (isResolvingDiscountFilter) {
+            return const Center(child: CircularProgressIndicator())
+                .paddingSymmetric(vertical: 20);
+          }
+
           final sortedClinics = _sortClinics(clinics);
+
+          if (sortedClinics.isEmpty &&
+              _currentSort == ClinicSortOption.discountOnly) {
+            return Container(
+              height: 120,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.local_offer_outlined,
+                      size: 44, color: Colors.grey.shade300),
+                  12.height,
+                  Text(locale.value.noDataFound, style: secondaryTextStyle()),
+                ],
+              ),
+            );
+          }
 
           return ListView.separated(
             shrinkWrap: true,
@@ -255,9 +318,12 @@ class _SortByComponentState extends State<SortByComponent> {
               final clinic = sortedClinics[index];
               return _ClinicListCard(
                 clinic: clinic,
-                distance: _currentSort == ClinicSortOption.nearest && _userPosition != null
+                distance: _currentSort == ClinicSortOption.nearest &&
+                        _userPosition != null
                     ? _distanceTo(clinic)
                     : null,
+                hasDiscountAvailable:
+                    homeController.hasDiscountForClinic(clinic.id),
               );
             },
           );
@@ -290,31 +356,37 @@ class _SortByComponentState extends State<SortByComponent> {
               16.height,
               Text(locale.value.sortBy, style: boldTextStyle(size: 18)),
               16.height,
-              ...ClinicSortOption.values.where((o) => o != ClinicSortOption.none).map(
-                (option) => ListTile(
-                  leading: Icon(
-                    _getSortIcon(option),
-                    color: _currentSort == option ? appColorPrimary : iconColor,
+              ...ClinicSortOption.values
+                  .where((o) => o != ClinicSortOption.none)
+                  .map(
+                    (option) => ListTile(
+                      leading: Icon(
+                        _getSortIcon(option),
+                        color: _currentSort == option
+                            ? appColorPrimary
+                            : iconColor,
+                      ),
+                      title: Text(
+                        _getSortLabel(option),
+                        style: _currentSort == option
+                            ? boldTextStyle(color: appColorPrimary)
+                            : primaryTextStyle(),
+                      ),
+                      trailing: _currentSort == option
+                          ? const Icon(Icons.check_circle,
+                              color: appColorPrimary)
+                          : null,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _onSortChanged(option);
+                      },
+                    ),
                   ),
-                  title: Text(
-                    _getSortLabel(option),
-                    style: _currentSort == option
-                        ? boldTextStyle(color: appColorPrimary)
-                        : primaryTextStyle(),
-                  ),
-                  trailing: _currentSort == option
-                      ? const Icon(Icons.check_circle, color: appColorPrimary)
-                      : null,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _onSortChanged(option);
-                  },
-                ),
-              ),
               // Clear sort option
               if (_currentSort != ClinicSortOption.none)
                 ListTile(
-                  leading: const Icon(Icons.clear_rounded, color: cancelStatusColor),
+                  leading:
+                      const Icon(Icons.clear_rounded, color: cancelStatusColor),
                   title: Text(
                     locale.value.clearAll,
                     style: primaryTextStyle(color: cancelStatusColor),
@@ -340,13 +412,17 @@ class _SortByComponentState extends State<SortByComponent> {
 class _ClinicListCard extends StatelessWidget {
   final Clinic clinic;
   final double? distance;
+  final bool hasDiscountAvailable;
 
-  const _ClinicListCard({required this.clinic, this.distance});
+  const _ClinicListCard({
+    required this.clinic,
+    this.distance,
+    this.hasDiscountAvailable = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     const double imageSize = 120.0;
-    const double logoSize = 42.0;
 
     return GestureDetector(
       onTap: () => Get.to(() => ClinicDetailScreen(), arguments: clinic),
@@ -358,54 +434,32 @@ class _ClinicListCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left side: Cover image + overlapping logo
+            // Left side: Clinic Logo
             SizedBox(
               width: imageSize,
               height: imageSize,
               child: Stack(
-                clipBehavior: Clip.none,
                 children: [
-                  // Cover image
                   ClipRRect(
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(14),
                       bottomLeft: Radius.circular(14),
                     ),
                     child: CachedImageWidget(
-                      url: clinic.clinicImage,
+                      url: clinic.logo.isNotEmpty
+                          ? clinic.logo
+                          : clinic.clinicImage,
                       width: imageSize,
                       height: imageSize,
                       fit: BoxFit.cover,
                     ),
                   ),
-
-                  // Logo overlapping top-left of cover (rectangular with margin)
-                  if (clinic.logo.isNotEmpty)
+                  if (hasDiscountAvailable)
                     Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: context.cardColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: CachedImageWidget(
-                            url: clinic.logo,
-                            width: logoSize,
-                            height: logoSize,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                      top: 87,
+                      right: 8,
+                      child: DiscountBadgeWidget.pill(
+                        label: locale.value.discountAvailable,
                       ),
                     ),
                 ],
@@ -474,7 +528,8 @@ class _ClinicListCard extends StatelessWidget {
                           8.width,
                         ],
                         // Distance
-                        if (distance != null && distance != double.infinity) ...[
+                        if (distance != null &&
+                            distance != double.infinity) ...[
                           const Icon(Icons.near_me_rounded,
                               size: 12, color: appColorSecondary),
                           2.width,
@@ -494,8 +549,7 @@ class _ClinicListCard extends StatelessWidget {
                               horizontal: 10, vertical: 4),
                           decoration: boxDecorationDefault(
                             color: getClinicStatusLightColor(
-                              clinicStatus:
-                                  clinic.clinicStatus.toLowerCase(),
+                              clinicStatus: clinic.clinicStatus.toLowerCase(),
                             ),
                             borderRadius: radius(12),
                           ),
@@ -505,8 +559,7 @@ class _ClinicListCard extends StatelessWidget {
                             style: boldTextStyle(
                               size: 10,
                               color: getClinicStatusColor(
-                                clinicStatus:
-                                    clinic.clinicStatus.toLowerCase(),
+                                clinicStatus: clinic.clinicStatus.toLowerCase(),
                               ),
                             ),
                           ),

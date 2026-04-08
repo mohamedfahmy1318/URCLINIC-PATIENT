@@ -1,12 +1,16 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../api/core_apis.dart';
 import '../../api/home_apis.dart';
 import '../../utils/app_common.dart';
+import '../clinic/model/clinics_res_model.dart';
 import '../dashboard/dashboard_controller.dart';
+import '../service/model/service_list_model.dart';
 import 'model/dashboard_res_model.dart';
 
 class HomeController extends GetxController {
@@ -27,6 +31,10 @@ class HomeController extends GetxController {
   /// Banners
   RxList<BannerModel> bannerList = <BannerModel>[].obs;
   RxBool isBannersLoading = false.obs;
+
+  /// Clinic discount cache keyed by clinic id.
+  RxMap<int, bool> clinicDiscountAvailability = <int, bool>{}.obs;
+  RxSet<int> clinicDiscountLoadingIds = <int>{}.obs;
 
   @override
   void onReady() {
@@ -65,14 +73,123 @@ class HomeController extends GetxController {
   }
 
   void handleDashboardRes(DashboardRes value) {
-    debugPrint(
-        'NEARBYCLINIC.LENGTH: ${dashboardData.value.nearByClinic.length}');
-    debugPrint('VALUE.DATA: ${value.data.nearByClinic.length}');
+    if (kDebugMode) {
+      debugPrint('Dashboard payload processed');
+    }
+
+    value.data.nearByClinic = _filterVisibleClinics(value.data.nearByClinic);
+    value.data.popularClinic.selectedClinic =
+        _filterVisibleClinics(value.data.popularClinic.selectedClinic);
+
     dashboardData(value.data);
     unreadNotificationCount(value.data.unReadCount);
-    debugPrint(
-        'After NEARBYCLINIC.LENGTH: ${dashboardData.value.nearByClinic.length}');
+    prefetchClinicDiscountAvailability(_collectUniqueClinics(value.data));
     //More Logic....
+  }
+
+  List<Clinic> _filterVisibleClinics(List<Clinic> source) {
+    return source.where((clinic) {
+      return clinic.id > 0 &&
+          clinic.name.trim().isNotEmpty &&
+          clinic.status == 1;
+    }).toList();
+  }
+
+  List<Clinic> _collectUniqueClinics(DashboardData data) {
+    final Map<int, Clinic> uniqueClinicMap = <int, Clinic>{};
+
+    for (final clinic in [
+      ...data.nearByClinic,
+      ...data.popularClinic.selectedClinic,
+    ]) {
+      if (clinic.id > 0) {
+        uniqueClinicMap[clinic.id] = clinic;
+      }
+    }
+
+    return uniqueClinicMap.values.toList();
+  }
+
+  void prefetchClinicDiscountAvailability(List<Clinic> clinics) {
+    for (final clinic in clinics) {
+      final int clinicId = clinic.id;
+
+      if (clinicId <= 0) continue;
+      if (clinicDiscountAvailability.containsKey(clinicId)) continue;
+      if (clinicDiscountLoadingIds.contains(clinicId)) continue;
+
+      _fetchClinicDiscountAvailability(clinicId);
+    }
+  }
+
+  Future<void> _fetchClinicDiscountAvailability(int clinicId) async {
+    clinicDiscountLoadingIds.add(clinicId);
+
+    try {
+      final List<ServiceElement> services = <ServiceElement>[];
+
+      await CoreServiceApis.getServiceList(
+        serviceList: services,
+        clinicId: clinicId,
+        allServices: 'all',
+      );
+
+      final List<ServiceElement> activeServices =
+          services.where((service) => service.status == 1).toList();
+
+      if (activeServices.isEmpty) {
+        _removeClinicFromDashboard(clinicId);
+        clinicDiscountAvailability.remove(clinicId);
+        return;
+      }
+
+      clinicDiscountAvailability[clinicId] = activeServices.hasAnyDiscount;
+    } catch (_) {
+      if (kDebugMode) {
+        log('Error loading clinic discount status');
+      }
+      clinicDiscountAvailability[clinicId] = false;
+    } finally {
+      clinicDiscountLoadingIds.remove(clinicId);
+    }
+  }
+
+  void _removeClinicFromDashboard(int clinicId) {
+    bool changed = false;
+
+    dashboardData.update((data) {
+      if (data == null) return;
+
+      final List<Clinic> newNearBy =
+          data.nearByClinic.where((clinic) => clinic.id != clinicId).toList();
+      final List<Clinic> newPopular = data.popularClinic.selectedClinic
+          .where((clinic) => clinic.id != clinicId)
+          .toList();
+
+      changed = newNearBy.length != data.nearByClinic.length ||
+          newPopular.length != data.popularClinic.selectedClinic.length;
+
+      data.nearByClinic = newNearBy;
+      data.popularClinic.selectedClinic = newPopular;
+    });
+
+    if (!changed) return;
+
+    if (currentPage.value >= dashboardData.value.nearByClinic.length) {
+      currentPage(
+        dashboardData.value.nearByClinic.isEmpty
+            ? 0
+            : dashboardData.value.nearByClinic.length - 1,
+      );
+    }
+  }
+
+  bool hasDiscountForClinic(int clinicId) {
+    return clinicDiscountAvailability[clinicId] ?? false;
+  }
+
+  bool isClinicDiscountLoading(int clinicId) {
+    return clinicDiscountLoadingIds.contains(clinicId);
   }
 
 /*  Future<void> _checkAndShowDialog(BuildContext context, bool isAutoUpdateOn) async {

@@ -3,14 +3,13 @@ import 'package:get/get.dart';
 import 'package:kivicare_patient/api/auth_apis.dart';
 import 'package:kivicare_patient/main.dart';
 import 'package:kivicare_patient/screens/auth/model/login_response.dart';
-import 'package:kivicare_patient/utils/constants.dart';
-import 'package:kivicare_patient/utils/local_storage.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../utils/app_common.dart';
 import '../../utils/colors.dart';
 import '../../utils/common_base.dart';
 import '../booking/appointments_controller.dart';
 import '../home/home_controller.dart';
+import '../../utils/secure_storage.dart';
 import 'dashboard_controller.dart';
 import 'components/menu.dart';
 
@@ -120,8 +119,7 @@ class DashboardScreen extends StatelessWidget {
               loginType: loginUserData.value.loginType,
             ),
           );
-          setValueToLocal(
-              SharedPreferenceConst.USER_DATA, loginUserData.toJson());
+          saveUserDataSecure(loginUserData.value);
         }).catchError((e) {
           toast(e.toString());
         });

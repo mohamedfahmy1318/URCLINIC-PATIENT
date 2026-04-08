@@ -1,10 +1,13 @@
 // ignore_for_file: depend_on_referenced_packages
 import 'dart:async';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../api/core_apis.dart';
+import '../../main.dart';
 import '../doctor/model/doctor_list_res.dart';
 import '../service/model/service_list_model.dart';
 import 'model/clinic_detail_model.dart';
@@ -12,12 +15,16 @@ import 'model/clinics_res_model.dart';
 
 class ClinicDetailController extends GetxController {
   RxBool isLoading = false.obs;
+  RxString clinicFetchError = ''.obs;
 
-  Rx<Future<ClinicDetailModel>> getClinicDetail = Future(() => ClinicDetailModel(data: Clinic(clinicSession: ClinicSession()))).obs;
+  Rx<Future<ClinicDetailModel>> getClinicDetail = Future(
+          () => ClinicDetailModel(data: Clinic(clinicSession: ClinicSession())))
+      .obs;
   Rx<Clinic> clinicData = Clinic(clinicSession: ClinicSession()).obs;
 
   //Services
-  Rx<Future<RxList<ServiceElement>>> serviceListFuture = Future(() => RxList<ServiceElement>()).obs;
+  Rx<Future<RxList<ServiceElement>>> serviceListFuture =
+      Future(() => RxList<ServiceElement>()).obs;
   RxBool isServicesLoading = false.obs;
   RxList<ServiceElement> serviceList = RxList();
   RxBool isServicesLastPage = false.obs;
@@ -46,19 +53,91 @@ class ClinicDetailController extends GetxController {
     if (showLoader) {
       isLoading(true);
     }
-    await getClinicDetail(
-      CoreServiceApis.getClinicDetails(clinicId: clinicData.value.id),
-    ).then((value) {
-      clinicData(value.data);
+
+    clinicFetchError('');
+
+    if (clinicData.value.id <= 0) {
+      clinicFetchError(locale.value.pageNotFound);
       isLoading(false);
+      return;
+    }
+
+    final bool hasActiveServices =
+        await _hasAnyActiveService(clinicData.value.id);
+    if (!hasActiveServices) {
+      clinicFetchError(locale.value.noServicesAvailable);
+      isLoading(false);
+      return;
+    }
+
+    try {
+      final Future<ClinicDetailModel> requestFuture =
+          CoreServiceApis.getClinicDetails(clinicId: clinicData.value.id);
+      getClinicDetail(requestFuture);
+      final ClinicDetailModel value = await requestFuture;
+
+      clinicData(value.data);
+
       // Load services after clinic details are loaded to calculate active count
       getServiceList(showLoader: false);
       // Load doctors after clinic details are loaded to calculate active count
       getDoctors(showLoader: false);
-    }).catchError((e) {
+    } catch (e, st) {
+      final String message = _friendlyClinicError(e);
+      clinicFetchError(message);
+      log('ClinicDetail getClinicDetail err ==> $message');
+      _reportClinicDetailFetchFailure(error: e, stackTrace: st);
+    } finally {
       isLoading(false);
-      log('ClinicDetail getClinicDetail err ==> $e');
-    }).whenComplete(() => isLoading(false));
+    }
+  }
+
+  Future<bool> _hasAnyActiveService(int clinicId) async {
+    try {
+      final List<ServiceElement> probeList = <ServiceElement>[];
+
+      await CoreServiceApis.getServiceList(
+        page: 1,
+        perPage: 20,
+        serviceList: probeList,
+        clinicId: clinicId,
+        allServices: 'all',
+      );
+
+      return probeList.any((service) => service.status == 1);
+    } catch (_) {
+      // Do not block detail fetch on a probe failure.
+      return true;
+    }
+  }
+
+  String _friendlyClinicError(Object error) {
+    final String raw = error.toString();
+    final String lower = raw.toLowerCase();
+    if (lower.contains('500') || lower.contains('internal server')) {
+      return locale.value.internalServerError;
+    }
+    return raw;
+  }
+
+  void _reportClinicDetailFetchFailure({
+    required Object error,
+    required StackTrace stackTrace,
+  }) {
+    if (!kReleaseMode) return;
+
+    try {
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: 'clinic_detail_fetch_failed',
+        information: <String>['clinic_id=${clinicData.value.id}'],
+      );
+    } catch (_) {
+      if (kDebugMode) {
+        log('ClinicDetail crash report skipped');
+      }
+    }
   }
 
   Future<void> getServiceList({bool showLoader = true}) async {
@@ -91,13 +170,14 @@ class ClinicDetailController extends GetxController {
         serviceList: allServicesList,
         clinicId: clinicData.value.id,
         allServices: 'all',
-        lastPageCallBack: (p0) {
-        },
+        lastPageCallBack: (p0) {},
       );
-      activeServicesCount(allServicesList.where((service) => service.status == 1).length);
+      activeServicesCount(
+          allServicesList.where((service) => service.status == 1).length);
     } catch (e) {
       log('Error loading all services for count: $e');
-      activeServicesCount(serviceList.where((service) => service.status == 1).length);
+      activeServicesCount(
+          serviceList.where((service) => service.status == 1).length);
     }
   }
 
@@ -109,10 +189,10 @@ class ClinicDetailController extends GetxController {
         perPage: 1000,
         doctors: allDoctorsList,
         clinicId: clinicData.value.id,
-        lastPageCallBack: (p0) {
-        },
+        lastPageCallBack: (p0) {},
       );
-      activeDoctorsCount(allDoctorsList.where((doctor) => doctor.status == 1).length);
+      activeDoctorsCount(
+          allDoctorsList.where((doctor) => doctor.status == 1).length);
     } catch (e) {
       activeDoctorsCount(doctors.where((doctor) => doctor.status == 1).length);
     }

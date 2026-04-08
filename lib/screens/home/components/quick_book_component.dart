@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:kivicare_patient/components/cached_image_widget.dart';
 import 'package:kivicare_patient/screens/home/components/clinic_list_widget.dart';
@@ -81,6 +83,9 @@ class QuickBookComponent extends StatelessWidget {
                                     quickBookController.serviceCont.text;
                                 quickBookController.serviceData =
                                     quickBookController.serviceList[index];
+                                quickBookController.selectedSlot("");
+                                quickBookController.onDateTimeChange();
+                                quickBookController.slots.clear();
                                 quickBookController.dateCont.clear();
                                 quickBookController.timeCont.clear();
                                 quickBookController.getClinicList();
@@ -143,6 +148,8 @@ class QuickBookComponent extends StatelessWidget {
                           },
                           onSwipeRefresh: () async {
                             quickBookController.currentPage.value = 1;
+                            quickBookController.serviceList.clear();
+                            await quickBookController.getServiceList();
                           },
                         ).expand(),
                       ),
@@ -251,6 +258,9 @@ class QuickBookComponent extends StatelessWidget {
                     lastDate: DateTime(2101),
                   );
                   if (selectedDate != null) {
+                    quickBookController.selectedSlot("");
+                    quickBookController.onDateTimeChange();
+                    quickBookController.timeCont.clear();
                     quickBookController.dateCont.text =
                         selectedDate.formatDateYYYYmmdd();
                     quickBookController.selectedDate.value =
@@ -358,8 +368,11 @@ class QuickBookComponent extends StatelessWidget {
                               quickBookController.serviceCont.text.isNotEmpty);
                     }
 
-                    return Obx(
-                      () => Column(
+                    return Obx(() {
+                      final double slotItemWidth =
+                          math.max(88, ((Get.width - 80) / 3)).toDouble();
+
+                      return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           16.height,
@@ -396,7 +409,7 @@ class QuickBookComponent extends StatelessWidget {
                                             slot;
                                       },
                                       child: Container(
-                                        width: Get.width / 3 - 32,
+                                        width: slotItemWidth,
                                         padding: const EdgeInsets.symmetric(
                                             vertical: 12),
                                         decoration:
@@ -429,8 +442,8 @@ class QuickBookComponent extends StatelessWidget {
                             ),
                           ).visible(!quickBookController.isLoading.value),
                         ],
-                      ),
-                    );
+                      );
+                    });
                   },
                 );
               },

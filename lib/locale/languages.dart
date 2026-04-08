@@ -344,6 +344,8 @@ abstract class BaseLanguage {
 
   String get discount;
 
+  String get discountAvailable;
+
   String get off;
 
   String get subtotal;

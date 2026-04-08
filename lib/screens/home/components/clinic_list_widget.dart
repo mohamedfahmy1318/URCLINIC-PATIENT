@@ -27,8 +27,13 @@ class ClinicListWidget extends StatelessWidget {
             hideKeyboard(context);
             quickBookController.selectedClinicId.value = clinicList[index].id;
             quickBookController.clinicCont.text = clinicList[index].name;
-            quickBookController.selectedService.value = quickBookController.clinicCont.text;
+            quickBookController.selectedClinic.value =
+                quickBookController.clinicCont.text;
             quickBookController.selectedClinicData = clinicList[index];
+            quickBookController.selectedSlot("");
+            quickBookController.onDateTimeChange();
+            quickBookController.timeCont.clear();
+            quickBookController.slots.clear();
             Get.back();
           },
           child: Container(
@@ -36,7 +41,9 @@ class ClinicListWidget extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: boxDecorationDefault(
               borderRadius: BorderRadius.circular(6),
-              color: isDarkMode.value ? appScreenBackgroundDark : appScreenBackground,
+              color: isDarkMode.value
+                  ? appScreenBackgroundDark
+                  : appScreenBackground,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -53,9 +60,14 @@ class ClinicListWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(clinicList[index].name, style: boldTextStyle(size: 16, color: isDarkMode.value ? null : darkGrayTextColor)),
+                    Text(clinicList[index].name,
+                        style: boldTextStyle(
+                            size: 16,
+                            color:
+                                isDarkMode.value ? null : darkGrayTextColor)),
                     2.height,
-                    Text(clinicList[index].description, style: primaryTextStyle(size: 12, color: dividerColor)),
+                    Text(clinicList[index].description,
+                        style: primaryTextStyle(size: 12, color: dividerColor)),
                   ],
                 ).expand(),
               ],

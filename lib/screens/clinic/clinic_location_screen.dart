@@ -39,6 +39,7 @@ class ClinicLocationScreen extends StatelessWidget {
               pincode: clinic.pincode,
               latitude: clinic.latitude,
               longitude: clinic.longitude,
+              googleMapLink: clinic.googleMapLink,
               isMain: true,
             ),
 
@@ -62,6 +63,9 @@ class ClinicLocationScreen extends StatelessWidget {
                     pincode: addr.pincode,
                     latitude: addr.latitude,
                     longitude: addr.longitude,
+                    googleMapLink: addr.googleMapLink.isNotEmpty
+                        ? addr.googleMapLink
+                        : clinic.googleMapLink,
                     isMain: false,
                   ),
                 );
@@ -140,6 +144,7 @@ class ClinicLocationScreen extends StatelessWidget {
     required String pincode,
     required String latitude,
     required String longitude,
+    required String googleMapLink,
     required bool isMain,
   }) {
     return Container(
@@ -267,8 +272,14 @@ class ClinicLocationScreen extends StatelessWidget {
             elevation: 0,
             shapeBorder: RoundedRectangleBorder(borderRadius: radius(12)),
             onTap: () {
-              _openInMaps(latitude, longitude, address,
-                  _buildLocationString(cityName, stateName, countryName));
+              _openInMaps(
+                latitude: latitude,
+                longitude: longitude,
+                googleMapLink: googleMapLink,
+                address: address,
+                location:
+                    _buildLocationString(cityName, stateName, countryName),
+              );
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -296,14 +307,65 @@ class ClinicLocationScreen extends StatelessWidget {
     return parts.join(', ');
   }
 
-  void _openInMaps(
-      String latitude, String longitude, String address, String location) {
-    if (latitude.isNotEmpty && longitude.isNotEmpty) {
-      launchMap("$latitude,$longitude");
-    } else if (address.isNotEmpty) {
-      launchMap(address);
+  void _openInMaps({
+    required String latitude,
+    required String longitude,
+    required String googleMapLink,
+    required String address,
+    required String location,
+  }) {
+    final String lat = latitude.trim();
+    final String lng = longitude.trim();
+    final String mapLink = _extractLaunchableMapLink(googleMapLink);
+    final String addr = address.trim();
+    final String loc = location.trim();
+
+    // Priority: coordinates -> google map link -> address/location text
+    if (_hasValidCoordinates(lat, lng)) {
+      launchMap('$lat,$lng');
+    } else if (mapLink.isNotEmpty && _isLaunchableMapUrl(mapLink)) {
+      commonLaunchUrl(mapLink);
+    } else if (addr.isNotEmpty) {
+      launchMap(addr);
     } else {
-      launchMap(location);
+      launchMap(loc);
     }
+  }
+
+  bool _hasValidCoordinates(String latitude, String longitude) {
+    return double.tryParse(latitude) != null &&
+        double.tryParse(longitude) != null;
+  }
+
+  String _extractLaunchableMapLink(String rawLink) {
+    final String value = rawLink.trim();
+    if (value.isEmpty) return '';
+
+    // Some APIs may return an iframe markup instead of a direct URL.
+    if (value.toLowerCase().contains('<iframe')) {
+      final RegExp srcRegex = RegExp(
+        r'''src\s*=\s*["']([^"']+)["']''',
+        caseSensitive: false,
+      );
+      final Match? match = srcRegex.firstMatch(value);
+      return match?.group(1)?.trim() ?? '';
+    }
+
+    return value;
+  }
+
+  bool _isLaunchableMapUrl(String url) {
+    final Uri? uri = Uri.tryParse(url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return false;
+    }
+
+    // Google embed URLs require iframe context and cannot be opened directly.
+    final String loweredPath = uri.path.toLowerCase();
+    if (loweredPath.contains('/maps/embed')) {
+      return false;
+    }
+
+    return true;
   }
 }

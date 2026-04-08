@@ -536,6 +536,9 @@ class LanguageEn extends BaseLanguage {
   String get discount => "Discount";
 
   @override
+  String get discountAvailable => "Discount Available";
+
+  @override
   String get off => "off";
 
   @override

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/screens/booking/model/booking_req.dart';
@@ -10,6 +11,7 @@ import 'package:kivicare_patient/utils/constants.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../api/core_apis.dart';
+import '../../../main.dart';
 
 class QuickBookController extends GetxController {
   TextEditingController serviceCont = TextEditingController();
@@ -37,7 +39,8 @@ class QuickBookController extends GetxController {
   RxBool nextBtnVisible = false.obs;
 
   //get list of services
-  Rx<Future<RxList<ServiceElement>>> servicesFuture = Future(() => RxList<ServiceElement>()).obs;
+  Rx<Future<RxList<ServiceElement>>> servicesFuture =
+      Future(() => RxList<ServiceElement>()).obs;
   RxList<ServiceElement> servicesList = RxList();
 
   //get list of clinic
@@ -77,6 +80,16 @@ class QuickBookController extends GetxController {
 
     selectedDate.value = '';
     selectedSlot.value = '';
+    selectedServiceId.value = -1;
+    selectedClinicId.value = -1;
+    selectedDoctorId.value = -1;
+    selectedService.value = '';
+    selectedClinic.value = '';
+    doctorName.value = '';
+    serviceData = null;
+    selectedClinicData = null;
+    price.value = '';
+    nextBtnVisible.value = false;
 
     serviceList.clear();
     clinicList.clear();
@@ -118,13 +131,17 @@ class QuickBookController extends GetxController {
     if (showLoader) {
       isLoading(true);
     }
-    await clinicFuture(CoreServiceApis.getClinics(clinics: clinicList, search: searchClinic.value, serviceId: selectedServiceId.value)).then((value) {
+    await clinicFuture(CoreServiceApis.getClinics(
+            clinics: clinicList,
+            search: searchClinic.value,
+            serviceId: selectedServiceId.value))
+        .then((value) {
       clinicList(value);
       isLoading(false);
     }).catchError((e) {
       isLoading(false);
     }).whenComplete(() => isLoading(false));
-    if(clinicList.length == 1){
+    if (clinicList.length == 1) {
       clinicCont.text = clinicList.first.name;
       selectedClinic(clinicList.first.name);
       selectedClinicId(clinicList.first.id);
@@ -163,8 +180,18 @@ class QuickBookController extends GetxController {
         ),
       );
 
+      if (!timeSlots.contains(selectedSlot.value)) {
+        selectedSlot('');
+        timeCont.clear();
+        onDateTimeChange();
+      }
+
       log('Fetched ${timeSlots.length} time slots');
     } catch (e) {
+      slots.clear();
+      selectedSlot('');
+      timeCont.clear();
+      onDateTimeChange();
       log("getTimeSlots error: $e");
     } finally {
       if (showLoader) isLoading(false);
@@ -185,6 +212,33 @@ class QuickBookController extends GetxController {
   }
 
   void bookAppointment() {
+    if (serviceData == null) {
+      serviceError.value = locale.value.kindlyChooseAServiceFirst;
+      return;
+    }
+    if (selectedClinicData == null || selectedClinicId.value.isNegative) {
+      clinicError.value = locale.value.kindlyChooseAClinicFirst;
+      return;
+    }
+    if (selectedDoctorId.value.isNegative) {
+      timeError.value = locale.value.chooseTime;
+      return;
+    }
+    if (selectedDate.value.isEmpty || selectedSlot.value.isEmpty) {
+      dateError.value = locale.value.dateIsNotSelected;
+      timeError.value = locale.value.chooseTime;
+      return;
+    }
+
+    final BuildContext? context = Get.context;
+    if (context == null) {
+      if (kDebugMode) {
+        log('bookAppointment aborted: context is null');
+      }
+      toast(errorSomethingWentWrong, print: true);
+      return;
+    }
+
     //BookingReq
     bookingReq.clinicId = selectedClinicId.value.toString();
     bookingReq.serviceId = selectedServiceId.value.toString();
@@ -201,10 +255,11 @@ class QuickBookController extends GetxController {
     bookingReq.totalAmount = price.value.toDouble();
     bookingReq.isEnableAdvancePayment = serviceData!.isEnableAdvancePayment;
     bookingReq.advancePayableAmount = serviceData!.advancePaymentAmount;
-    bookingReq.isOnlineService = serviceData!.type.toLowerCase() == ServiceTypeConst.online;
+    bookingReq.isOnlineService =
+        serviceData!.type.toLowerCase() == ServiceTypeConst.online;
 
     showInDialog(
-      Get.context!,
+      context,
       contentPadding: EdgeInsets.zero,
       builder: (_) {
         return AppointmentSummaryWidget(
@@ -213,7 +268,7 @@ class QuickBookController extends GetxController {
         );
       },
     ).then((value) {
-      dispose();
+      resetFields();
     });
   }
 
@@ -224,7 +279,7 @@ class QuickBookController extends GetxController {
   }
 
   @override
-  void dispose() {
+  void onClose() {
     serviceCont.clear();
     clinicCont.clear();
     dateCont.clear();
@@ -236,6 +291,10 @@ class QuickBookController extends GetxController {
     selectedDoctorId(-1);
     currentPage(1);
     hasMoreData(false);
-    super.dispose();
+    serviceCont.dispose();
+    clinicCont.dispose();
+    dateCont.dispose();
+    timeCont.dispose();
+    super.onClose();
   }
 }

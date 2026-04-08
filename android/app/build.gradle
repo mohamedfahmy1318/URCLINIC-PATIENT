@@ -53,8 +53,12 @@ android {
         applicationId "com.urclinic.patient"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion 36
-        versionCode 25
-        versionName "1.9.0"
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        manifestPlaceholders = [
+            applicationName    : 'android.app.Application',
+            GOOGLE_MAPS_API_KEY: localProperties.getProperty('GOOGLE_MAPS_API_KEY', '')
+        ]
     }
 
     signingConfigs {

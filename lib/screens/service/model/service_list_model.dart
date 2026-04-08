@@ -138,6 +138,33 @@ class ServiceElement {
   num totalInclusiveTax;
 
   bool get isInclusiveTaxesAvailable => totalInclusiveTax > 0;
+  bool get hasDiscount => discountValue > 0;
+
+  num get basePrice => price > 0 ? price : charges;
+
+  num get finalPrice {
+    if (!hasDiscount) return basePrice;
+
+    if (payableAmount > 0) return payableAmount;
+
+    final num calculatedAmount = basePrice - discountAmount;
+    return calculatedAmount >= 0 ? calculatedAmount : 0;
+  }
+
+  String get discountBadgeText {
+    if (!hasDiscount) return '';
+
+    final num normalizedValue = discountValue;
+    final String formattedValue = normalizedValue % 1 == 0
+        ? normalizedValue.toInt().toString()
+        : normalizedValue.toString();
+
+    if (discountType.toLowerCase() == 'percentage') {
+      return '-$formattedValue%';
+    }
+
+    return '-$formattedValue';
+  }
 
   String get localizedName =>
       selectedLanguageCode.value == 'ar' && nameAr.isNotEmpty ? nameAr : name;
@@ -218,8 +245,10 @@ class ServiceElement {
           ? json['subcategory_name_ar']
           : "",
       duration: json['duration'] is int ? json['duration'] : -1,
-      isDiscount:
-          json['discount'] is bool ? json['discount'] : json['discount'] == 1,
+      isDiscount: json['discount'] is bool
+          ? json['discount']
+          : json['discount'] == 1 ||
+              (json['discount_value'] is num && json['discount_value'] > 0),
       featured: json['featured'] is int ? json['featured'] : -1,
       discountType:
           json['discount_type'] is String ? json['discount_type'] : "",
@@ -301,6 +330,10 @@ class ServiceElement {
       'price': price,
     };
   }
+}
+
+extension ServiceDiscountListExtension on Iterable<ServiceElement> {
+  bool get hasAnyDiscount => any((service) => service.hasDiscount);
 }
 
 class AssignDoctor {

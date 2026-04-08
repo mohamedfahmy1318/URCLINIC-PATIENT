@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,7 +36,8 @@ class IncidentManagement extends GetxController {
   XFile? pickedFile;
 
   // Incident list state
-  Rx<Future<RxList<Incident>>> incidenceFuture = Future(() => RxList<Incident>()).obs;
+  Rx<Future<RxList<Incident>>> incidenceFuture =
+      Future(() => RxList<Incident>()).obs;
   RxList<Incident> incidents = RxList<Incident>();
   RxBool isIncidenceLastPage = false.obs;
   RxInt incidencePage = 1.obs;
@@ -55,8 +57,11 @@ class IncidentManagement extends GetxController {
     filterStatus = [
       IncidentStatusModel(name: locale.value.all),
       IncidentStatusModel(type: IncidentStatus.open, name: locale.value.open),
-      IncidentStatusModel(type: IncidentStatus.closed, name: locale.value.closed.toLowerCase().capitalizeFirstLetter()),
-      IncidentStatusModel(type: IncidentStatus.reject, name: locale.value.rejected),
+      IncidentStatusModel(
+          type: IncidentStatus.closed,
+          name: locale.value.closed.toLowerCase().capitalizeFirstLetter()),
+      IncidentStatusModel(
+          type: IncidentStatus.reject, name: locale.value.rejected),
     ].obs;
 
     if (filterStatus.isNotEmpty) {
@@ -111,7 +116,6 @@ class IncidentManagement extends GetxController {
       final fileSize = await file.length();
       final sizeInMB = fileSize / (1024 * 1024);
 
-
       if (fileSize <= 2 * 1024 * 1024) {
         imageFile(file);
         imageTitleCont.text = path.basename(pickedFile!.path);
@@ -131,16 +135,29 @@ class IncidentManagement extends GetxController {
   }) async {
     isLoading(true);
     hideKeyBoardWithoutContext();
-    log('Submit Request: title: $title,description: $description,email: $email,mobileNumber: $mobileNumber, phoneCode: $phoneCode,imageFile: $imageFile');
-    await CoreServiceApis.addIncident(title: title, description: description, email: email, mobileNumber: mobileNumber, phoneCode: phoneCode, imageFile: imageFile).then((value) async {
-      log('Incident Submitted: ${value.toJson()}');
+    if (kDebugMode) {
+      log('Submitting incident request');
+    }
+    await CoreServiceApis.addIncident(
+            title: title,
+            description: description,
+            email: email,
+            mobileNumber: mobileNumber,
+            phoneCode: phoneCode,
+            imageFile: imageFile)
+        .then((value) async {
+      if (kDebugMode) {
+        log('Incident submitted successfully');
+      }
       toast(value.message);
       isLoading(false);
     }).then((data) {
       toast(locale.value.successfullyAdded);
-    }).catchError((e) {
+    }).catchError((_) {
       isLoading(false);
-      log(e.toString());
+      if (kDebugMode) {
+        log('Incident submission failed');
+      }
     });
   }
 }

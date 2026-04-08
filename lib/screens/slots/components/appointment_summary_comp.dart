@@ -16,6 +16,7 @@ class AppointmentSummaryWidget extends StatelessWidget {
   final BookingReq bookingData;
   final bool isQuickBook;
   final RxBool _isBooking = false.obs;
+  final PaymentController _paymentController = PaymentController();
 
   AppointmentSummaryWidget(
       {super.key, required this.bookingData, this.isQuickBook = false});
@@ -193,21 +194,30 @@ class AppointmentSummaryWidget extends StatelessWidget {
                         shapeBorder: RoundedRectangleBorder(
                             borderRadius: radius(defaultAppButtonRadius / 2)),
                         onTap: () {
+                          if (_isBooking.value) return;
                           _isBooking.value = true;
-                          paymentController = PaymentController();
-                          paymentController.bookingData = bookingData;
-                          paymentController.paymentOption(
+                          _paymentController.bookingData = bookingData;
+                          _paymentController.bookingErrorMessage('');
+                          _paymentController.paymentOption(
                               PaymentMethods.PAYMENT_METHOD_CASH);
-                          // Directly save booking as cash - skip payment screen
-                          paymentController.saveBooking(Get.context!);
-                          // Reset loading on error (on success, navigation dismisses dialog)
-                          paymentController.isLoading.listen((loading) {
-                            if (!loading && _isBooking.value) {
+                          _paymentController
+                              .saveBooking(context)
+                              .whenComplete(() {
+                            if (_isBooking.value) {
                               _isBooking.value = false;
                             }
                           });
                         },
                       ),
+              ),
+              8.height,
+              Obx(
+                () => Text(
+                  _paymentController.bookingErrorMessage.value,
+                  style: secondaryTextStyle(color: Colors.red, size: 12),
+                  textAlign: TextAlign.center,
+                ).paddingSymmetric(horizontal: 16).visible(
+                    _paymentController.bookingErrorMessage.value.isNotEmpty),
               ),
             ],
           ),

@@ -24,7 +24,9 @@ class ForgetPasswordController extends GetxController {
 
     await AuthServiceApis.forgotPasswordAPI(request: req).then((value) async {
       isLoading(false);
-      toast(value.message.isNotEmpty ? value.message : locale.value.weHaveEmailedYourPasswordResetLink);
+      toast(value.message.isNotEmpty
+          ? value.message
+          : locale.value.weHaveEmailedYourPasswordResetLink);
       Get.back();
     }).catchError((e) {
       isLoading(false);

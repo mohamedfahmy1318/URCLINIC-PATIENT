@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/api/core_apis.dart';
@@ -36,6 +40,7 @@ class PaymentController extends GetxController {
   //
   BookingReq bookingData = BookingReq();
   RxString paymentOption = PaymentMethods.PAYMENT_METHOD_CASH.obs;
+  RxString bookingErrorMessage = ''.obs;
   TextEditingController optionalCont = TextEditingController();
   RxBool isLoading = false.obs;
 
@@ -84,11 +89,13 @@ class PaymentController extends GetxController {
       isLoading(false);
     }).catchError((e) {
       isLoading(false);
+      bookingErrorMessage(e.toString());
       toast(e.toString(), print: true);
     });
   }
 
   void handleBookNowClick(BuildContext context, bool isQuickBook) {
+    bookingErrorMessage('');
     if (isFromBookingDetail) {
       payWithSelectedOption(context, isCashPayment: false);
     } else {
@@ -142,26 +149,69 @@ class PaymentController extends GetxController {
     );
   }
 
-  void saveBooking(BuildContext context, {List<PlatformFile>? files}) {
+  Future<void> saveBooking(BuildContext context,
+      {List<PlatformFile>? files}) async {
+    final String traceId = _newBookingTraceId();
     isLoading(true);
+    bookingErrorMessage('');
+    _logBookingEvent(
+      traceId: traceId,
+      stage: 'submit_start',
+      details: _bookingDetails(),
+    );
 
-    CoreServiceApis.bookServiceApi(
-      request: bookingData.toJson(),
-      files: bookingData.files,
-      onSuccess: () async {
-        payWithSelectedOption(context);
-      },
-      loaderOff: () {
-        isLoading(false);
-      },
-    ).then((value) {}).catchError((e) {
+    try {
+      await CoreServiceApis.bookServiceApi(
+        request: bookingData.toJson(),
+        files: bookingData.files,
+        traceId: traceId,
+        onSuccess: () async {
+          _logBookingEvent(
+            traceId: traceId,
+            stage: 'submit_success',
+            details: {
+              'booking_id': saveBookingRes.value.saveBookingResData.id,
+            },
+          );
+          payWithSelectedOption(context);
+        },
+        loaderOff: () {
+          isLoading(false);
+        },
+        onFailure: (message) {
+          final String cleanedMessage =
+              message.trim().isEmpty ? errorSomethingWentWrong : message;
+          bookingErrorMessage(cleanedMessage);
+          _logBookingEvent(
+            traceId: traceId,
+            stage: 'submit_failed',
+            details: _bookingDetails(),
+            error: cleanedMessage,
+            reportToCrashlytics: true,
+          );
+          toast(cleanedMessage, print: true);
+        },
+      );
+    } catch (e, st) {
       isLoading(false);
-      toast(e.toString(), print: true);
-    });
+      final String message =
+          e.toString().trim().isEmpty ? errorSomethingWentWrong : e.toString();
+      bookingErrorMessage(message);
+      _logBookingEvent(
+        traceId: traceId,
+        stage: 'submit_exception',
+        details: _bookingDetails(),
+        error: e,
+        stackTrace: st,
+        reportToCrashlytics: true,
+      );
+      toast(message, print: true);
+    }
   }
 
   Future<void> onPaymentSuccess() async {
     isLoading(false);
+    bookingErrorMessage('');
     reLoadBookingsOnDashboard();
     await Future.delayed(const Duration(milliseconds: 300));
     Get.offUntil(
@@ -175,6 +225,66 @@ class PaymentController extends GetxController {
       ),
       (route) => route.isFirst || route.settings.name == '/$DashboardScreen',
     );
+  }
+
+  String _newBookingTraceId() {
+    final int uid = loginUserData.value.id;
+    return 'booking_${DateTime.now().millisecondsSinceEpoch}_$uid';
+  }
+
+  Map<String, dynamic> _bookingDetails() {
+    return {
+      'clinic_id': bookingData.clinicId,
+      'service_id': bookingData.serviceId,
+      'doctor_id': bookingData.doctorId,
+      'appointment_date': bookingData.appointmentDate,
+      'appointment_time': bookingData.appointmentTime,
+      'source': isFromBookingDetail ? 'appointment_detail' : 'new_booking',
+      'files_count': bookingData.files.length,
+      'is_advance_enabled': bookingData.isEnableAdvancePayment,
+      'pay_amount': payAmount,
+    };
+  }
+
+  void _logBookingEvent({
+    required String traceId,
+    required String stage,
+    Map<String, dynamic>? details,
+    Object? error,
+    StackTrace? stackTrace,
+    bool reportToCrashlytics = false,
+  }) {
+    final Map<String, dynamic> payload = {
+      'trace_id': traceId,
+      'stage': stage,
+      if (details != null) 'details': details,
+      if (error != null) 'error': error.toString(),
+    };
+
+    if (kDebugMode) {
+      log('[BOOKING] ${jsonEncode(payload)}');
+    }
+
+    if (!kDebugMode) {
+      try {
+        FirebaseCrashlytics.instance.log(jsonEncode(payload));
+      } catch (_) {
+        // Ignore logging failures to keep booking flow resilient.
+      }
+    }
+
+    if (!reportToCrashlytics) return;
+
+    try {
+      FirebaseCrashlytics.instance.recordError(
+        error ?? 'booking_$stage',
+        stackTrace ?? StackTrace.current,
+        reason: 'booking_flow_$stage',
+        information: <String>[jsonEncode(payload)],
+      );
+    } catch (_) {
+      // Keep booking flow non-fatal even if crash reporting fails.
+    }
   }
 }
 

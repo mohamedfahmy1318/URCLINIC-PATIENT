@@ -116,6 +116,7 @@ class Clinic {
   String pincode;
   String latitude;
   String longitude;
+  String googleMapLink;
   List<AdditionalAddress> additionalAddresses;
   dynamic distance;
   dynamic distanceFormate;
@@ -148,6 +149,8 @@ class Clinic {
   int satisfactionPercentage;
   int totalVerifiedDoctor;
 
+  bool get isPinned => isPending == 1;
+
   String get localizedSpecialty =>
       selectedLanguageCode.value == 'ar' && specialtyAr.isNotEmpty
           ? specialtyAr
@@ -173,6 +176,7 @@ class Clinic {
     this.pincode = "",
     this.latitude = "",
     this.longitude = "",
+    this.googleMapLink = "",
     this.additionalAddresses = const <AdditionalAddress>[],
     this.distance,
     this.distanceFormate,
@@ -225,6 +229,8 @@ class Clinic {
       pincode: json['pincode'] is String ? json['pincode'] : "",
       latitude: json['latitude'] is String ? json['latitude'] : "",
       longitude: json['longitude'] is String ? json['longitude'] : "",
+      googleMapLink:
+          json['google_map_link'] is String ? json['google_map_link'] : "",
       additionalAddresses: json['additional_addresses'] is List
           ? List<AdditionalAddress>.from(json['additional_addresses']
               .map((x) => AdditionalAddress.fromJson(x)))
@@ -232,7 +238,11 @@ class Clinic {
       distance: json['distance'],
       distanceFormate: json['distance_formate'],
       status: json['status'] is int ? json['status'] : -1,
-      isPending: json['is_pending'] is int ? json['is_pending'] : 0,
+      isPending: json['is_pending'] is int
+          ? json['is_pending']
+          : json['is_pending'] is bool
+              ? (json['is_pending'] ? 1 : 0)
+              : int.tryParse('${json['is_pending'] ?? 0}') ?? 0,
       logo: json['logo'] is String ? json['logo'] : "",
       clinicImage: json['clinic_image'] is String ? json['clinic_image'] : "",
       createdBy: json['created_by'] is int ? json['created_by'] : -1,
@@ -290,6 +300,7 @@ class Clinic {
       'pincode': pincode,
       'latitude': latitude,
       'longitude': longitude,
+      'google_map_link': googleMapLink,
       'additional_addresses':
           additionalAddresses.map((e) => e.toJson()).toList(),
       'distance': distance,
@@ -330,6 +341,7 @@ class AdditionalAddress {
   String pincode;
   String latitude;
   String longitude;
+  String googleMapLink;
 
   AdditionalAddress({
     this.id = -1,
@@ -343,6 +355,7 @@ class AdditionalAddress {
     this.pincode = "",
     this.latitude = "",
     this.longitude = "",
+    this.googleMapLink = "",
   });
 
   factory AdditionalAddress.fromJson(Map<String, dynamic> json) {
@@ -358,6 +371,8 @@ class AdditionalAddress {
       pincode: json['pincode'] is String ? json['pincode'] : "",
       latitude: json['latitude'] is String ? json['latitude'] : "",
       longitude: json['longitude'] is String ? json['longitude'] : "",
+      googleMapLink:
+          json['google_map_link'] is String ? json['google_map_link'] : "",
     );
   }
 
@@ -374,6 +389,7 @@ class AdditionalAddress {
       'pincode': pincode,
       'latitude': latitude,
       'longitude': longitude,
+      'google_map_link': googleMapLink,
     };
   }
 

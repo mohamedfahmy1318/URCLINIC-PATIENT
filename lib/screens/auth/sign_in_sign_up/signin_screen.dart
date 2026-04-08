@@ -16,7 +16,9 @@ import '../password/forget_password_screen.dart';
 import 'signup_screen.dart';
 
 class SignInScreen extends StatelessWidget {
-  SignInScreen({super.key});
+  final bool showBackButton;
+
+  SignInScreen({super.key, this.showBackButton = false});
 
   final SignInController signInController = Get.put(SignInController());
 
@@ -24,7 +26,8 @@ class SignInScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffoldNew(
       isLoading: signInController.isLoading,
-      hasLeadingWidget: false,
+      hasLeadingWidget: showBackButton,
+      appBartitleText: showBackButton ? locale.value.signIn : null,
       clipBehaviorSplitRegion: Clip.none,
       body: Stack(
         clipBehavior: Clip.none,
@@ -61,7 +64,9 @@ class SignInScreen extends StatelessWidget {
                         filled: true,
                         hintText: "${locale.value.eG} merry_456@gmail.com",
                       ),
-                      suffix: commonLeadingWid(imgPath: Assets.iconsIcMail, size: 14).paddingAll(14),
+                      suffix: commonLeadingWid(
+                              imgPath: Assets.iconsIcMail, size: 14)
+                          .paddingAll(14),
                     ),
                     16.height,
                     AppTextField(
@@ -78,8 +83,12 @@ class SignInScreen extends StatelessWidget {
                         filled: true,
                         hintText: "••••••••",
                       ),
-                      suffixPasswordVisibleWidget: commonLeadingWid(imgPath: Assets.iconsIcEye, size: 14).paddingAll(12),
-                      suffixPasswordInvisibleWidget: commonLeadingWid(imgPath: Assets.iconsIcEyeSlash, size: 14).paddingAll(12),
+                      suffixPasswordVisibleWidget:
+                          commonLeadingWid(imgPath: Assets.iconsIcEye, size: 14)
+                              .paddingAll(12),
+                      suffixPasswordInvisibleWidget: commonLeadingWid(
+                              imgPath: Assets.iconsIcEyeSlash, size: 14)
+                          .paddingAll(12),
                     ),
                     Column(
                       children: [
@@ -90,7 +99,9 @@ class SignInScreen extends StatelessWidget {
                               children: [
                                 16.height,
                                 AppTextField(
-                                  title: signInController.tryToAnother.isTrue ? locale.value.otpFromAuthenticatorApp : locale.value.otp,
+                                  title: signInController.tryToAnother.isTrue
+                                      ? locale.value.otpFromAuthenticatorApp
+                                      : locale.value.otp,
                                   textStyle: primaryTextStyle(size: 12),
                                   controller: signInController.otpCont,
                                   focus: signInController.otpFocus,
@@ -101,7 +112,8 @@ class SignInScreen extends StatelessWidget {
                                   ],
                                   validator: (value) {
                                     if (value == null || value.length != 6) {
-                                      return locale.value.pleaseEnterValid6digitOTP;
+                                      return locale
+                                          .value.pleaseEnterValid6digitOTP;
                                     }
                                     return null;
                                   },
@@ -116,10 +128,14 @@ class SignInScreen extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     Obx(
-                                      () => signInController.remainingSeconds.value > 0
+                                      () => signInController
+                                                  .remainingSeconds.value >
+                                              0
                                           ? Text(
                                               signInController.formattedTime,
-                                              style: primaryTextStyle(size: 14, color: context.primaryColor),
+                                              style: primaryTextStyle(
+                                                  size: 14,
+                                                  color: context.primaryColor),
                                             )
                                           : TextButton(
                                               onPressed: () {
@@ -148,21 +164,26 @@ class SignInScreen extends StatelessWidget {
                       () => Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          if (signInController.isGoogleAuthentication.value == 1) TextButton(
-                                  onPressed: () {
-                                    signInController.tryToAnother.value = !signInController.tryToAnother.value;
-                                  },
-                                  child: Text(
-                                    locale.value.tryToAnotherWay,
-                                    style: primaryTextStyle(
-                                      size: 12,
-                                      color: appColorPrimary,
-                                      // decoration: TextDecoration.underline,
-                                      fontStyle: FontStyle.italic,
-                                      decorationColor: appColorPrimary,
-                                    ),
-                                  ),
-                                ) else const SizedBox(),
+                          if (signInController.isGoogleAuthentication.value ==
+                              1)
+                            TextButton(
+                              onPressed: () {
+                                signInController.tryToAnother.value =
+                                    !signInController.tryToAnother.value;
+                              },
+                              child: Text(
+                                locale.value.tryToAnotherWay,
+                                style: primaryTextStyle(
+                                  size: 12,
+                                  color: appColorPrimary,
+                                  // decoration: TextDecoration.underline,
+                                  fontStyle: FontStyle.italic,
+                                  decorationColor: appColorPrimary,
+                                ),
+                              ),
+                            )
+                          else
+                            const SizedBox(),
                         ],
                       ),
                     ),
@@ -181,8 +202,10 @@ class SignInScreen extends StatelessWidget {
                             onChanged: (val) async {
                               signInController.toggleSwitch();
                             },
-                            checkboxShape: RoundedRectangleBorder(borderRadius: radius(0)),
-                            side: const BorderSide(color: secondaryTextColor, width: 1.5),
+                            checkboxShape:
+                                RoundedRectangleBorder(borderRadius: radius(0)),
+                            side: const BorderSide(
+                                color: secondaryTextColor, width: 1.5),
                             title: Text(
                               locale.value.rememberMe,
                               style: secondaryTextStyle(color: darkGrayGeneral),
@@ -212,21 +235,28 @@ class SignInScreen extends StatelessWidget {
                         Obx(
                           () => AppButton(
                             height: 54,
-                            text: signInController.loginSucessfull.isTrue ? locale.value.verify : locale.value.signIn,
+                            text: signInController.loginSucessfull.isTrue
+                                ? locale.value.verify
+                                : locale.value.signIn,
                             color: appColorSecondary,
                             textStyle: appButtonTextStyleWhite,
                             onTap: () {
                               if (signInController.loginSucessfull.isTrue) {
-                                if (signInController.signInformKey.currentState!.validate()) {
+                                if (signInController.signInformKey.currentState!
+                                    .validate()) {
                                   if (signInController.tryToAnother.isTrue) {
-                                    signInController.verifyUser(authentication: "google2fa");
+                                    signInController.verifyUser(
+                                        authentication: "google2fa");
                                   } else {
-                                    signInController.verifyUser(authentication: "email");
+                                    signInController.verifyUser(
+                                        authentication: "email");
                                   }
                                 }
                               } else {
-                                if (signInController.signInformKey.currentState!.validate()) {
-                                  signInController.signInformKey.currentState!.save();
+                                if (signInController.signInformKey.currentState!
+                                    .validate()) {
+                                  signInController.signInformKey.currentState!
+                                      .save();
                                   signInController.saveForm();
                                 }
                               }
@@ -246,7 +276,8 @@ class SignInScreen extends StatelessWidget {
                                   width: 54,
                                   padding: const EdgeInsets.all(18),
                                   decoration: boxDecorationWithRoundedCorners(
-                                    backgroundColor: bodyWhite.withValues(alpha: 0.1),
+                                    backgroundColor:
+                                        bodyWhite.withValues(alpha: 0.1),
                                     boxShape: BoxShape.circle,
                                   ),
                                   child: const GoogleLogoWidget(size: 24),
@@ -261,7 +292,8 @@ class SignInScreen extends StatelessWidget {
                                 width: 54,
                                 padding: const EdgeInsets.all(16),
                                 decoration: boxDecorationWithRoundedCorners(
-                                  backgroundColor: bodyWhite.withValues(alpha: 0.1),
+                                  backgroundColor:
+                                      bodyWhite.withValues(alpha: 0.1),
                                   boxShape: BoxShape.circle,
                                 ),
                                 child: Image.asset(
@@ -278,13 +310,15 @@ class SignInScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(locale.value.notAMember, style: secondaryTextStyle()),
+                        Text(locale.value.notAMember,
+                            style: secondaryTextStyle()),
                         4.width,
                         InkWell(
                           onTap: () {
                             Get.to(() => SignUpScreen());
                             hideKeyboard(context);
-                            signInController.signInformKey.currentState?.reset();
+                            signInController.signInformKey.currentState
+                                ?.reset();
                           },
                           child: Text(
                             locale.value.signUp,

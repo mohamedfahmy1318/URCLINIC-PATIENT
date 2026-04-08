@@ -58,9 +58,10 @@ class SignUpController extends GetxController {
         "last_name": lastNameCont.text.trim(),
         "password": passwordCont.text.trim(),
         "google_authentication_type": "Email",
-        "date_of_birth" : dateCont.text.trim(),
-        "mobile" : '+${pickedPhoneCode.value.phoneCode.trim()} ${phoneCont.text.trim()}',
-        "gender" : selectedGender.value.slug,
+        "date_of_birth": dateCont.text.trim(),
+        "mobile":
+            '+${pickedPhoneCode.value.phoneCode.trim()} ${phoneCont.text.trim()}',
+        "gender": selectedGender.value.slug,
         UserKeys.userType: LoginTypeConst.LOGIN_TYPE_USER,
       };
 
@@ -72,7 +73,8 @@ class SignUpController extends GetxController {
           sCont.emailCont.text = emailCont.text.trim();
           sCont.passwordCont.text = passwordCont.text.trim();
           sCont.isNavigateToDashboard(true);
-          sCont.userName("${firstNameCont.text.trim()} ${lastNameCont.text.trim()}");
+          sCont.userName(
+              "${firstNameCont.text.trim()} ${lastNameCont.text.trim()}");
           Get.back();
           // isLoading(true);
           // sCont.saveForm().whenComplete(() => isLoading(false));
@@ -87,5 +89,24 @@ class SignUpController extends GetxController {
     } else {
       toast(locale.value.pleaseAcceptTermsAnd);
     }
+  }
+
+  @override
+  void onClose() {
+    emailCont.dispose();
+    firstNameCont.dispose();
+    lastNameCont.dispose();
+    passwordCont.dispose();
+    dateCont.dispose();
+    phoneCont.dispose();
+
+    emailFocus.dispose();
+    fisrtNameFocus.dispose();
+    lastNameFocus.dispose();
+    passwordFocus.dispose();
+    dateFocus.dispose();
+    phoneFocus.dispose();
+    mobileFocus.dispose();
+    super.onClose();
   }
 }

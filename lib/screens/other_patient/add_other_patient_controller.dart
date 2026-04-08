@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:country_picker/country_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -73,28 +74,36 @@ class AddOtherPatientController extends GetxController {
           pickedPhoneCode(CountryParser.parsePhoneCode(phoneCode));
         } catch (parseError) {
           final countries = CountryService().getAll();
-          final matchingCountries = countries.where((c) => c.phoneCode == phoneCode).toList();
+          final matchingCountries =
+              countries.where((c) => c.phoneCode == phoneCode).toList();
 
           if (matchingCountries.isNotEmpty) {
-            matchingCountries.sort((a, b) => a.name.length.compareTo(b.name.length));
+            matchingCountries
+                .sort((a, b) => a.name.length.compareTo(b.name.length));
             pickedPhoneCode(matchingCountries.first);
           } else {
-            log("No country found for phone code: $phoneCode");
+            if (kDebugMode) {
+              log('Unable to map phone code to country');
+            }
           }
         }
       } else {
-        log("Invalid phone code: $phoneCode");
+        if (kDebugMode) {
+          log('Invalid phone code format while loading dependent profile');
+        }
       }
-    } catch (e) {
+    } catch (_) {
       pickedPhoneCode(Country.from(json: defaultCountry.toJson()));
       mobileCont.text = argument.mobile.trim();
-      log('CountryParser.parsePhoneCode Err: $e');
+      if (kDebugMode) {
+        log('Phone code parsing failed while loading dependent profile');
+      }
     }
-
 
     selectedGender(
       genders.firstWhere(
-        (element) => element.slug.toLowerCase() == argument.gender.toLowerCase(),
+        (element) =>
+            element.slug.toLowerCase() == argument.gender.toLowerCase(),
         orElse: () => CMNModel(
           id: 3,
           name: RelationConstant.others.capitalizeFirstLetter(),
@@ -106,7 +115,8 @@ class AddOtherPatientController extends GetxController {
     dateOfBirthCont.text = argument.birthDate;
     selectedRelation(
       relation.firstWhere(
-        (element) => element.slug.toLowerCase() == argument.relation.toLowerCase(),
+        (element) =>
+            element.slug.toLowerCase() == argument.relation.toLowerCase(),
         orElse: () => CMNModel(
           id: 5,
           name: RelationConstant.others.capitalizeFirstLetter(),
@@ -122,13 +132,16 @@ class AddOtherPatientController extends GetxController {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       fieldHintText: DateTime.now().formatDateYYYYmmdd(),
-      initialDate: dateOfBirthCont.text.isNotEmpty ? DateTime.parse(dateOfBirthCont.text) : null,
+      initialDate: dateOfBirthCont.text.isNotEmpty
+          ? DateTime.parse(dateOfBirthCont.text)
+          : null,
       firstDate: DateTime(1900),
       lastDate: now,
       confirmText: locale.value.confirm,
       cancelText: locale.value.cancel,
       helpText: locale.value.selectBirthdate,
-      locale: Locale(selectedLanguageDataModel?.languageCode ?? getStringAsync(SELECTED_LANGUAGE_CODE)),
+      locale: Locale(selectedLanguageDataModel?.languageCode ??
+          getStringAsync(SELECTED_LANGUAGE_CODE)),
       builder: (_, child) {
         return Theme(
           data: isDarkMode.value ? AppTheme.darkTheme : AppTheme.lightTheme,
@@ -146,14 +159,16 @@ class AddOtherPatientController extends GetxController {
   }
 
   Future<void> _getFromGallery() async {
-    pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1800, maxHeight: 1800);
+    pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery, maxWidth: 1800, maxHeight: 1800);
     if (pickedFile != null) {
       imageFile(File(pickedFile!.path));
     }
   }
 
   Future<void> _getFromCamera() async {
-    pickedFile = await ImagePicker().pickImage(source: ImageSource.camera, maxWidth: 1800, maxHeight: 1800);
+    pickedFile = await ImagePicker()
+        .pickImage(source: ImageSource.camera, maxWidth: 1800, maxHeight: 1800);
     if (pickedFile != null) {
       imageFile(File(pickedFile!.path));
     }
@@ -202,13 +217,15 @@ class AddOtherPatientController extends GetxController {
       UserKeys.lastName: lNameCont.text,
       OtherPatientConst.relation: selectedRelation.value.name,
       OtherPatientConst.dob: dateOfBirthCont.text,
-      OtherPatientConst.contactNumber: '+${mobileCont.text.trim().formatPhoneNumber(pickedPhoneCode.value.phoneCode)}',
+      OtherPatientConst.contactNumber:
+          '+${mobileCont.text.trim().formatPhoneNumber(pickedPhoneCode.value.phoneCode)}',
       UserKeys.gender: selectedGender.value.name,
       UserKeys.userId: loginUserData.value.id,
     };
 
     if (Get.arguments is UserData) {
-      memberData.putIfAbsent(OtherPatientConst.idKey, () => (Get.arguments as UserData).id);
+      memberData.putIfAbsent(
+          OtherPatientConst.idKey, () => (Get.arguments as UserData).id);
     }
 
     await CoreServiceApis.addUpdateOtherPatientApi(
@@ -235,5 +252,21 @@ class AddOtherPatientController extends GetxController {
       addMemberFormKey.currentState!.save();
       await addMember();
     }
+  }
+
+  @override
+  void onClose() {
+    fNameCont.dispose();
+    lNameCont.dispose();
+    phoneCodeCont.dispose();
+    mobileCont.dispose();
+    dateOfBirthCont.dispose();
+
+    fNameFocus.dispose();
+    lNameFocus.dispose();
+    phoneCodeFocus.dispose();
+    mobileFocus.dispose();
+    dateOfBirthFocus.dispose();
+    super.onClose();
   }
 }

@@ -1,30 +1,80 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
+import 'package:get_storage/get_storage.dart';
 
-import 'package:kivicare_patient/main.dart';
+import 'package:kivicare_patient/utils/app_common.dart';
+import 'package:kivicare_patient/utils/constants.dart';
+import 'package:kivicare_patient/utils/local_storage.dart';
+import 'package:kivicare_patient/utils/session_guard.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const MethodChannel pathProviderChannel =
+      MethodChannel('plugins.flutter.io/path_provider');
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUpAll(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(pathProviderChannel,
+            (MethodCall methodCall) async {
+      return '.';
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await GetStorage.init('test-session-guard');
+    localStorage = GetStorage('test-session-guard');
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(pathProviderChannel, null);
+  });
+
+  setUp(() async {
+    await localStorage.erase();
+    isLoggedIn(false);
+  });
+
+  test('markSessionActivity stores timestamp for logged-in user', () {
+    isLoggedIn(true);
+
+    markSessionActivity();
+
+    final dynamic saved = getValueFromLocal(
+      SharedPreferenceConst.SESSION_LAST_ACTIVITY_AT,
+    );
+    expect(saved, isA<int>());
+    expect(saved as int, greaterThan(0));
+  });
+
+  test('markSessionActivity does not write when logged out', () {
+    isLoggedIn(false);
+
+    markSessionActivity();
+
+    expect(
+      getValueFromLocal(SharedPreferenceConst.SESSION_LAST_ACTIVITY_AT),
+      isNull,
+    );
+  });
+
+  test('isSessionExpired returns true for stale session', () {
+    isLoggedIn(true);
+    final int staleEpoch = DateTime.now()
+        .subtract(const Duration(minutes: 31))
+        .millisecondsSinceEpoch;
+    setValueToLocal(SharedPreferenceConst.SESSION_LAST_ACTIVITY_AT, staleEpoch);
+
+    expect(isSessionExpired(), isTrue);
+  });
+
+  test('clearSessionActivity removes stored timestamp', () {
+    isLoggedIn(true);
+    markSessionActivity();
+
+    clearSessionActivity();
+
+    expect(
+      getValueFromLocal(SharedPreferenceConst.SESSION_LAST_ACTIVITY_AT),
+      isNull,
+    );
   });
 }

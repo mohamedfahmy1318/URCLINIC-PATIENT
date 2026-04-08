@@ -19,12 +19,15 @@ class BSScontroller extends GetxController {
 
   StreamController<String> searchStream = StreamController<String>();
   final _scrollController = ScrollController();
+  StreamSubscription<String>? _searchSubscription;
   final Function(String)? searchApiCall;
 
   @override
   void onInit() {
-    _scrollController.addListener(() => Get.context != null ? hideKeyboard(Get.context) : null);
-    searchStream.stream.debounce(const Duration(seconds: 1)).listen((s) {
+    _scrollController.addListener(
+        () => Get.context != null ? hideKeyboard(Get.context) : null);
+    _searchSubscription =
+        searchStream.stream.debounce(const Duration(seconds: 1)).listen((s) {
       searchApiCall?.call(s);
     });
     super.onInit();
@@ -32,10 +35,10 @@ class BSScontroller extends GetxController {
 
   @override
   void onClose() {
+    _searchSubscription?.cancel();
     searchStream.close();
-    if (Get.context != null) {
-      _scrollController.removeListener(() => hideKeyboard(Get.context));
-    }
+    _scrollController.dispose();
+    searchCont.dispose();
     super.onClose();
   }
 }
@@ -93,7 +96,9 @@ class BottomSelectionSheet extends StatelessWidget {
             behavior: HitTestBehavior.translucent,
             child: Container(
               width: Get.width,
-              constraints: BoxConstraints(minWidth: Get.height * 0.65, maxHeight: Get.height * heightRatio),
+              constraints: BoxConstraints(
+                  minWidth: Get.height * 0.65,
+                  maxHeight: Get.height * heightRatio),
               decoration: BoxDecoration(
                 color: context.scaffoldBackgroundColor,
                 borderRadius: const BorderRadius.only(
@@ -110,17 +115,23 @@ class BottomSelectionSheet extends StatelessWidget {
                       bottomSheetDivider,
                       AppTextField(
                         controller: getxBSSCont.searchCont,
-                        textStyle: secondaryTextStyle(size: 14, color: textPrimaryColorGlobal),
+                        textStyle: secondaryTextStyle(
+                            size: 14, color: textPrimaryColorGlobal),
                         textFieldType: TextFieldType.OTHER,
                         onChanged: (p0) {
                           onChanged?.call(p0);
-                          getxBSSCont.isSearchText(getxBSSCont.searchCont.text.trim().isNotEmpty);
+                          getxBSSCont.isSearchText(
+                              getxBSSCont.searchCont.text.trim().isNotEmpty);
                           getxBSSCont.searchStream.add(p0);
                         },
                         decoration: inputDecorationWithOutBorder(
                           context,
                           hintText: hintText ?? 'Search Here',
-                          prefixIcon: commonLeadingWid(imgPath: Assets.iconsIcSearch, icon: Icons.search_outlined, size: 14).paddingAll(12),
+                          prefixIcon: commonLeadingWid(
+                                  imgPath: Assets.iconsIcSearch,
+                                  icon: Icons.search_outlined,
+                                  size: 14)
+                              .paddingAll(12),
                           filled: true,
                           fillColor: context.cardColor,
                           suffixIcon: Obx(
@@ -135,25 +146,32 @@ class BottomSelectionSheet extends StatelessWidget {
                         ),
                       ).visible(!hideSearchBar),
                       32.height.visible(!hideSearchBar),
-                      if (hasError) Obx(
-                              () => NoDataWidget(
-                                title: errorText ?? locale.value.somethingWentWrong,
-                                retryText: locale.value.reload,
-                                imageWidget: const ErrorStateWidget(),
-                                onRetry: isLoading == true.obs ? null : onRetry,
-                              ).paddingSymmetric(horizontal: 32),
-                            ) else isEmpty
-                              ? Obx(
-                                  () => NoDataWidget(
-                                    title: noDataTitle ?? locale.value.noDataFound,
-                                    subTitle: noDataSubTitle,
-                                    titleTextStyle: primaryTextStyle(),
-                                    retryText: locale.value.reload,
-                                    imageWidget: const EmptyStateWidget(),
-                                    onRetry: isLoading == true.obs ? null : onRetry,
-                                  ).visible(!(isLoading ?? false.obs).value).paddingSymmetric(horizontal: 32),
+                      if (hasError)
+                        Obx(
+                          () => NoDataWidget(
+                            title: errorText ?? locale.value.somethingWentWrong,
+                            retryText: locale.value.reload,
+                            imageWidget: const ErrorStateWidget(),
+                            onRetry: isLoading == true.obs ? null : onRetry,
+                          ).paddingSymmetric(horizontal: 32),
+                        )
+                      else
+                        isEmpty
+                            ? Obx(
+                                () => NoDataWidget(
+                                  title:
+                                      noDataTitle ?? locale.value.noDataFound,
+                                  subTitle: noDataSubTitle,
+                                  titleTextStyle: primaryTextStyle(),
+                                  retryText: locale.value.reload,
+                                  imageWidget: const EmptyStateWidget(),
+                                  onRetry:
+                                      isLoading == true.obs ? null : onRetry,
                                 )
-                              : listWidget,
+                                    .visible(!(isLoading ?? false.obs).value)
+                                    .paddingSymmetric(horizontal: 32),
+                              )
+                            : listWidget,
                       32.height,
                     ],
                   ).paddingSymmetric(horizontal: 20),
@@ -171,7 +189,9 @@ class BottomSelectionSheet extends StatelessWidget {
                         appCloseIconButton(
                           context,
                           onPressed: () {
-                            if (!(isLoading == null ? false : isLoading!.value)) {
+                            if (!(isLoading == null
+                                ? false
+                                : isLoading!.value)) {
                               handleCloseClick(context, getxBSSCont);
                               Get.back();
                             }
@@ -183,7 +203,9 @@ class BottomSelectionSheet extends StatelessWidget {
                   ),
                   Obx(
                     () => (currentPage ?? (1.obs)).value == 1
-                        ? const LoaderWidget().center().visible((isLoading ?? false.obs).value)
+                        ? const LoaderWidget()
+                            .center()
+                            .visible((isLoading ?? false.obs).value)
                         : const Positioned(
                             bottom: 60,
                             left: 16,
@@ -210,7 +232,8 @@ class BottomSelectionSheet extends StatelessWidget {
   }
 }
 
-void serviceCommonBottomSheet(BuildContext context, {required Widget child, final Function(dynamic)? onSheetClose}) {
+void serviceCommonBottomSheet(BuildContext context,
+    {required Widget child, final Function(dynamic)? onSheetClose}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,

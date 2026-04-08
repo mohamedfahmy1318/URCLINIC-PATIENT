@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
@@ -14,8 +17,11 @@ import '../main.dart';
 import '../utils/api_end_points.dart';
 import '../utils/app_common.dart';
 import '../utils/common_base.dart';
-import '../utils/constants.dart';
-import '../utils/local_storage.dart';
+import '../utils/session_guard.dart';
+
+const Duration _requestTimeout = Duration(seconds: 20);
+const int _maxRequestAttempts = 2;
+bool _isHandlingUnauthorizedSession = false;
 
 Map<String, String> buildHeaderTokens({
   Map? extraKeys,
@@ -81,77 +87,143 @@ Future<Response> buildHttpResponse(
   final headers =
       header ?? buildHeaderTokens(extraKeys: extraKeys, endPoint: endPoint);
   final Uri url = buildBaseUrl(endPoint);
+  final bool isInternalRequest = !endPoint.startsWith('http');
 
-  Response response;
-  log('URL (${method.name}): $url');
+  if (isLoggedIn.value && isInternalRequest && isSessionExpired()) {
+    await _handleUnauthorizedSession();
+    throw 'Session expired. Please sign in again.';
+  }
 
   try {
-    if (method == HttpMethodType.POST) {
-      log('Request: ${jsonEncode(request)}');
-      response =
-          await http.post(url, body: jsonEncode(request), headers: headers);
-    } else if (method == HttpMethodType.DELETE) {
-      response = await delete(url, headers: headers);
-    } else if (method == HttpMethodType.PUT) {
-      response = await put(url, body: jsonEncode(request), headers: headers);
-    } else {
-      response = await get(url, headers: headers);
-    }
+    final Response response = await _executeWithTimeoutAndRetry(
+      url: url,
+      method: method,
+      request: request,
+      headers: headers,
+    );
+
     apiPrint(
       url: url.toString(),
       endPoint: endPoint,
-      headers: jsonEncode(headers),
+      headers: jsonEncode(_redactHeaderMap(headers)),
       hasRequest: method == HttpMethodType.POST || method == HttpMethodType.PUT,
-      request: jsonEncode(request),
+      request: _redactMessage(jsonEncode(request)),
       statusCode: response.statusCode,
-      responseBody: response.body.trim(),
+      responseBody:
+          _summarizeResponseBody(_redactMessage(response.body.trim())),
       methodtype: method.name,
     );
-    // log('Response (${method.name}) ${response.statusCode}: ${response.body.trim().trim()}');
+
+    if (isLoggedIn.value && response.statusCode == 401 && isInternalRequest) {
+      await _handleUnauthorizedSession();
+      throw 'Session expired. Please sign in again.';
+    }
 
     if (isLoggedIn.value &&
-        response.statusCode == 401 &&
-        !endPoint.startsWith('http')) {
-      return await reGenerateToken().then((value) async {
-        return buildHttpResponse(endPoint,
-            method: method, request: request, extraKeys: extraKeys);
-      }).catchError((e) async {
-        if (!await isNetworkAvailable()) {
-          throw errorInternetNotAvailable;
-        } else {
-          throw errorSomethingWentWrong;
-        }
-      });
-    } else {
-      return response;
+        response.statusCode.isSuccessful() &&
+        isInternalRequest) {
+      markSessionActivity();
     }
-  } on Exception catch (e) {
-    log(e);
+
+    return response;
+  } on Exception catch (_) {
+    if (!kReleaseMode) {
+      log('buildHttpResponse failed');
+    }
     throw errorInternetNotAvailable;
   }
 }
 
-Future<void> reGenerateToken() async {
-  log('Regenerating Token');
-  final userPASSWORD = getValueFromLocal(SharedPreferenceConst.USER_PASSWORD);
+Future<void> _handleUnauthorizedSession() async {
+  if (_isHandlingUnauthorizedSession) return;
+  _isHandlingUnauthorizedSession = true;
 
-  final Map req = {
-    UserKeys.email: loginUserData.value.email,
-    UserKeys.userType: LoginTypeConst.LOGIN_TYPE_USER,
-  };
-  if (loginUserData.value.isSocialLoginType) {
-    log('LOGINUSERDATA.VALUE.ISSOCIALLOGIN: ${loginUserData.value.isSocialLoginType}');
-    req[UserKeys.loginType] = loginUserData.value.loginType;
-  } else {
-    req[UserKeys.password] = userPASSWORD;
+  try {
+    await AuthServiceApis.clearData();
+    isLoggedIn(false);
+  } catch (_) {
+    // Keep unauthorized handling non-fatal.
+  } finally {
+    _isHandlingUnauthorizedSession = false;
   }
-  return AuthServiceApis.loginUser(
-          request: req, isSocialLogin: loginUserData.value.isSocialLoginType)
-      .then((value) async {
-    loginUserData.value.apiToken = value.userData.apiToken;
-  }).catchError((e) {
-    throw e;
-  });
+}
+
+Future<Response> _executeWithTimeoutAndRetry({
+  required Uri url,
+  required HttpMethodType method,
+  required Map? request,
+  required Map<String, String> headers,
+}) async {
+  Object? lastError;
+
+  for (int attempt = 0; attempt < _maxRequestAttempts; attempt++) {
+    try {
+      if (method == HttpMethodType.POST) {
+        return await http
+            .post(url, body: jsonEncode(request), headers: headers)
+            .timeout(_requestTimeout);
+      } else if (method == HttpMethodType.DELETE) {
+        return await delete(url, headers: headers).timeout(_requestTimeout);
+      } else if (method == HttpMethodType.PUT) {
+        return await put(url, body: jsonEncode(request), headers: headers)
+            .timeout(_requestTimeout);
+      } else {
+        return await get(url, headers: headers).timeout(_requestTimeout);
+      }
+    } on SocketException catch (e) {
+      lastError = e;
+    } on TimeoutException catch (e) {
+      lastError = e;
+    }
+  }
+
+  throw lastError ?? Exception('Request failed');
+}
+
+Map<String, String> _redactHeaderMap(Map<String, String> header) {
+  final Map<String, String> sanitized = Map<String, String>.from(header);
+  if (sanitized.containsKey(HttpHeaders.authorizationHeader)) {
+    sanitized[HttpHeaders.authorizationHeader] = 'Bearer ***';
+  }
+  return sanitized;
+}
+
+String _redactMessage(String raw) {
+  return raw
+      .replaceAll(RegExp(r'Bearer\s+[A-Za-z0-9\-\._]+'), 'Bearer ***')
+      .replaceAll(RegExp(r'"api_token"\s*:\s*"[^"]+"'), '"api_token":"***"')
+      .replaceAll(RegExp(r'"password"\s*:\s*"[^"]*"'), '"password":"***"')
+      .replaceAll(
+          RegExp(r'"old_password"\s*:\s*"[^"]*"'), '"old_password":"***"')
+      .replaceAll(
+          RegExp(r'"new_password"\s*:\s*"[^"]*"'), '"new_password":"***"');
+}
+
+String _summarizeResponseBody(String raw) {
+  final String body = raw.trim();
+  if (body.isEmpty) return body;
+
+  final String lower = body.toLowerCase();
+  final bool isHtmlResponse =
+      lower.startsWith('<!doctype html') || lower.contains('<html');
+
+  if (isHtmlResponse) {
+    const int previewLength = 400;
+    final String preview =
+        body.length > previewLength ? body.substring(0, previewLength) : body;
+    final String singleLinePreview =
+        preview.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return '[HTML error response omitted] '
+        '$singleLinePreview'
+        '${body.length > previewLength ? ' ...' : ''}';
+  }
+
+  const int maxLength = 1800;
+  if (body.length <= maxLength) return body;
+
+  final int truncatedCount = body.length - maxLength;
+  return '${body.substring(0, math.min(maxLength, body.length))} '
+      '...[truncated $truncatedCount chars]';
 }
 
 Future handleResponse(Response response,
@@ -210,7 +282,15 @@ Future handleResponse(Response response,
   } else if (response.statusCode == 504) {
     throw locale.value.gatewayTimeout;
   } else {
-    final Map body = jsonDecode(response.body.trim());
+    final String bodyText = response.body.trim();
+    if (!bodyText.isJson()) {
+      if (response.statusCode >= 500) {
+        throw locale.value.internalServerError;
+      }
+      throw errorSomethingWentWrong;
+    }
+
+    final Map body = jsonDecode(bodyText);
 
     if (body.containsKey('status') && body['status']) {
       return body;
@@ -239,44 +319,85 @@ Future<MultipartRequest> getMultiPartRequest(String endPoint,
   return MultipartRequest('POST', Uri.parse(url));
 }
 
+bool _isInternalRequestUrl(Uri uri) {
+  return uri.toString().startsWith(BASE_URL);
+}
+
 Future<void> sendMultiPartRequest(MultipartRequest multiPartRequest,
     {Function(dynamic)? onSuccess, Function(dynamic)? onError}) async {
-  final http.Response response =
-      await http.Response.fromStream(await multiPartRequest.send());
-  apiPrint(
-    url: multiPartRequest.url.toString(),
-    headers: jsonEncode(multiPartRequest.headers),
-    request: jsonEncode(multiPartRequest.fields),
-    hasRequest: true,
-    statusCode: response.statusCode,
-    responseBody: response.body.trim(),
-    methodtype: "MultiPart",
-  );
-  // log("Result: ${response.statusCode} - ${multiPartRequest.fields}");
-  // log(response.body.trim());
-  if (response.statusCode.isSuccessful()) {
-    onSuccess?.call(response.body.trim());
-  } else {
-    if (isLoggedIn.value && response.statusCode == 401) {
-      return reGenerateToken().then((value) async {
-        try {
-          final http.Response response =
-              await http.Response.fromStream(await multiPartRequest.send());
-          if (response.statusCode.isSuccessful()) {
-            onSuccess?.call(response.body.trim());
-          } else {
-            onError?.call(response.reasonPhrase);
-          }
-        } catch (e) {
-          onError?.call(response.reasonPhrase);
-        }
-      }).catchError((e) {
-        onError?.call(response.reasonPhrase);
-      });
-    } else {
-      onError?.call(response.reasonPhrase);
-    }
+  if (isLoggedIn.value &&
+      _isInternalRequestUrl(multiPartRequest.url) &&
+      isSessionExpired()) {
+    await _handleUnauthorizedSession();
+    onError?.call('Session expired. Please sign in again.');
+    return;
   }
+
+  try {
+    final streamedResponse =
+        await multiPartRequest.send().timeout(_requestTimeout);
+    final http.Response response =
+        await http.Response.fromStream(streamedResponse)
+            .timeout(_requestTimeout);
+
+    apiPrint(
+      url: multiPartRequest.url.toString(),
+      headers: jsonEncode(multiPartRequest.headers),
+      request: jsonEncode(multiPartRequest.fields),
+      hasRequest: true,
+      statusCode: response.statusCode,
+      responseBody: _summarizeResponseBody(response.body.trim()),
+      methodtype: "MultiPart",
+    );
+
+    if (response.statusCode.isSuccessful()) {
+      if (isLoggedIn.value && _isInternalRequestUrl(multiPartRequest.url)) {
+        markSessionActivity();
+      }
+      onSuccess?.call(response.body.trim());
+    } else {
+      if (isLoggedIn.value && response.statusCode == 401) {
+        await _handleUnauthorizedSession();
+        onError?.call('Session expired. Please sign in again.');
+      } else {
+        onError?.call(_extractMultipartErrorMessage(response));
+      }
+    }
+  } on TimeoutException {
+    onError?.call(locale.value.gatewayTimeout);
+  } on SocketException {
+    onError?.call(errorInternetNotAvailable);
+  } catch (_) {
+    onError?.call(errorSomethingWentWrong);
+  }
+}
+
+String _extractMultipartErrorMessage(http.Response response) {
+  try {
+    final String body = response.body.trim();
+    if (body.isNotEmpty && body.isJson()) {
+      final Map<String, dynamic> decoded =
+          Map<String, dynamic>.from(jsonDecode(body));
+      final dynamic message = decoded['message'] ?? decoded['error'];
+
+      if (message is String && message.trim().isNotEmpty) {
+        return message;
+      }
+
+      if (message is List && message.isNotEmpty) {
+        return message.first.toString();
+      }
+
+      if (message is Map && message.isNotEmpty) {
+        return message.values.first.toString();
+      }
+    }
+  } catch (_) {
+    // Keep fallback path non-fatal for unexpected payloads.
+  }
+
+  final String reason = response.reasonPhrase?.trim() ?? '';
+  return reason.isNotEmpty ? reason : errorSomethingWentWrong;
 }
 
 Future buildMultiPartResponse({
@@ -288,6 +409,12 @@ Future buildMultiPartResponse({
   bool isKeyRequireIndexing = false,
 }) async {
   try {
+    final bool isInternalRequest = !endPoint.startsWith('http');
+    if (isLoggedIn.value && isInternalRequest && isSessionExpired()) {
+      await _handleUnauthorizedSession();
+      throw 'Session expired. Please sign in again.';
+    }
+
     final MultipartRequest multiPartRequest =
         await getMultiPartRequest(endPoint);
     multiPartRequest.headers.addAll(buildHeaderTokens());
@@ -325,14 +452,27 @@ Future buildMultiPartResponse({
       request: jsonEncode(multiPartRequest.fields),
       hasRequest: true,
       statusCode: response.statusCode,
-      responseBody: response.body,
+      responseBody: _summarizeResponseBody(response.body),
       methodtype: "MultiPart",
     );
+
+    if (isLoggedIn.value &&
+        response.statusCode.isSuccessful() &&
+        isInternalRequest) {
+      markSessionActivity();
+    }
+
     return await handleResponse(response);
   } on SocketException catch (e) {
-    log(e.toString());
+    if (!kReleaseMode) {
+      log(e.toString());
+    }
+    rethrow;
   } on Exception catch (e) {
-    log(e.toString());
+    if (!kReleaseMode) {
+      log(e.toString());
+    }
+    rethrow;
   }
 }
 
@@ -359,7 +499,6 @@ Future<List<MultipartFile>> getMultipartImages2(
 
     multiPartRequest.add(
         await MultipartFile.fromPath('$name[$i]', element.path.validate()));
-    log('MultipartFile: $name[$i]');
   });
 
   return multiPartRequest;
@@ -369,8 +508,10 @@ String parseStripeError(String response) {
   try {
     final body = jsonDecode(response);
     return parseHtmlString(body['error']['message']);
-  } on Exception catch (e) {
-    log(e);
+  } on Exception catch (_) {
+    if (!kReleaseMode) {
+      log('parseStripeError failed');
+    }
     throw errorSomethingWentWrong;
   }
 }
@@ -387,14 +528,18 @@ void apiPrint({
   bool fullLog = false,
   String responseHeader = '',
 }) {
+  if (kReleaseMode) return;
+
   if (fullLog) {
     debugPrint(
         "┌───────────────────────────────────────────────────────────────────────────────────────────────────────");
     debugPrint("\u001b[93m Url: \u001B[39m $url");
     debugPrint("\u001b[93m endPoint: \u001B[39m \u001B[1m$endPoint\u001B[22m");
-    debugPrint("\u001b[93m header: \u001B[39m \u001b[96m$headers\u001B[39m");
+    debugPrint(
+        "\u001b[93m header: \u001B[39m \u001b[96m${_redactMessage(headers)}\u001B[39m");
     if (hasRequest) {
-      debugPrint('\u001b[93m Request: \u001B[39m \u001b[95m$request\u001B[39m');
+      debugPrint(
+          '\u001b[93m Request: \u001B[39m \u001b[95m${_redactMessage(request)}\u001B[39m');
     }
     debugPrint(statusCode.isSuccessful() ? "\u001b[32m" : "\u001b[31m");
     debugPrint(
@@ -402,7 +547,7 @@ void apiPrint({
     debugPrint(
         '\u001b[93m MethodType ($methodtype) | StatusCode ($statusCode)\u001B[39m');
     debugPrint('Response : ');
-    debugPrint('\x1B[32m${formatJson(responseBody)}\x1B[0m');
+    debugPrint('\x1B[32m${formatJson(_redactMessage(responseBody))}\x1B[0m');
     debugPrint("\u001B[0m");
     debugPrint(
         "└───────────────────────────────────────────────────────────────────────────────────────────────────────");
@@ -412,9 +557,10 @@ void apiPrint({
     debugPrint("\u001b[93m Url: \u001B[39m $url");
     debugPrint("\u001b[93m endPoint: \u001B[39m \u001B[1m$endPoint\u001B[22m");
     debugPrint(
-        "\u001b[93m header: \u001B[39m \u001b[96m${headers.split(',').join(',\n')}\u001B[39m");
+        "\u001b[93m header: \u001B[39m \u001b[96m${_redactMessage(headers).split(',').join(',\n')}\u001B[39m");
     if (hasRequest) {
-      debugPrint('\u001b[93m Request: \u001B[39m \u001b[95m$request\u001B[39m');
+      debugPrint(
+          '\u001b[93m Request: \u001B[39m \u001b[95m${_redactMessage(request)}\u001B[39m');
     }
     debugPrint(statusCode.isSuccessful() ? "\u001b[32m" : "\u001b[31m");
     debugPrint(
@@ -422,7 +568,7 @@ void apiPrint({
     debugPrint(
         "\u001b[93m Response header: \u001B[39m \u001b[96m$responseHeader\u001B[39m");
     debugPrint('\u001b[93m Response \u001B[39m');
-    debugPrint(responseBody);
+    debugPrint(_redactMessage(responseBody));
     debugPrint("\u001B[0m");
     debugPrint(
         "└───────────────────────────────────────────────────────────────────────────────────────────────────────");

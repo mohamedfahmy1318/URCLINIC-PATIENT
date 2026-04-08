@@ -16,7 +16,7 @@ class FilterScreen extends StatelessWidget {
 
   FilterScreen({super.key, this.filterType = 'service', this.displayName});
 
-  final FilterController filterCont = Get.put(FilterController(), permanent: true);
+  final FilterController filterCont = Get.put(FilterController());
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,8 @@ class FilterScreen extends StatelessWidget {
         height: Get.height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isDarkMode.value ? appScreenBackgroundDark : appScreenBackground,
+          color:
+              isDarkMode.value ? appScreenBackgroundDark : appScreenBackground,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,11 +62,13 @@ class FilterScreen extends StatelessWidget {
                                   ? filterCont.appointmentFiterList
                                   : filterCont.filterList,
                 ).expand(),
-                Obx(() => filterCont.viewFilterWidget(displayName ?? "", filterCont)),
+                Obx(() =>
+                    filterCont.viewFilterWidget(displayName ?? "", filterCont)),
               ],
             ).expand(),
             Container(
-              decoration: boxDecorationDefault(borderRadius: radius(0), color: context.cardColor),
+              decoration: boxDecorationDefault(
+                  borderRadius: radius(0), color: context.cardColor),
               width: Get.width,
               padding: const EdgeInsets.all(16),
               child: AppButton(

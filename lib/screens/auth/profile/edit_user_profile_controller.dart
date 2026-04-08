@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:country_picker/country_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,7 +14,7 @@ import '../model/common_model.dart';
 import '../model/login_response.dart';
 import '../../../utils/common_base.dart';
 import '../../../utils/constants.dart';
-import '../../../utils/local_storage.dart';
+import '../../../utils/secure_storage.dart';
 
 class EditUserProfileController extends GetxController {
   //Constructor region
@@ -25,8 +26,10 @@ class EditUserProfileController extends GetxController {
   RxBool isLoading = false.obs;
   Rx<File> imageFile = File("").obs;
   XFile? pickedFile;
-  Rx<DateTime> selectedDate = DateTime.now().subtract(const Duration(days: 1)).obs;
-  Rx<Future<UserResponse>> userDataFuture = Future(() => UserResponse(userData: UserData())).obs;
+  Rx<DateTime> selectedDate =
+      DateTime.now().subtract(const Duration(days: 1)).obs;
+  Rx<Future<UserResponse>> userDataFuture =
+      Future(() => UserResponse(userData: UserData())).obs;
   Rx<UserData> userData = UserData().obs;
 
   TextEditingController fNameCont = TextEditingController();
@@ -75,7 +78,7 @@ class EditUserProfileController extends GetxController {
             loginType: loginUserData.value.loginType,
           ),
         );
-        setValueToLocal(SharedPreferenceConst.USER_DATA, loginUserData.toJson());
+        saveUserDataSecure(loginUserData.value);
       }).catchError((e) {
         toast(e.toString());
       }),
@@ -96,26 +99,38 @@ class EditUserProfileController extends GetxController {
           pickedPhoneCode(CountryParser.parsePhoneCode(phoneCode));
         } catch (parseError) {
           final countries = CountryService().getAll();
-          final matchingCountries = countries.where((c) => c.phoneCode == phoneCode).toList();
+          final matchingCountries =
+              countries.where((c) => c.phoneCode == phoneCode).toList();
 
           if (matchingCountries.isNotEmpty) {
-            matchingCountries.sort((a, b) => a.name.length.compareTo(b.name.length));
+            matchingCountries
+                .sort((a, b) => a.name.length.compareTo(b.name.length));
             pickedPhoneCode(matchingCountries.first);
           } else {
-            log("No country found for phone code: $phoneCode");
+            if (kDebugMode) {
+              log('Unable to map phone code to country');
+            }
           }
         }
       } else {
-        log("Invalid phone code: $phoneCode");
+        if (kDebugMode) {
+          log('Invalid phone code format while loading profile');
+        }
       }
-    } catch (e) {
+    } catch (_) {
       pickedPhoneCode(Country.from(json: defaultCountry.toJson()));
       mobileCont.text = loginUserData.value.mobile.trim();
-      log('CountryParser.parsePhoneCode Err: $e');
+      if (kDebugMode) {
+        log('Phone code parsing failed while loading profile');
+      }
     }
     emailCont.text = loginUserData.value.email;
     addressCont.text = loginUserData.value.address;
-    selectedGender(genders.firstWhere((element) => element.slug.toLowerCase() == loginUserData.value.gender.toLowerCase(), orElse: () => CMNModel(id: 3, name: "Other", slug: "other")));
+    selectedGender(genders.firstWhere(
+        (element) =>
+            element.slug.toLowerCase() ==
+            loginUserData.value.gender.toLowerCase(),
+        orElse: () => CMNModel(id: 3, name: "Other", slug: "other")));
     selectedDate.value = loginUserData.value.dateOfBirth.dateInyyyyMMddFormat;
     dateOfBirthCont.text = selectedDate.value.formatDateYYYYmmdd();
     isLoading(false);
@@ -144,11 +159,20 @@ class EditUserProfileController extends GetxController {
     isLoading(true);
 
     AuthServiceApis.updateProfile(
-      firstName: isProfilePhoto ? loginUserData.value.firstName : fNameCont.text.trim(),
-      lastName: isProfilePhoto ? loginUserData.value.lastName : lNameCont.text.trim(),
-      mobile: isProfilePhoto ? loginUserData.value.mobile : "+${mobileCont.text.trim().formatPhoneNumber(pickedPhoneCode.value.phoneCode)}",
-      address: isProfilePhoto ? loginUserData.value.address : addressCont.text.trim(),
-      gender: isProfilePhoto ? loginUserData.value.gender : selectedGender.value.slug,
+      firstName: isProfilePhoto
+          ? loginUserData.value.firstName
+          : fNameCont.text.trim(),
+      lastName:
+          isProfilePhoto ? loginUserData.value.lastName : lNameCont.text.trim(),
+      mobile: isProfilePhoto
+          ? loginUserData.value.mobile
+          : "+${mobileCont.text.trim().formatPhoneNumber(pickedPhoneCode.value.phoneCode)}",
+      address: isProfilePhoto
+          ? loginUserData.value.address
+          : addressCont.text.trim(),
+      gender: isProfilePhoto
+          ? loginUserData.value.gender
+          : selectedGender.value.slug,
       imageFile: imageFile.value.path.isNotEmpty ? imageFile.value : null,
       email: isProfilePhoto ? loginUserData.value.email : emailCont.text.trim(),
       dateOfBirth: selectedDate.value.formatDateYYYYmmdd(),
@@ -156,15 +180,20 @@ class EditUserProfileController extends GetxController {
         isLoading(false);
         if (data != null) {
           if ((data as String).isJson()) {
-            log("Response: ${jsonDecode(data)}");
-            final UserResponse loginResponseModel = UserResponse.fromJson(jsonDecode(data));
-            selectedDate.value = DateTime.parse(loginResponseModel.userData.dateOfBirth);
+            if (kDebugMode) {
+              log('Profile update response received');
+            }
+            final UserResponse loginResponseModel =
+                UserResponse.fromJson(jsonDecode(data));
+            selectedDate.value =
+                DateTime.parse(loginResponseModel.userData.dateOfBirth);
             loginUserData(
               UserData(
                 id: loginUserData.value.id,
                 firstName: loginResponseModel.userData.firstName,
                 lastName: loginResponseModel.userData.lastName,
-                userName: "${loginResponseModel.userData.firstName} ${loginResponseModel.userData.lastName}",
+                userName:
+                    "${loginResponseModel.userData.firstName} ${loginResponseModel.userData.lastName}",
                 mobile: loginResponseModel.userData.mobile,
                 email: loginResponseModel.userData.email,
                 userRole: loginUserData.value.userRole,
@@ -176,7 +205,7 @@ class EditUserProfileController extends GetxController {
                 loginType: loginUserData.value.loginType,
               ),
             );
-            setValueToLocal(SharedPreferenceConst.USER_DATA, loginUserData.toJson());
+            saveUserDataSecure(loginUserData.value);
             Get.back();
           }
         }
@@ -190,7 +219,8 @@ class EditUserProfileController extends GetxController {
   }
 
   Future<void> _getFromGallery() async {
-    pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1800, maxHeight: 1800);
+    pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery, maxWidth: 1800, maxHeight: 1800);
     if (pickedFile != null) {
       imageFile(File(pickedFile!.path));
       if (isProfilePhoto) {
@@ -201,7 +231,8 @@ class EditUserProfileController extends GetxController {
   }
 
   Future<void> _getFromCamera() async {
-    pickedFile = await ImagePicker().pickImage(source: ImageSource.camera, maxWidth: 1800, maxHeight: 1800);
+    pickedFile = await ImagePicker()
+        .pickImage(source: ImageSource.camera, maxWidth: 1800, maxHeight: 1800);
     if (pickedFile != null) {
       imageFile(File(pickedFile!.path));
       if (isProfilePhoto) {
@@ -272,10 +303,13 @@ class EditUserProfileController extends GetxController {
               alignment: Alignment.center,
               width: 100,
               height: 100,
-              decoration: boxDecorationDefault(shape: BoxShape.circle, color: appColorPrimary.withValues(alpha: 0.4)),
+              decoration: boxDecorationDefault(
+                  shape: BoxShape.circle,
+                  color: appColorPrimary.withValues(alpha: 0.4)),
               child: Text(
                 "${loginUserData.value.firstName.firstLetter.toUpperCase()}${loginUserData.value.lastName.firstLetter.toUpperCase()}",
-                style: const TextStyle(fontSize: 100 * 0.3, color: Colors.white),
+                style:
+                    const TextStyle(fontSize: 100 * 0.3, color: Colors.white),
               ),
             ),
           ).cornerRadiusWithClipRRect(45),
@@ -283,5 +317,25 @@ class EditUserProfileController extends GetxController {
       ).paddingSymmetric(vertical: 16),
       title: locale.value.wouldYouLikeToSetProfilePhotoAs,
     );
+  }
+
+  @override
+  void onClose() {
+    fNameCont.dispose();
+    lNameCont.dispose();
+    emailCont.dispose();
+    phoneCodeCont.dispose();
+    mobileCont.dispose();
+    addressCont.dispose();
+    dateOfBirthCont.dispose();
+
+    fNameFocus.dispose();
+    lNameFocus.dispose();
+    emailFocus.dispose();
+    phoneCodeFocus.dispose();
+    mobileFocus.dispose();
+    addressFocus.dispose();
+    dateOfBirthFocus.dispose();
+    super.onClose();
   }
 }

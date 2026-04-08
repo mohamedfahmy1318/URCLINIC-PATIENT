@@ -26,10 +26,10 @@ import 'utils/push_notification_service.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  log('${FirebaseTopicConst.notificationDataKey}: ${message.data}');
-  log('${FirebaseTopicConst.notificationKey} -->: ${message.notification}');
-  log('${FirebaseTopicConst.notificationTitleKey} -->: ${message.notification!.title}');
-  log('${FirebaseTopicConst.notificationBodyKey} -->: ${message.notification!.body}');
+  if (kDebugMode) {
+    log('${FirebaseTopicConst.notificationDataKey}: ${message.data.keys.toList()}');
+    log('${FirebaseTopicConst.notificationKey} -->: ${message.notification != null}');
+  }
 }
 
 Rx<BaseLanguage> locale = Rx<BaseLanguage>(LanguageEn());
@@ -45,23 +45,36 @@ Future<void> applyLanguage(String code) async {
     locale.value = loaded;
     Get.updateLocale(Locale(lang));
   } catch (e) {
-    log('applyLanguage E: $e');
+    if (kDebugMode) log('applyLanguage E: $e');
   }
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (_) {
+    // Keep app boot resilient when environment file is intentionally absent.
+  }
 
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
-      .then((value) {
-    PushNotificationService().setupFirebaseMessaging();
+  try {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
+    await PushNotificationService().setupFirebaseMessaging();
     if (kReleaseMode) {
       FlutterError.onError =
           FirebaseCrashlytics.instance.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
     }
-  }).catchError(onError);
+  } catch (e) {
+    if (kDebugMode) {
+      log('Firebase init error: $e');
+    }
+  }
 
   await GetStorage.init();
   //
@@ -104,7 +117,7 @@ void main() async {
       toggleThemeMode(themeId: THEME_MODE_LIGHT);
     }
   } catch (e) {
-    log('getThemeFromLocal from cache E: $e');
+    if (kDebugMode) log('getThemeFromLocal from cache E: $e');
   }
   runApp(const MyApp());
 }

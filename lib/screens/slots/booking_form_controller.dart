@@ -30,7 +30,8 @@ class BookingFormController extends GetxController {
   RxString selectedSlot = "".obs;
   final Set<String> holidayDates = <String>{};
 
-  final ManageOtherPatientController manageOtherPatientController = ManageOtherPatientController();
+  final ManageOtherPatientController manageOtherPatientController =
+      ManageOtherPatientController();
 
   Rx<UserData> selectedMember = UserData().obs;
 
@@ -105,7 +106,8 @@ class BookingFormController extends GetxController {
 
     init();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (selectedService.value.id.isNegative && currentSelectedService.value.id.isNegative) {
+      if (selectedService.value.id.isNegative &&
+          currentSelectedService.value.id.isNegative) {
         isShowBottomSheet();
       }
     });
@@ -123,7 +125,8 @@ class BookingFormController extends GetxController {
         isEmpty: !isLoading.value && serviceList.isEmpty,
         errorText: errorMessageService.value,
         noDataTitle: locale.value.serviceListIsEmpty,
-        noDataSubTitle: locale.value.thereAreNoServicesListedAtTheMomentStayTunedF,
+        noDataSubTitle:
+            locale.value.thereAreNoServicesListedAtTheMomentStayTunedF,
         isLoading: isLoading,
         searchApiCall: (p0) => getServiceList(searchText: p0),
         onRetry: () {
@@ -155,7 +158,9 @@ class BookingFormController extends GetxController {
       );
 
       if (pickedFiles != null && pickedFiles.files.isNotEmpty) {
-        Set<String> existingFiles = medicalReportFiles.map((file) => file.name.trim().toLowerCase()).toSet();
+        Set<String> existingFiles = medicalReportFiles
+            .map((file) => file.name.trim().toLowerCase())
+            .toSet();
 
         for (final file in pickedFiles.files) {
           if (file.path != null) {
@@ -181,7 +186,8 @@ class BookingFormController extends GetxController {
   }
 
   ///Get Service List
-  Future<void> getServiceList({String searchText = "", int serviceId = -1}) async {
+  Future<void> getServiceList(
+      {String searchText = "", int serviceId = -1}) async {
     isLoading(true);
     CoreServiceApis.getServiceList(
       serviceId: serviceId,
@@ -293,8 +299,15 @@ class BookingFormController extends GetxController {
       ),
     ).then((value) {
       log('value.length ==> ${value.length}');
+      if (!value.contains(selectedSlot.value)) {
+        selectedSlot('');
+        onDateTimeChange();
+      }
     }).catchError((e) {
       isLoading(false);
+      slots.clear();
+      selectedSlot('');
+      onDateTimeChange();
       log("getTimeSlots error $e");
     }).whenComplete(() => isLoading(false));
   }
@@ -329,7 +342,9 @@ class BookingFormController extends GetxController {
       doctorValidationError(locale.value.chooseDoctor);
     }
 
-    if (serviceValidationError.value.isNotEmpty || clinicValidationError.value.isNotEmpty || doctorValidationError.value.isNotEmpty) {
+    if (serviceValidationError.value.isNotEmpty ||
+        clinicValidationError.value.isNotEmpty ||
+        doctorValidationError.value.isNotEmpty) {
       return;
     }
     //BookingReq
@@ -348,9 +363,11 @@ class BookingFormController extends GetxController {
     bookingReq.clinicName = selectedClinic.value.name;
     bookingReq.location = selectedClinic.value.address;
     bookingReq.totalAmount = totalAmount.toStringAsFixed(2).toDouble();
-    bookingReq.isEnableAdvancePayment = selectedService.value.isEnableAdvancePayment;
+    bookingReq.isEnableAdvancePayment =
+        selectedService.value.isEnableAdvancePayment;
     bookingReq.advancePayableAmount = advancePayableAmount;
-    bookingReq.isOnlineService = selectedService.value.type.toLowerCase() == ServiceTypeConst.online;
+    bookingReq.isOnlineService =
+        selectedService.value.type.toLowerCase() == ServiceTypeConst.online;
     if (selectedMember.value.id > 0) {
       bookingReq.otherPatientId = selectedMember.value.id.toString();
     }
@@ -364,7 +381,8 @@ class BookingFormController extends GetxController {
   }
 
   //----------------------------------------Price Calculation-----------------------------------
-  AssignDoctor get finalAssignDoctor => selectedService.value.assignDoctor.firstWhere(
+  AssignDoctor get finalAssignDoctor =>
+      selectedService.value.assignDoctor.firstWhere(
         (element) => element.doctorId == selectedDoctor.value.doctorId,
         orElse: () => AssignDoctor(
           priceDetail: PriceDetail(
@@ -379,19 +397,37 @@ class BookingFormController extends GetxController {
         ),
       );
 
-  double get fixedExclusiveTaxAmount => appConfigs.value.taxData.where((element) => (element.taxScope == TaxType.exclusiveTax) && (element.type.toLowerCase().contains(TaxType.FIXED.toLowerCase()))).sumByDouble((p0) => p0.value.validate());
+  double get fixedExclusiveTaxAmount => appConfigs.value.taxData
+      .where((element) =>
+          (element.taxScope == TaxType.exclusiveTax) &&
+          (element.type.toLowerCase().contains(TaxType.FIXED.toLowerCase())))
+      .sumByDouble((p0) => p0.value.validate());
 
-  double get percentExclusiveTaxAmount => appConfigs.value.taxData.where((element) {
-        return (element.taxScope == TaxType.exclusiveTax) && (element.type.toLowerCase().contains(TaxType.PERCENT.toLowerCase()));
+  double get percentExclusiveTaxAmount =>
+      appConfigs.value.taxData.where((element) {
+        return (element.taxScope == TaxType.exclusiveTax) &&
+            (element.type
+                .toLowerCase()
+                .contains(TaxType.PERCENT.toLowerCase()));
       }).sumByDouble((p0) {
-        return (selectedService.value.assignDoctor.isNotEmpty ? finalAssignDoctor.priceDetail.serviceAmount * p0.value.validate() : selectedService.value.payableAmount * p0.value.validate()) / 100;
+        return (selectedService.value.assignDoctor.isNotEmpty
+                ? finalAssignDoctor.priceDetail.serviceAmount *
+                    p0.value.validate()
+                : selectedService.value.payableAmount * p0.value.validate()) /
+            100;
       });
 
-  num get totalExclusiveTax => (fixedExclusiveTaxAmount + percentExclusiveTaxAmount).toStringAsFixed(Constants.DECIMAL_POINT).toDouble();
+  num get totalExclusiveTax =>
+      (fixedExclusiveTaxAmount + percentExclusiveTaxAmount)
+          .toStringAsFixed(Constants.DECIMAL_POINT)
+          .toDouble();
 
-  num get totalAmount => (selectedService.value.assignDoctor.isNotEmpty ? (finalAssignDoctor.priceDetail.totalAmount) : (selectedService.value.payableAmount + totalExclusiveTax));
+  num get totalAmount => (selectedService.value.assignDoctor.isNotEmpty
+      ? (finalAssignDoctor.priceDetail.totalAmount)
+      : (selectedService.value.payableAmount + totalExclusiveTax));
 
-  num get advancePayableAmount => (totalAmount * selectedService.value.advancePaymentAmount) / 100;
+  num get advancePayableAmount =>
+      (totalAmount * selectedService.value.advancePaymentAmount) / 100;
 
   num get remainingAmountAfterService => totalAmount - advancePayableAmount;
 
@@ -416,7 +452,8 @@ class BookingFormController extends GetxController {
               selectedService(displayList[index]);
               serviceNameText(selectedService.value.name);
               serviceValidationError("");
-              currentSelectedService.value.payableAmount = selectedService.value.payableAmount.toDouble();
+              currentSelectedService.value.payableAmount =
+                  selectedService.value.payableAmount.toDouble();
 
               // Only clear clinic and doctor if they are not pre-selected values
               if (currentSelectedClinic.value.id.isNegative) {
@@ -440,7 +477,7 @@ class BookingFormController extends GetxController {
         });
       },
       onNextPage: () {
-        if (isLastPage.value) {
+        if (!isLastPage.value) {
           servicePage(servicePage.value + 1);
           getServiceList();
         }

@@ -4,6 +4,7 @@ import 'package:kivicare_patient/utils/colors.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../../components/cached_image_widget.dart';
+import '../../../../components/discount_badge_widget.dart';
 import '../../../components/app_custom_dialog.dart';
 import '../../../generated/assets.dart';
 import '../../../main.dart';
@@ -57,6 +58,14 @@ class ServiceCard extends StatelessWidget {
                     bottomRightRadius:
                         serviceElement.isVideoConsultancy ? 6 : 0,
                   ),
+                  if (serviceElement.hasDiscount)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: DiscountBadgeWidget.circular(
+                        label: serviceElement.discountBadgeText,
+                      ),
+                    ),
                   if (serviceElement.isVideoConsultancy)
                     Positioned(
                       bottom: 0,
@@ -107,16 +116,13 @@ class ServiceCard extends StatelessWidget {
                     children: [
                       // Main price: discounted payableAmount when discount applied, else charges
                       PriceWidget(
-                        price: serviceElement.isDiscount
-                            ? serviceElement.payableAmount
-                            : serviceElement.charges,
+                        price: serviceElement.finalPrice,
                         size: 18,
                       ),
                       // Original price with strikethrough when discounted
-                      if (serviceElement.isDiscount)
+                      if (serviceElement.hasDiscount)
                         PriceWidget(
-                          price: serviceElement.charges +
-                              serviceElement.totalInclusiveTax,
+                          price: serviceElement.basePrice,
                           isLineThroughEnabled: true,
                           size: 14,
                           color: textSecondaryColorGlobal,

@@ -4,6 +4,7 @@ import 'package:nb_utils/nb_utils.dart';
 
 import '../../../components/app_custom_dialog.dart';
 import '../../../components/cached_image_widget.dart';
+import '../../../components/discount_badge_widget.dart';
 import '../../../main.dart';
 import '../../../utils/app_common.dart';
 import '../../../utils/colors.dart';
@@ -88,6 +89,14 @@ class PopularServiceCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (serviceElement.hasDiscount)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: DiscountBadgeWidget.circular(
+                      label: serviceElement.discountBadgeText,
+                    ),
+                  ),
               ],
             ),
             Column(
@@ -107,15 +116,13 @@ class PopularServiceCard extends StatelessWidget {
                     children: [
                       // Main price: discounted payableAmount when discount applied, else charges
                       PriceWidget(
-                        price: serviceElement.isDiscount
-                            ? serviceElement.payableAmount
-                            : serviceElement.payableAmount,
+                        price: serviceElement.finalPrice,
                         size: 18,
                       ),
                       // Original price with strikethrough when discounted
-                      if (serviceElement.isDiscount)
+                      if (serviceElement.hasDiscount)
                         PriceWidget(
-                          price: serviceElement.price,
+                          price: serviceElement.basePrice,
                           isLineThroughEnabled: true,
                           size: 14,
                           color: textSecondaryColorGlobal,

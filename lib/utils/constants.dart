@@ -10,8 +10,8 @@ import '../screens/auth/model/common_model.dart';
 class Constants {
   static const perPageItem = 20;
   static var labelTextSize = 16;
-  static const mapLinkForIOS = 'http://maps.apple.com/?q=';
-  static var googleMapPrefix = 'https://www.google.com/maps/search/?api=1&query=';
+  static const googleMapPrefix =
+      'https://www.google.com/maps/search/?api=1&query=';
   static const DEFAULT_EMAIL = 'john@gmail.com';
   static const DEFAULT_PASS = '12345678';
   static const appLogoSize = 120.0;
@@ -25,10 +25,14 @@ class DateFormatConst {
   static const DD_MM_YYYY = "dd-MM-yyyy"; //Use to show only in UI
   static const MMMM_D_yyyy = "MMMM d, y"; //Use to show only in UI
   static const D_MMMM_yyyy = "d MMMM, y"; //Use to show only in UI
-  static const MMMM_D_yyyy_At_HH_mm_a = "MMMM d, y @ hh:mm a"; //Use to show only in UI
-  static const EEEE_D_MMMM_At_HH_mm_a = "EEEE d MMMM @ hh:mm a"; //Use to show only in UI
-  static const EEE_MMM_d_yyyy_At_HH_mm = "EEE, MMM d, yyyy 'at' HH:mm"; //Use to show only in UI
-  static const dd_MMM_yyyy_HH_mm_a = "dd MMM y, hh:mm a"; //Use to show only in UI
+  static const MMMM_D_yyyy_At_HH_mm_a =
+      "MMMM d, y @ hh:mm a"; //Use to show only in UI
+  static const EEEE_D_MMMM_At_HH_mm_a =
+      "EEEE d MMMM @ hh:mm a"; //Use to show only in UI
+  static const EEE_MMM_d_yyyy_At_HH_mm =
+      "EEE, MMM d, yyyy 'at' HH:mm"; //Use to show only in UI
+  static const dd_MMM_yyyy_HH_mm_a =
+      "dd MMM y, hh:mm a"; //Use to show only in UI
   static const yyyy_MM_dd_HH_mm = 'yyyy-MM-dd HH:mm';
   static const yyyy_MM_dd = 'yyyy-MM-dd';
   static const HH_mm12Hour = 'hh:mm a';
@@ -85,6 +89,7 @@ class LoginTypeConst {
 class SharedPreferenceConst {
   static const IS_LOGGED_IN = 'IS_LOGGED_IN';
   static const USER_DATA = 'USER_LOGIN_DATA';
+  static const SESSION_LAST_ACTIVITY_AT = 'SESSION_LAST_ACTIVITY_AT';
   static const USER_EMAIL = 'USER_EMAIL';
   static const USER_PASSWORD = 'USER_PASSWORD';
   static const FIRST_TIME = 'FIRST_TIME';
@@ -389,6 +394,6 @@ class CancellationStatusKeys {
 
 const SERVICE_PAYMENT_STATUS_ADVANCE_PAID = 'advanced_paid';
 
-class AutoUpdateConst{
+class AutoUpdateConst {
   static String isAutoUpdateOn = 'isAutoUpdateOn';
 }

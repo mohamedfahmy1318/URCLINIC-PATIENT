@@ -31,7 +31,9 @@ Widget get commonDivider => Column(
         Divider(
           height: 1,
           thickness: 1,
-          color: isDarkMode.value ? borderColor.withValues(alpha: 0.1) : borderColor.withValues(alpha: 0.5),
+          color: isDarkMode.value
+              ? borderColor.withValues(alpha: 0.1)
+              : borderColor.withValues(alpha: 0.5),
         ),
       ],
     );
@@ -42,24 +44,31 @@ Widget get bottomSheetDivider => Column(
         Divider(
           indent: 3,
           height: 0,
-          color: isDarkMode.value ? borderColor.withValues(alpha: 0.2) : borderColor.withValues(alpha: 0.5),
+          color: isDarkMode.value
+              ? borderColor.withValues(alpha: 0.2)
+              : borderColor.withValues(alpha: 0.5),
         ),
         20.height,
       ],
     );
 
-final fontFamilyWeight700 = GoogleFonts.interTight(fontWeight: FontWeight.w700).fontFamily;
+final fontFamilyWeight700 =
+    GoogleFonts.interTight(fontWeight: FontWeight.w700).fontFamily;
 
 Future<void> handleRate() async {
   if (isAndroid) {
     if (getStringAsync(APP_PLAY_STORE_URL).isNotEmpty) {
-      commonLaunchUrl(getStringAsync(APP_PLAY_STORE_URL), launchMode: LaunchMode.externalApplication);
+      commonLaunchUrl(getStringAsync(APP_PLAY_STORE_URL),
+          launchMode: LaunchMode.externalApplication);
     } else {
-      commonLaunchUrl('${getSocialMediaLink(LinkProvider.PLAY_STORE)}${await getPackageName()}', launchMode: LaunchMode.externalApplication);
+      commonLaunchUrl(
+          '${getSocialMediaLink(LinkProvider.PLAY_STORE)}${await getPackageName()}',
+          launchMode: LaunchMode.externalApplication);
     }
   } else if (isIOS) {
     if (getStringAsync(APP_APPSTORE_URL).isNotEmpty) {
-      commonLaunchUrl(getStringAsync(APP_APPSTORE_URL), launchMode: LaunchMode.externalApplication);
+      commonLaunchUrl(getStringAsync(APP_APPSTORE_URL),
+          launchMode: LaunchMode.externalApplication);
     }
   }
 }
@@ -92,19 +101,33 @@ void toggleThemeMode({required int themeId}) {
 
 List<LanguageDataModel> languageList() {
   return [
-    LanguageDataModel(id: 1, name: 'English', languageCode: 'en', fullLanguageCode: 'en-US', flag: Assets.flagsIcUs),
-    LanguageDataModel(id: 3, name: 'Arabic', languageCode: 'ar', fullLanguageCode: 'ar-AR', flag: Assets.flagsIcAr),
+    LanguageDataModel(
+        id: 1,
+        name: 'English',
+        languageCode: 'en',
+        fullLanguageCode: 'en-US',
+        flag: Assets.flagsIcUs),
+    LanguageDataModel(
+        id: 3,
+        name: 'Arabic',
+        languageCode: 'ar',
+        fullLanguageCode: 'ar-AR',
+        flag: Assets.flagsIcAr),
   ];
 }
 
-Widget appCloseIconButton(BuildContext context, {required void Function() onPressed, double size = 12}) {
+Widget appCloseIconButton(BuildContext context,
+    {required void Function() onPressed, double size = 12}) {
   return IconButton(
     iconSize: size,
     padding: EdgeInsets.zero,
     onPressed: onPressed,
     icon: Container(
       padding: EdgeInsets.all(size - 8),
-      decoration: boxDecorationDefault(color: context.cardColor, borderRadius: BorderRadius.circular(size - 4), border: Border.all(color: iconColor)),
+      decoration: boxDecorationDefault(
+          color: context.cardColor,
+          borderRadius: BorderRadius.circular(size - 4),
+          border: Border.all(color: iconColor)),
       child: Icon(
         Icons.close_rounded,
         size: size,
@@ -114,7 +137,8 @@ Widget appCloseIconButton(BuildContext context, {required void Function() onPres
   );
 }
 
-Widget commonLeadingWid({required String imgPath, IconData? icon, Color? color, double size = 20}) {
+Widget commonLeadingWid(
+    {required String imgPath, IconData? icon, Color? color, double size = 20}) {
   return Image.asset(
     imgPath,
     width: size,
@@ -164,8 +188,16 @@ Widget commonLeadingWidSVG({
   }
 }
 
-Future<void> commonLaunchUrl(String address, {LaunchMode launchMode = LaunchMode.inAppWebView}) async {
-  await launchUrl(Uri.parse(address), mode: launchMode).catchError((e) {
+Future<void> commonLaunchUrl(String address,
+    {LaunchMode launchMode = LaunchMode.inAppWebView}) async {
+  final Uri? uri = Uri.tryParse(address.trim());
+
+  if (uri == null || uri.scheme.isEmpty) {
+    toast('${locale.value.invalidUrl}: $address');
+    return;
+  }
+
+  await launchUrl(uri, mode: launchMode).catchError((e) {
     toast('${locale.value.invalidUrl}: $address');
   });
 }
@@ -179,9 +211,11 @@ void viewFiles(String url) {
 void launchCall(String? url) {
   if (url.validate().isNotEmpty) {
     if (isIOS) {
-      commonLaunchUrl('tel://${url!}', launchMode: LaunchMode.externalApplication);
+      commonLaunchUrl('tel://${url!}',
+          launchMode: LaunchMode.externalApplication);
     } else {
-      commonLaunchUrl('tel:${url!}', launchMode: LaunchMode.externalApplication);
+      commonLaunchUrl('tel:${url!}',
+          launchMode: LaunchMode.externalApplication);
     }
   }
 }
@@ -189,7 +223,7 @@ void launchCall(String? url) {
 void launchMap(String? url) {
   if (url.validate().isNotEmpty) {
     final encodedQuery = Uri.encodeComponent(url.validate());
-    final String newURL = (isIOS ? Constants.mapLinkForIOS : Constants.googleMapPrefix) + encodedQuery;
+    final String newURL = Constants.googleMapPrefix + encodedQuery;
     commonLaunchUrl(newURL, launchMode: LaunchMode.externalApplication);
   }
 }
@@ -222,7 +256,8 @@ extension DateData on String {
 
   String get dateInMMMMDyyyyFormat {
     try {
-      return DateFormat(DateFormatConst.MMMM_D_yyyy).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.MMMM_D_yyyy)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       return this;
     }
@@ -230,7 +265,8 @@ extension DateData on String {
 
   String get dateInEEEEDMMMMAtHHmmAmPmFormat {
     try {
-      return DateFormat(DateFormatConst.EEEE_D_MMMM_At_HH_mm_a).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.EEEE_D_MMMM_At_HH_mm_a)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       return this;
     }
@@ -238,7 +274,8 @@ extension DateData on String {
 
   String get dateInEEEMMMDyyyyAtHHmmFormat {
     try {
-      return DateFormat(DateFormatConst.EEE_MMM_d_yyyy_At_HH_mm).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.EEE_MMM_d_yyyy_At_HH_mm)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       return this;
     }
@@ -246,7 +283,8 @@ extension DateData on String {
 
   String get dateInDMMMMyyyyFormat {
     try {
-      return DateFormat(DateFormatConst.D_MMMM_yyyy).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.D_MMMM_yyyy)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       return this;
     }
@@ -254,7 +292,8 @@ extension DateData on String {
 
   String get dateInDDMMYYYYFormat {
     try {
-      return DateFormat(DateFormatConst.DD_MM_YYYY).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.DD_MM_YYYY)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       return this;
     }
@@ -278,7 +317,8 @@ extension DateData on String {
 
   String get dateInMMMMDyyyyAtHHmmAmPmFormat {
     try {
-      return DateFormat(DateFormatConst.MMMM_D_yyyy_At_HH_mm_a).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.MMMM_D_yyyy_At_HH_mm_a)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       return this;
     }
@@ -286,7 +326,8 @@ extension DateData on String {
 
   String get dateInddMMMyyyyHHmmAmPmFormat {
     try {
-      return DateFormat(DateFormatConst.dd_MMM_yyyy_HH_mm_a).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.dd_MMM_yyyy_HH_mm_a)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       try {
         return "$dateInyyyyMMddHHmmFormat";
@@ -303,13 +344,16 @@ extension DateData on String {
       try {
         try {
           if (DateTime.parse(this).isUtc) {
-            return DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm).parse(DateTime.parse(this).toLocal().toString());
+            return DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm)
+                .parse(DateTime.parse(this).toLocal().toString());
           } else {
-            return DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm).parse(DateTime.parse(this).toString());
+            return DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm)
+                .parse(DateTime.parse(this).toString());
           }
         } catch (e) {
           log('dateInyyyyMMddHHmmFormat Check isUtc Error in $this: $e');
-          return DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm).parse(DateTime.parse(this).toString());
+          return DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm)
+              .parse(DateTime.parse(this).toString());
         }
       } catch (e) {
         log('dateInyyyyMMddHHmmFormat Error in $this: $e');
@@ -324,14 +368,16 @@ extension DateData on String {
 
   String get timeInHHmmAmPmFormat {
     try {
-      return DateFormat(DateFormatConst.HH_mm12Hour).format(dateInyyyyMMddHHmmFormat);
+      return DateFormat(DateFormatConst.HH_mm12Hour)
+          .format(dateInyyyyMMddHHmmFormat);
     } catch (e) {
       return this;
     }
   }
 
   TimeOfDay get timeOfDay24Format {
-    return TimeOfDay.fromDateTime(DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm).parse(this));
+    return TimeOfDay.fromDateTime(
+        DateFormat(DateFormatConst.yyyy_MM_dd_HH_mm).parse(this));
   }
 
   String get amPMto24HourFormat {
@@ -410,10 +456,12 @@ extension DateData on String {
 
       String formattedDuration = '';
       if (hours > 0) {
-        formattedDuration += "$hours ${showFullTitleHoursMinutes ? 'hour' : 'hr'} ";
+        formattedDuration +=
+            "$hours ${showFullTitleHoursMinutes ? 'hour' : 'hr'} ";
       }
       if (minutes > 0) {
-        formattedDuration += '$minutes ${showFullTitleHoursMinutes ? 'minute' : 'min'}';
+        formattedDuration +=
+            '$minutes ${showFullTitleHoursMinutes ? 'minute' : 'min'}';
       }
       return formattedDuration.trim();
     } catch (e) {
@@ -512,7 +560,8 @@ extension TimeExtension on TimeOfDay {
   /// Returns a string representing the formatted time.
   String formatTimeHHmm24Hour() {
     final timeIn24Hour = DateFormat(DateFormatConst.HH_mm24Hour);
-    final tempDateTime = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, hour, minute);
+    final tempDateTime = DateTime(DateTime.now().year, DateTime.now().month,
+        DateTime.now().day, hour, minute);
     return timeIn24Hour.format(tempDateTime);
   }
 
@@ -521,18 +570,23 @@ extension TimeExtension on TimeOfDay {
   /// Returns a string representing the formatted time.
   String formatTimeHHmmAMPM() {
     final timeInAMPM = DateFormat(DateFormatConst.HH_mm12Hour);
-    final tempDateTime = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, hour, minute);
+    final tempDateTime = DateTime(DateTime.now().year, DateTime.now().month,
+        DateTime.now().day, hour, minute);
     return timeInAMPM.format(tempDateTime);
   }
 }
 
-TextStyle get appButtonTextStyleGray => boldTextStyle(color: appColorSecondary, size: 14);
+TextStyle get appButtonTextStyleGray =>
+    boldTextStyle(color: appColorSecondary, size: 14);
 
-TextStyle get appButtonTextStyleWhite => boldTextStyle(color: Colors.white, size: 14);
+TextStyle get appButtonTextStyleWhite =>
+    boldTextStyle(color: Colors.white, size: 14);
 
-TextStyle get appButtonPrimaryColorText => boldTextStyle(color: appColorPrimary);
+TextStyle get appButtonPrimaryColorText =>
+    boldTextStyle(color: appColorPrimary);
 
-TextStyle get appButtonFontColorText => boldTextStyle(color: Colors.grey, size: 14);
+TextStyle get appButtonFontColorText =>
+    boldTextStyle(color: Colors.grey, size: 14);
 
 InputDecoration inputDecoration(
   BuildContext context, {
@@ -548,7 +602,8 @@ InputDecoration inputDecoration(
   Color? fillColor,
 }) {
   return InputDecoration(
-    contentPadding: contentPadding ?? const EdgeInsets.only(left: 12, bottom: 10, top: 10, right: 10),
+    contentPadding: contentPadding ??
+        const EdgeInsets.only(left: 12, bottom: 10, top: 10, right: 10),
     labelText: labelText,
     hintText: hintText,
     hintStyle: primaryTextStyle(size: 12),
@@ -589,9 +644,17 @@ InputDecoration inputDecoration(
   );
 }
 
-InputDecoration inputDecorationWithOutBorder(BuildContext context, {Widget? prefixIcon, Widget? suffixIcon, String? labelText, String? hintText, double? borderRadius, bool? filled, Color? fillColor}) {
+InputDecoration inputDecorationWithOutBorder(BuildContext context,
+    {Widget? prefixIcon,
+    Widget? suffixIcon,
+    String? labelText,
+    String? hintText,
+    double? borderRadius,
+    bool? filled,
+    Color? fillColor}) {
   return InputDecoration(
-    contentPadding: const EdgeInsets.only(left: 12, bottom: 10, top: 10, right: 10),
+    contentPadding:
+        const EdgeInsets.only(left: 12, bottom: 10, top: 10, right: 10),
     labelText: labelText,
     hintText: hintText,
     hintStyle: secondaryTextStyle(size: 12),
@@ -633,7 +696,8 @@ InputDecoration inputDecorationWithOutBorder(BuildContext context, {Widget? pref
 Future<List<PlatformFile>> pickFiles({FileType type = FileType.custom}) async {
   List<PlatformFile> filePath0 = [];
   try {
-    final FilePickerResult? filePickerResult = await FilePicker.platform.pickFiles(
+    final FilePickerResult? filePickerResult =
+        await FilePicker.platform.pickFiles(
       type: type,
       allowMultiple: true,
       allowedExtensions: ['jpg', 'pdf', 'doc', 'png', 'docx'],
@@ -674,7 +738,8 @@ Widget backButton({Object? result}) {
     onPressed: () {
       Get.back(result: result);
     },
-    icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.grey, size: 20),
+    icon: const Icon(Icons.arrow_back_ios_new_outlined,
+        color: Colors.grey, size: 20),
   );
 }
 
@@ -698,7 +763,12 @@ extension WidgetExt on Widget {
   Container circularLightPrimaryBg({double? padding, Color? color}) {
     return Container(
       padding: EdgeInsets.all(padding ?? 12),
-      decoration: boxDecorationDefault(shape: BoxShape.circle, color: color ?? (isDarkMode.value ? Colors.grey.withValues(alpha: 0.1) : extraLightPrimaryColor)),
+      decoration: boxDecorationDefault(
+          shape: BoxShape.circle,
+          color: color ??
+              (isDarkMode.value
+                  ? Colors.grey.withValues(alpha: 0.1)
+                  : extraLightPrimaryColor)),
       child: this,
     );
   }
@@ -756,7 +826,8 @@ extension StrEtx on String {
     );
   }
 
-  Widget showSvg({double? size, Color? color, double? width, double? height, bool? fit}) {
+  Widget showSvg(
+      {double? size, Color? color, double? width, double? height, bool? fit}) {
     if (fit ?? false) {
       return SvgPicture.asset(
         this,
@@ -830,8 +901,14 @@ void pickCountry(BuildContext context, {required Function(Country) onSelect}) {
   );
 }
 
-Future<void> showNewUpdateDialog(BuildContext context, {required int currentAppVersionCode}) async {
-  final bool canClose = (isAndroid && currentAppVersionCode >= appConfigs.value.patientAndroidMinForceUpdateCode) || (isIOS && currentAppVersionCode >= appConfigs.value.patientIosMinForceUpdateCode);
+Future<void> showNewUpdateDialog(BuildContext context,
+    {required int currentAppVersionCode}) async {
+  final bool canClose = (isAndroid &&
+          currentAppVersionCode >=
+              appConfigs.value.patientAndroidMinForceUpdateCode) ||
+      (isIOS &&
+          currentAppVersionCode >=
+              appConfigs.value.patientIosMinForceUpdateCode);
   showInDialog(
     context,
     contentPadding: EdgeInsets.zero,
@@ -846,9 +923,17 @@ Future<void> showNewUpdateDialog(BuildContext context, {required int currentAppV
 }
 
 Future<void> showForceUpdateDialog(BuildContext context) async {
-  if ((isAndroid && appConfigs.value.isForceUpdateforAndroid && appConfigs.value.patientAndroidLatestVersionUpdateCode > currentPackageinfo.value.versionCode.validate().toInt()) ||
-      (isIOS && appConfigs.value.isForceUpdateforIos && appConfigs.value.patientIosLatestVersionUpdateCode > currentPackageinfo.value.versionCode.validate().toInt())) {
-    showNewUpdateDialog(context, currentAppVersionCode: currentPackageinfo.value.versionCode.validate().toInt());
+  if ((isAndroid &&
+          appConfigs.value.isForceUpdateforAndroid &&
+          appConfigs.value.patientAndroidLatestVersionUpdateCode >
+              currentPackageinfo.value.versionCode.validate().toInt()) ||
+      (isIOS &&
+          appConfigs.value.isForceUpdateforIos &&
+          appConfigs.value.patientIosLatestVersionUpdateCode >
+              currentPackageinfo.value.versionCode.validate().toInt())) {
+    showNewUpdateDialog(context,
+        currentAppVersionCode:
+            currentPackageinfo.value.versionCode.validate().toInt());
   }
 }
 
@@ -865,7 +950,7 @@ Future<void> doIfLoggedIn(VoidCallback callback) async {
     callback.call();
   } else {
     final bool? res = await Get.to(
-      () => SignInScreen(),
+      () => SignInScreen(showBackButton: true),
       binding: BindingsBuilder(
         () {
           setStatusBarColor(
@@ -898,10 +983,20 @@ Widget detailWidget({
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     crossAxisAlignment: crossAxisAlignment ?? CrossAxisAlignment.start,
     children: [
-      leadingWidget ?? Text(title.validate(), style: leadingTextStyle ?? secondaryTextStyle()).expand(),
-      trailingWidget ?? Text(value.validate(), textAlign: TextAlign.right, style: trailingTextStyle ?? primaryTextStyle(size: 12, color: textColor)).expand(),
+      leadingWidget ??
+          Text(title.validate(),
+                  style: leadingTextStyle ?? secondaryTextStyle())
+              .expand(),
+      trailingWidget ??
+          Text(value.validate(),
+                  textAlign: TextAlign.right,
+                  style: trailingTextStyle ??
+                      primaryTextStyle(size: 12, color: textColor))
+              .expand(),
     ],
-  ).paddingBottom(10).visible(trailingWidget != null || value.validate().isNotEmpty);
+  )
+      .paddingBottom(10)
+      .visible(trailingWidget != null || value.validate().isNotEmpty);
 }
 
 Widget detailWidgetPrice({
@@ -921,7 +1016,8 @@ Widget detailWidgetPrice({
         leadingWidget ?? Text(title ?? '', style: secondaryTextStyle()),
         PriceWidget(
           price: value,
-          color: textColor ?? (isDarkMode.value ? Colors.white : darkGrayTextColor),
+          color: textColor ??
+              (isDarkMode.value ? Colors.white : darkGrayTextColor),
           size: isBoldText ? 14 : 12,
           isBoldText: isBoldText || isSemiBoldText,
         ),
@@ -979,7 +1075,9 @@ Color getPriceStatusColor({required String paymentStatus}) {
     return completedStatusColor;
   } else if (paymentStatus.toLowerCase().contains(PaymentStatus.PAID)) {
     return completedStatusColor;
-  } else if (paymentStatus.toLowerCase().contains(PaymentStatus.ADVANCE_REFUNDED)) {
+  } else if (paymentStatus
+      .toLowerCase()
+      .contains(PaymentStatus.ADVANCE_REFUNDED)) {
     return confirmedStatusColor;
   } else if (paymentStatus.toLowerCase().contains(PaymentStatus.REFUNDED)) {
     return confirmedStatusColor;
@@ -1011,7 +1109,8 @@ String getBookingPaymentStatus({required String status}) {
 String getPrescriptionStatus({required String status}) {
   if (status.toLowerCase().contains(StatusConst.pending)) {
     return locale.value.pending;
-  } else if (status.toLowerCase().contains(StatusConst.completed) || status.toLowerCase().contains(PaymentStatus.PAID)) {
+  } else if (status.toLowerCase().contains(StatusConst.completed) ||
+      status.toLowerCase().contains(PaymentStatus.PAID)) {
     return locale.value.completed;
   } else {
     return status;
@@ -1029,9 +1128,11 @@ Color getPrescriptionStatusColor({required String status}) {
 }
 
 String getPrescriptionPaymentStatus({required String status}) {
-  if (status.toLowerCase().contains(PaymentStatus.pending) || status.toLowerCase().contains(PaymentStatus.UNPAID)) {
+  if (status.toLowerCase().contains(PaymentStatus.pending) ||
+      status.toLowerCase().contains(PaymentStatus.UNPAID)) {
     return locale.value.unpaid;
-  } else if (status.toLowerCase().contains(StatusConst.completed) || status.toLowerCase().contains(PaymentStatus.PAID)) {
+  } else if (status.toLowerCase().contains(StatusConst.completed) ||
+      status.toLowerCase().contains(PaymentStatus.PAID)) {
     return locale.value.paid;
   } else {
     return status;
@@ -1039,9 +1140,11 @@ String getPrescriptionPaymentStatus({required String status}) {
 }
 
 Color getPrescriptionPaymentStatusColor({required String paymentStatus}) {
-  if (paymentStatus.toLowerCase().contains(PaymentStatus.pending) || paymentStatus.toLowerCase().contains(PaymentStatus.UNPAID)) {
+  if (paymentStatus.toLowerCase().contains(PaymentStatus.pending) ||
+      paymentStatus.toLowerCase().contains(PaymentStatus.UNPAID)) {
     return pendingStatusColor;
-  } else if (paymentStatus.toLowerCase().contains(StatusConst.completed) || paymentStatus.toLowerCase().contains(PaymentStatus.PAID)) {
+  } else if (paymentStatus.toLowerCase().contains(StatusConst.completed) ||
+      paymentStatus.toLowerCase().contains(PaymentStatus.PAID)) {
     return completedStatusColor;
   } else {
     return confirmedStatusColor;
@@ -1060,9 +1163,13 @@ Color getClinicStatusColor({required String clinicStatus}) {
 
 Color getClinicStatusLightColor({required String clinicStatus}) {
   if (clinicStatus.toLowerCase().contains(ClinicStatus.OPEN)) {
-    return isDarkMode.value ? lightGreenColor.withValues(alpha: 0.1) : lightGreenColor;
+    return isDarkMode.value
+        ? lightGreenColor.withValues(alpha: 0.1)
+        : lightGreenColor;
   } else if (clinicStatus.toLowerCase().contains(ClinicStatus.CLOSE)) {
-    return isDarkMode.value ? lightSecondaryColor.withValues(alpha: 0.1) : lightSecondaryColor;
+    return isDarkMode.value
+        ? lightSecondaryColor.withValues(alpha: 0.1)
+        : lightSecondaryColor;
   } else {
     return defaultStatusColor;
   }
@@ -1094,21 +1201,37 @@ Color getRatingBarColor(num starNumber) {
 String getAppointmentNotification({required String notification}) {
   if (notification.toLowerCase().contains(NotificationConst.newAppointment)) {
     return locale.value.newAppointmentBooked;
-  } else if (notification.toLowerCase().contains(NotificationConst.checkoutAppointment)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.checkoutAppointment)) {
     return locale.value.appointmentCompleted;
-  } else if (notification.toLowerCase().contains(NotificationConst.rejectAppointment)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.rejectAppointment)) {
     return locale.value.appointmentRejected;
-  } else if (notification.toLowerCase().contains(NotificationConst.cancelAppointment)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.cancelAppointment)) {
     return locale.value.appointmentCancelled;
-  } else if (notification.toLowerCase().contains(NotificationConst.rescheduleAppointment)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.rescheduleAppointment)) {
     return locale.value.appointmentRescheduled;
-  } else if (notification.toLowerCase().contains(NotificationConst.acceptAppointment)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.acceptAppointment)) {
     return locale.value.appointmentAccepted;
-  } else if (notification.toLowerCase().contains(NotificationConst.changePassword)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.changePassword)) {
     return locale.value.changePassword;
-  } else if (notification.toLowerCase().contains(NotificationConst.forgetEmailPassword)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.forgetEmailPassword)) {
     return locale.value.forgetEmailPassword;
-  } else if (notification.toLowerCase().contains(NotificationConst.incidence_reply)) {
+  } else if (notification
+      .toLowerCase()
+      .contains(NotificationConst.incidence_reply)) {
     return locale.value.incidenceReportReply;
   } else {
     return "";
@@ -1118,11 +1241,17 @@ String getAppointmentNotification({required String notification}) {
 String getOtherPatientRelation({required String relation}) {
   if (relation.toLowerCase().contains(RelationConstant.parents.toLowerCase())) {
     return locale.value.parents;
-  } else if (relation.toLowerCase().contains(RelationConstant.siblings.toLowerCase())) {
+  } else if (relation
+      .toLowerCase()
+      .contains(RelationConstant.siblings.toLowerCase())) {
     return locale.value.siblings;
-  } else if (relation.toLowerCase().contains(RelationConstant.spouse.toLowerCase())) {
+  } else if (relation
+      .toLowerCase()
+      .contains(RelationConstant.spouse.toLowerCase())) {
     return locale.value.spouse;
-  } else if (relation.toLowerCase().contains(RelationConstant.others.toLowerCase())) {
+  } else if (relation
+      .toLowerCase()
+      .contains(RelationConstant.others.toLowerCase())) {
     return locale.value.others;
   } else {
     return "";
@@ -1145,7 +1274,9 @@ String getOtherPatientGender({required String gender}) {
 bool checkTimeDifference({required DateTime inputDateTime}) {
   final DateTime currentTime = DateTime.now();
 
-  if (currentTime.isBefore(inputDateTime) && inputDateTime.difference(currentTime).inHours <= (appConfigs.value.cancellationChargeHours.validate())) {
+  if (currentTime.isBefore(inputDateTime) &&
+      inputDateTime.difference(currentTime).inHours <=
+          (appConfigs.value.cancellationChargeHours.validate())) {
     return true;
   }
 
@@ -1166,7 +1297,9 @@ String formatBookingDate(
   bool isTime = false,
   bool showDateWithTime = false,
 }) {
-  final parsedDateTime = isFromMicrosecondsSinceEpoch ? DateTime.fromMicrosecondsSinceEpoch(dateTime.validate().toInt() * 1000) : DateTime.parse(dateTime.validate());
+  final parsedDateTime = isFromMicrosecondsSinceEpoch
+      ? DateTime.fromMicrosecondsSinceEpoch(dateTime.validate().toInt() * 1000)
+      : DateTime.parse(dateTime.validate());
 
   return DateFormat(format).format(parsedDateTime);
 }
