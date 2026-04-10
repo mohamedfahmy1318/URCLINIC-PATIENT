@@ -67,24 +67,64 @@ class HomeController extends GetxController {
     getAppConfigurations();
     await getDashboardDetailFuture(
       HomeServiceApis.getDashboard(),
-    ).then((value) {
-      handleDashboardRes(value);
+    ).then((value) async {
+      await handleDashboardRes(value);
     }).whenComplete(() => isLoading(false));
   }
 
-  void handleDashboardRes(DashboardRes value) {
+  Future<void> handleDashboardRes(DashboardRes value) async {
     if (kDebugMode) {
       debugPrint('Dashboard payload processed');
     }
 
+    // Keep current Home clinics until clinic-list API sync completes to
+    // prevent showing transient dashboard-only clinics during refresh.
+    final List<Clinic> currentHomeClinics =
+        List<Clinic>.from(dashboardData.value.nearByClinic);
+
     value.data.nearByClinic = _filterVisibleClinics(value.data.nearByClinic);
     value.data.popularClinic.selectedClinic =
         _filterVisibleClinics(value.data.popularClinic.selectedClinic);
+    value.data.nearByClinic = currentHomeClinics;
 
     dashboardData(value.data);
     unreadNotificationCount(value.data.unReadCount);
-    prefetchClinicDiscountAvailability(_collectUniqueClinics(value.data));
+    // Home clinic rows should follow the primary clinic-list endpoint.
+    await _syncHomeClinicsFromClinicListApi();
     //More Logic....
+  }
+
+  Future<void> _syncHomeClinicsFromClinicListApi() async {
+    try {
+      final List<Clinic> clinicsFromApi = <Clinic>[];
+      int page = 1;
+      bool isLastPage = false;
+
+      while (!isLastPage) {
+        await CoreServiceApis.getClinics(
+          page: page,
+          perPage: 50,
+          clinics: clinicsFromApi,
+          lastPageCallBack: (isLast) {
+            isLastPage = isLast;
+          },
+        );
+        page++;
+      }
+
+      final List<Clinic> visibleClinics = _filterVisibleClinics(clinicsFromApi);
+
+      dashboardData.update((data) {
+        if (data == null) return;
+        data.nearByClinic = visibleClinics;
+      });
+
+      prefetchClinicDiscountAvailability(visibleClinics);
+    } catch (_) {
+      // Fallback to dashboard payload when clinic-list API is unavailable.
+      prefetchClinicDiscountAvailability(
+          _collectUniqueClinics(dashboardData.value));
+    }
   }
 
   List<Clinic> _filterVisibleClinics(List<Clinic> source) {
@@ -138,8 +178,8 @@ class HomeController extends GetxController {
           services.where((service) => service.status == 1).toList();
 
       if (activeServices.isEmpty) {
-        _removeClinicFromDashboard(clinicId);
-        clinicDiscountAvailability.remove(clinicId);
+        // Keep clinic visible on Home even when it has no active services.
+        clinicDiscountAvailability[clinicId] = false;
         return;
       }
 
@@ -151,36 +191,6 @@ class HomeController extends GetxController {
       clinicDiscountAvailability[clinicId] = false;
     } finally {
       clinicDiscountLoadingIds.remove(clinicId);
-    }
-  }
-
-  void _removeClinicFromDashboard(int clinicId) {
-    bool changed = false;
-
-    dashboardData.update((data) {
-      if (data == null) return;
-
-      final List<Clinic> newNearBy =
-          data.nearByClinic.where((clinic) => clinic.id != clinicId).toList();
-      final List<Clinic> newPopular = data.popularClinic.selectedClinic
-          .where((clinic) => clinic.id != clinicId)
-          .toList();
-
-      changed = newNearBy.length != data.nearByClinic.length ||
-          newPopular.length != data.popularClinic.selectedClinic.length;
-
-      data.nearByClinic = newNearBy;
-      data.popularClinic.selectedClinic = newPopular;
-    });
-
-    if (!changed) return;
-
-    if (currentPage.value >= dashboardData.value.nearByClinic.length) {
-      currentPage(
-        dashboardData.value.nearByClinic.isEmpty
-            ? 0
-            : dashboardData.value.nearByClinic.length - 1,
-      );
     }
   }
 

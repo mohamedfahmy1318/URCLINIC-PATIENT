@@ -26,12 +26,12 @@ void main() {
       MethodChannel('plugins.flutter.io/path_provider');
   const MethodChannel connectivityChannel =
       MethodChannel('dev.fluttercommunity.plus/connectivity');
-    const MethodChannel googleSignInChannel =
+  const MethodChannel googleSignInChannel =
       MethodChannel('plugins.flutter.io/google_sign_in');
-    const MethodChannel firebaseMessagingChannel =
+  const MethodChannel firebaseMessagingChannel =
       MethodChannel('plugins.flutter.io/firebase_messaging');
-      const MethodChannel flutterToastChannel =
-        MethodChannel('PonnamKarthik/fluttertoast');
+  const MethodChannel flutterToastChannel =
+      MethodChannel('PonnamKarthik/fluttertoast');
 
   Future<File> createTempFile(String name, {String content = 'tmp'}) async {
     final Directory dir = await Directory.systemTemp.createTemp('nu_release_');
@@ -78,8 +78,7 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(flutterToastChannel,
             (MethodCall methodCall) async {
-      if (methodCall.method == 'showToast' ||
-          methodCall.method == 'cancel') {
+      if (methodCall.method == 'showToast' || methodCall.method == 'cancel') {
         return true;
       }
       return null;
@@ -93,13 +92,13 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(pathProviderChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(connectivityChannel, null);
+        .setMockMethodCallHandler(connectivityChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(googleSignInChannel, null);
+        .setMockMethodCallHandler(googleSignInChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(firebaseMessagingChannel, null);
+        .setMockMethodCallHandler(firebaseMessagingChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(flutterToastChannel, null);
+        .setMockMethodCallHandler(flutterToastChannel, null);
   });
 
   setUp(() async {
@@ -123,10 +122,10 @@ void main() {
       loginUserData(UserData(apiToken: 'abc-token'));
 
       final loggedInHeader = buildHeaderTokens();
-      expect(loggedInHeader.containsKey(HttpHeaders.authorizationHeader),
-          isTrue);
-      expect(loggedInHeader[HttpHeaders.authorizationHeader],
-          'Bearer abc-token');
+      expect(
+          loggedInHeader.containsKey(HttpHeaders.authorizationHeader), isTrue);
+      expect(
+          loggedInHeader[HttpHeaders.authorizationHeader], 'Bearer abc-token');
 
       isLoggedIn(false);
       final loggedOutHeader = buildHeaderTokens();
@@ -144,8 +143,8 @@ void main() {
         'isFlutterWave': true,
         'flutterWaveSecretKey': 'sk_test_123',
       });
-      expect(flutterWave[HttpHeaders.authorizationHeader],
-          'Bearer sk_test_123');
+      expect(
+          flutterWave[HttpHeaders.authorizationHeader], 'Bearer sk_test_123');
 
       final airtel = buildHeaderTokens(extraKeys: {
         'isAirtelMoney': true,
@@ -159,8 +158,8 @@ void main() {
     });
 
     test('parse stripe error message successfully', () {
-      final message = parseStripeError(
-          '{"error": {"message": "<b>Card failed</b>"}}');
+      final message =
+          parseStripeError('{"error": {"message": "<b>Card failed</b>"}}');
       expect(message, 'Card failed');
     });
 
@@ -359,7 +358,8 @@ void main() {
       expect(body['data'], 1);
 
       await expectLater(
-        () => handleResponse(http.Response('{"status": false, "message":"x"}', 418)),
+        () => handleResponse(
+            http.Response('{"status": false, "message":"x"}', 418)),
         throwsA('x'),
       );
     });

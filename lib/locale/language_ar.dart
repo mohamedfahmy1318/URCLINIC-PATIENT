@@ -1101,6 +1101,10 @@ class LanguageAr extends BaseLanguage {
   String get yourAppointmentHasBeenBookedSuccessfully => "تم حجز موعدك بنجاح";
 
   @override
+  String get pleaseWaitForAppointmentConfirmationOrCancellation =>
+      "موعدك حاليا في حالة انتظار. برجاء انتظار تاكيد او الغاء الموعد.";
+
+  @override
   String get totalPayment => "المبلغ الإجمالي";
 
   @override

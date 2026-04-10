@@ -59,8 +59,9 @@ class SignUpController extends GetxController {
         "password": passwordCont.text.trim(),
         "google_authentication_type": "Email",
         "date_of_birth": dateCont.text.trim(),
-        "mobile":
-            '+${pickedPhoneCode.value.phoneCode.trim()} ${phoneCont.text.trim()}',
+        "mobile": phoneCont.text.trim().toInternationalPhoneNumber(
+              pickedPhoneCode.value.phoneCode,
+            ),
         "gender": selectedGender.value.slug,
         UserKeys.userType: LoginTypeConst.LOGIN_TYPE_USER,
       };

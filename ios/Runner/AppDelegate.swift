@@ -72,13 +72,6 @@ import GoogleMaps
       name: UIApplication.didBecomeActiveNotification,
       object: nil
     )
-
-    NotificationCenter.default.addObserver(
-      self,
-      selector: #selector(screenCaptureStateChanged),
-      name: UIScreen.capturedDidChangeNotification,
-      object: nil
-    )
   }
 
   @objc private func appWillResignActive() {
@@ -86,19 +79,7 @@ import GoogleMaps
   }
 
   @objc private func appDidBecomeActive() {
-    if UIScreen.main.isCaptured {
-      showPrivacyOverlay()
-    } else {
-      hidePrivacyOverlay()
-    }
-  }
-
-  @objc private func screenCaptureStateChanged() {
-    if UIScreen.main.isCaptured {
-      showPrivacyOverlay()
-    } else {
-      hidePrivacyOverlay()
-    }
+    hidePrivacyOverlay()
   }
 
   private func showPrivacyOverlay() {

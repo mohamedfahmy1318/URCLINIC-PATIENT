@@ -234,7 +234,7 @@ class SignInController extends GetxController {
       };
 
       /// Social Login Api
-        await loginUserRequest(request: request, isSocialLogin: true)
+      await loginUserRequest(request: request, isSocialLogin: true)
           .then((value) async {
         await handleLoginResponse(loginResponse: value, isSocialLogin: true);
         /*await Future.delayed(GetNumUtils(5).milliseconds);
@@ -264,7 +264,7 @@ class SignInController extends GetxController {
       };
 
       /// Social Login Api
-        await loginUserRequest(request: request, isSocialLogin: true)
+      await loginUserRequest(request: request, isSocialLogin: true)
           .then((value) async {
         await handleLoginResponse(loginResponse: value, isSocialLogin: true);
         setValueToLocal(SharedPreferenceConst.LOGIN_SUCCESSFULL, true);

@@ -13,6 +13,7 @@ import 'package:html/parser.dart';
 import 'package:intl/intl.dart';
 import 'package:kivicare_patient/utils/price_widget.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:phone_numbers_parser/phone_numbers_parser.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -813,6 +814,8 @@ extension WidgetExt on Widget {
 extension StrEtx on String {
   String get firstLetter => isNotEmpty ? this[0] : '';
 
+  String get normalizedPhoneDigits => replaceAll(RegExp(r'[^0-9]'), '');
+
   Widget iconImage({double? size, Color? color, BoxFit? fit}) {
     return Image.asset(
       this,
@@ -844,28 +847,83 @@ extension StrEtx on String {
   }
 
   String formatPhoneNumber(String phoneCode) {
-    final String trimmedPhoneNumber = trim();
+    final String normalizedPhoneCode = phoneCode.normalizedPhoneDigits;
+    String normalizedPhoneNumber = normalizedPhoneDigits;
 
-    if (trimmedPhoneNumber.startsWith(phoneCode)) {
-      return trimmedPhoneNumber;
-    } else {
-      return '$phoneCode $trimmedPhoneNumber';
+    if (normalizedPhoneCode.isNotEmpty &&
+        normalizedPhoneNumber.startsWith(normalizedPhoneCode) &&
+        normalizedPhoneNumber.length > normalizedPhoneCode.length) {
+      normalizedPhoneNumber =
+          normalizedPhoneNumber.substring(normalizedPhoneCode.length);
+    }
+
+    if (normalizedPhoneCode.isEmpty) return normalizedPhoneNumber;
+    if (normalizedPhoneNumber.isEmpty) return normalizedPhoneCode;
+
+    return '$normalizedPhoneCode $normalizedPhoneNumber';
+  }
+
+  String toInternationalPhoneNumber(String phoneCode) {
+    final String formattedPhone = formatPhoneNumber(phoneCode).trim();
+    if (formattedPhone.isEmpty) return '';
+    return '+$formattedPhone';
+  }
+
+  bool isValidPhoneForCountry(Country country) {
+    final String internationalPhone =
+        toInternationalPhoneNumber(country.phoneCode)
+            .replaceAll(RegExp(r'\s+'), '');
+
+    if (internationalPhone.length <= 1) return false;
+
+    try {
+      final IsoCode isoCode =
+          IsoCode.values.byName(country.countryCode.toUpperCase());
+      final PhoneNumber parsedPhone = PhoneNumber.parse(
+        internationalPhone,
+        destinationCountry: isoCode,
+      );
+      return parsedPhone.isValid();
+    } catch (_) {
+      try {
+        final PhoneNumber parsedPhone = PhoneNumber.parse(internationalPhone);
+        return parsedPhone.isValid();
+      } catch (_) {
+        return false;
+      }
     }
   }
 
   (String, String) get extractPhoneCodeAndNumber {
+    final String rawValue = trim();
+    if (rawValue.isEmpty) {
+      return ('', '');
+    }
+
+    final String compactInternational =
+        rawValue.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+
+    if (compactInternational.startsWith('+')) {
+      try {
+        final PhoneNumber parsedPhone = PhoneNumber.parse(compactInternational);
+        return (parsedPhone.countryCode, parsedPhone.nsn);
+      } catch (_) {
+        // Fall back to legacy parser for non-E.164 backend values.
+      }
+    }
+
     // Split the string by spaces and hyphens
-    final List<String> parts = trim().split(RegExp(r'[\s-]+'));
+    final List<String> parts = rawValue.split(RegExp(r'[\s-]+'));
 
     if (parts.length > 1) {
       // Assume the first part is the phone code
       final String phoneCode = parts[0].trim().replaceAll("+", '');
       // Join the remaining parts as the phone number
-      final String phoneNumber = parts.sublist(1).join().trim();
+      final String phoneNumber = parts.sublist(1).join().normalizedPhoneDigits;
       return (phoneCode, phoneNumber);
     } else {
       // If there's no separator, treat the whole string as the number
-      return ('', trim());
+      return ('', rawValue.normalizedPhoneDigits);
     }
   }
 }

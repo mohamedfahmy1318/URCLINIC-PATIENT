@@ -243,9 +243,6 @@ class _SortByComponentState extends State<SortByComponent> {
 
         // Clinics List
         Obx(() {
-          final popularClinics = List<Clinic>.from(
-            homeController.dashboardData.value.popularClinic.selectedClinic,
-          );
           final nearByClinics = List<Clinic>.from(
             homeController.dashboardData.value.nearByClinic,
           );
@@ -253,7 +250,8 @@ class _SortByComponentState extends State<SortByComponent> {
           final List<Clinic> clinics = <Clinic>[];
           final Set<int> addedClinicIds = <int>{};
 
-          for (final clinic in [...popularClinics, ...nearByClinics]) {
+          // Home list should reflect only the primary clinics payload.
+          for (final clinic in nearByClinics) {
             if (addedClinicIds.add(clinic.id)) {
               clinics.add(clinic);
             }

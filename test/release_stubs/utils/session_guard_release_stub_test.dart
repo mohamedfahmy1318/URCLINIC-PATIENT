@@ -61,7 +61,8 @@ void main() {
       final int withinLimit = DateTime.now()
           .subtract(const Duration(minutes: 5))
           .millisecondsSinceEpoch;
-      setValueToLocal(SharedPreferenceConst.SESSION_LAST_ACTIVITY_AT, withinLimit);
+      setValueToLocal(
+          SharedPreferenceConst.SESSION_LAST_ACTIVITY_AT, withinLimit);
 
       expect(isSessionExpired(), isFalse);
     });

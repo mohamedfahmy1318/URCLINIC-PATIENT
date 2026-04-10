@@ -188,8 +188,8 @@ void main() {
         'remember-user',
       );
       expect(getValueFromLocal(SharedPreferenceConst.USER_ID), '0');
-      expect(getValueFromLocal(SharedPreferenceConst.LOGIN_SUCCESSFULL),
-          isFalse);
+      expect(
+          getValueFromLocal(SharedPreferenceConst.LOGIN_SUCCESSFULL), isFalse);
       expect(getValueFromLocal(SharedPreferenceConst.IS_REMEMBER_ME), isTrue);
       expect(
         getValueFromLocal(SharedPreferenceConst.SESSION_LAST_ACTIVITY_AT),
@@ -365,8 +365,7 @@ void main() {
       );
     });
 
-    test('logout/config/profile/wallet/about wrappers parse success',
-        () async {
+    test('logout/config/profile/wallet/about wrappers parse success', () async {
       isLoggedIn(true);
       loginUserData(UserData(id: 22, apiToken: 'token-22'));
       setValueToLocal(SharedPreferenceConst.IS_LOGGED_IN, true);
@@ -453,13 +452,13 @@ void main() {
       await AuthServiceApis.getUserWallet();
 
       await expectLater(
-        () => AuthServiceApis.getWalletHistory(historyData: <WalletHistoryElement>[]),
+        () => AuthServiceApis.getWalletHistory(
+            historyData: <WalletHistoryElement>[]),
         throwsA(anything),
       );
     });
 
-    test('updateProfile logged-out no-op and logged-in error branch',
-        () async {
+    test('updateProfile logged-out no-op and logged-in error branch', () async {
       await AuthServiceApis.updateProfile(firstName: 'Noop');
 
       isLoggedIn(true);
@@ -671,7 +670,8 @@ class _StubHttpClientResponse extends Stream<List<int>>
   final List<int> _bytes;
   final _StubHttpHeaders _headers = _StubHttpHeaders();
 
-  _StubHttpClientResponse({required this.reply}) : _bytes = utf8.encode(reply.body) {
+  _StubHttpClientResponse({required this.reply})
+      : _bytes = utf8.encode(reply.body) {
     _headers.set(HttpHeaders.contentTypeHeader, 'application/json');
   }
 

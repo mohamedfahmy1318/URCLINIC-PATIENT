@@ -166,7 +166,9 @@ class EditUserProfileController extends GetxController {
           isProfilePhoto ? loginUserData.value.lastName : lNameCont.text.trim(),
       mobile: isProfilePhoto
           ? loginUserData.value.mobile
-          : "+${mobileCont.text.trim().formatPhoneNumber(pickedPhoneCode.value.phoneCode)}",
+          : mobileCont.text.trim().toInternationalPhoneNumber(
+                pickedPhoneCode.value.phoneCode,
+              ),
       address: isProfilePhoto
           ? loginUserData.value.address
           : addressCont.text.trim(),

@@ -18,7 +18,8 @@ import '../../../utils/app_common.dart';
 class EditUserProfileScreen extends StatelessWidget {
   EditUserProfileScreen({super.key});
 
-  final EditUserProfileController editUserProfileController = Get.put(EditUserProfileController());
+  final EditUserProfileController editUserProfileController =
+      Get.put(EditUserProfileController());
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   @override
@@ -55,19 +56,27 @@ class EditUserProfileScreen extends StatelessWidget {
                         16.height,
                         Obx(
                           () => ProfilePicWidget(
-                            heroTag: editUserProfileController.imageFile.value.path.isNotEmpty ? editUserProfileController.imageFile.value.path : loginUserData.value.profileImage,
-                            profileImage: editUserProfileController.imageFile.value.path.isNotEmpty ? editUserProfileController.imageFile.value.path : loginUserData.value.profileImage,
+                            heroTag: editUserProfileController
+                                    .imageFile.value.path.isNotEmpty
+                                ? editUserProfileController.imageFile.value.path
+                                : loginUserData.value.profileImage,
+                            profileImage: editUserProfileController
+                                    .imageFile.value.path.isNotEmpty
+                                ? editUserProfileController.imageFile.value.path
+                                : loginUserData.value.profileImage,
                             firstName: loginUserData.value.firstName,
                             lastName: loginUserData.value.lastName,
                             userName: loginUserData.value.userName,
                             showOnlyPhoto: true,
                             onCameraTap: () {
                               hideKeyboard(context);
-                              editUserProfileController.showBottomSheet(context);
+                              editUserProfileController
+                                  .showBottomSheet(context);
                             },
                             onPicTap: () {
                               hideKeyboard(context);
-                              editUserProfileController.showBottomSheet(context);
+                              editUserProfileController
+                                  .showBottomSheet(context);
                             },
                           ),
                         ),
@@ -78,7 +87,8 @@ class EditUserProfileScreen extends StatelessWidget {
                           focus: editUserProfileController.fNameFocus,
                           nextFocus: editUserProfileController.lNameFocus,
                           textFieldType: TextFieldType.NAME,
-                          errorThisFieldRequired: locale.value.thisFieldIsRequired,
+                          errorThisFieldRequired:
+                              locale.value.thisFieldIsRequired,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return locale.value.thisFieldIsRequired;
@@ -86,12 +96,14 @@ class EditUserProfileScreen extends StatelessWidget {
                             return null;
                           },
                           onChanged: (value) {
-                            if (value.trim().isNotEmpty) formKey.currentState?.validate();
+                            if (value.trim().isNotEmpty)
+                              formKey.currentState?.validate();
                           },
                           decoration: inputDecoration(
                             context,
                             labelText: locale.value.firstName,
-                            hintText: "${locale.value.eG} ${locale.value.merry}",
+                            hintText:
+                                "${locale.value.eG} ${locale.value.merry}",
                             fillColor: context.cardColor,
                             filled: true,
                           ),
@@ -108,7 +120,8 @@ class EditUserProfileScreen extends StatelessWidget {
                           focus: editUserProfileController.lNameFocus,
                           nextFocus: editUserProfileController.emailFocus,
                           textFieldType: TextFieldType.NAME,
-                          errorThisFieldRequired: locale.value.thisFieldIsRequired,
+                          errorThisFieldRequired:
+                              locale.value.thisFieldIsRequired,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return locale.value.thisFieldIsRequired;
@@ -116,7 +129,8 @@ class EditUserProfileScreen extends StatelessWidget {
                             return null;
                           },
                           onChanged: (value) {
-                            if (value.trim().isNotEmpty) formKey.currentState?.validate();
+                            if (value.trim().isNotEmpty)
+                              formKey.currentState?.validate();
                           },
                           decoration: inputDecoration(
                             context,
@@ -139,7 +153,8 @@ class EditUserProfileScreen extends StatelessWidget {
                           nextFocus: editUserProfileController.mobileFocus,
                           readOnly: loginUserData.value.isSocialLoginType,
                           textFieldType: TextFieldType.EMAIL_ENHANCED,
-                          errorThisFieldRequired: locale.value.thisFieldIsRequired,
+                          errorThisFieldRequired:
+                              locale.value.thisFieldIsRequired,
                           errorInvalidEmail: locale.value.pleaseEnterValidEmail,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -151,7 +166,8 @@ class EditUserProfileScreen extends StatelessWidget {
                             return null;
                           },
                           onChanged: (value) {
-                            if (value.trim().isNotEmpty && value.isEmail) formKey.currentState?.validate();
+                            if (value.trim().isNotEmpty && value.isEmail)
+                              formKey.currentState?.validate();
                           },
                           decoration: inputDecoration(
                             context,
@@ -174,17 +190,23 @@ class EditUserProfileScreen extends StatelessWidget {
                                 textStyle: primaryTextStyle(size: 12),
                                 textFieldType: TextFieldType.OTHER,
                                 controller: TextEditingController(
-                                  text: " +${editUserProfileController.pickedPhoneCode.value.phoneCode}",
+                                  text:
+                                      " +${editUserProfileController.pickedPhoneCode.value.phoneCode}",
                                 ),
                                 focus: editUserProfileController.phoneCodeFocus,
-                                nextFocus: editUserProfileController.mobileFocus,
+                                nextFocus:
+                                    editUserProfileController.mobileFocus,
                                 readOnly: true,
                                 onTap: () {
                                   pickCountry(
                                     context,
                                     onSelect: (Country country) {
-                                      editUserProfileController.pickedPhoneCode(country);
-                                      editUserProfileController.phoneCodeCont.text = editUserProfileController.pickedPhoneCode.value.phoneCode;
+                                      editUserProfileController
+                                          .pickedPhoneCode(country);
+                                      editUserProfileController
+                                              .phoneCodeCont.text =
+                                          editUserProfileController
+                                              .pickedPhoneCode.value.phoneCode;
                                     },
                                   );
                                 },
@@ -192,15 +214,18 @@ class EditUserProfileScreen extends StatelessWidget {
                                 decoration: inputDecoration(
                                   context,
                                   prefixIcon: Text(
-                                    editUserProfileController.pickedPhoneCode.value.flagEmoji,
+                                    editUserProfileController
+                                        .pickedPhoneCode.value.flagEmoji,
                                   ).paddingOnly(top: 2, left: 8),
-                                  prefixIconConstraints: BoxConstraints.tight(const Size(24, 24)),
+                                  prefixIconConstraints:
+                                      BoxConstraints.tight(const Size(24, 24)),
                                   suffixIcon: const Icon(
                                     Icons.keyboard_arrow_down_rounded,
                                     color: dividerColor,
                                     size: 22,
                                   ).paddingOnly(right: 32),
-                                  suffixIconConstraints: BoxConstraints.tight(const Size(24, 24)),
+                                  suffixIconConstraints:
+                                      BoxConstraints.tight(const Size(24, 24)),
                                   fillColor: context.cardColor,
                                   filled: true,
                                 ),
@@ -212,7 +237,8 @@ class EditUserProfileScreen extends StatelessWidget {
                               textFieldType: TextFieldType.PHONE,
                               controller: editUserProfileController.mobileCont,
                               focus: editUserProfileController.mobileFocus,
-                              errorThisFieldRequired: locale.value.thisFieldIsRequired,
+                              errorThisFieldRequired:
+                                  locale.value.thisFieldIsRequired,
                               keyboardType: TextInputType.phone,
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
@@ -221,13 +247,19 @@ class EditUserProfileScreen extends StatelessWidget {
                                 if (value == null || value.trim().isEmpty) {
                                   return locale.value.thisFieldIsRequired;
                                 }
-                                if (value.length < 10) {
-                                  return locale.value.pleaseEnterValidPhoneNumber;
+                                if (!value.trim().isValidPhoneForCountry(
+                                      editUserProfileController
+                                          .pickedPhoneCode.value,
+                                    )) {
+                                  return locale
+                                      .value.pleaseEnterValidPhoneNumber;
                                 }
                                 return null;
                               },
                               onChanged: (value) {
-                                if (value.trim().isNotEmpty && value.length >= 10) formKey.currentState?.validate();
+                                if (value.trim().isNotEmpty) {
+                                  formKey.currentState?.validate();
+                                }
                               },
                               decoration: inputDecoration(
                                 context,
@@ -253,7 +285,8 @@ class EditUserProfileScreen extends StatelessWidget {
                           decoration: inputDecoration(
                             context,
                             labelText: locale.value.address,
-                            hintText: "${locale.value.eG} 123, ${locale.value.mainStreet}",
+                            hintText:
+                                "${locale.value.eG} 123, ${locale.value.mainStreet}",
                             fillColor: context.cardColor,
                             filled: true,
                           ),
@@ -262,7 +295,8 @@ class EditUserProfileScreen extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(locale.value.gender, style: primaryTextStyle()),
+                            Text(locale.value.gender,
+                                style: primaryTextStyle()),
                             8.height,
                             Obx(
                               () => HorizontalList(
@@ -274,19 +308,35 @@ class EditUserProfileScreen extends StatelessWidget {
                                   return Obx(
                                     () => InkWell(
                                       onTap: () {
-                                        editUserProfileController.selectedGender(genders[index]);
-                                        loginUserData.value.gender = editUserProfileController.selectedGender.value.slug;
+                                        editUserProfileController
+                                            .selectedGender(genders[index]);
+                                        loginUserData.value.gender =
+                                            editUserProfileController
+                                                .selectedGender.value.slug;
                                       },
                                       borderRadius: radius(),
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20, vertical: 12),
                                         decoration: boxDecorationDefault(
-                                          color: editUserProfileController.selectedGender.value.id == genders[index].id ? appColorPrimary : context.cardColor,
+                                          color: editUserProfileController
+                                                      .selectedGender
+                                                      .value
+                                                      .id ==
+                                                  genders[index].id
+                                              ? appColorPrimary
+                                              : context.cardColor,
                                         ),
                                         child: Text(
                                           genders[index].name,
                                           style: secondaryTextStyle(
-                                            color: editUserProfileController.selectedGender.value.id == genders[index].id ? white : null,
+                                            color: editUserProfileController
+                                                        .selectedGender
+                                                        .value
+                                                        .id ==
+                                                    genders[index].id
+                                                ? white
+                                                : null,
                                           ),
                                         ),
                                       ),
@@ -296,12 +346,15 @@ class EditUserProfileScreen extends StatelessWidget {
                               ),
                             ),
                             16.height,
-                            Text(locale.value.dateOfBirth, style: primaryTextStyle()),
+                            Text(locale.value.dateOfBirth,
+                                style: primaryTextStyle()),
                             AppTextField(
-                              controller: editUserProfileController.dateOfBirthCont,
+                              controller:
+                                  editUserProfileController.dateOfBirthCont,
                               textStyle: primaryTextStyle(size: 12),
                               textFieldType: TextFieldType.OTHER,
-                              errorThisFieldRequired: locale.value.thisFieldIsRequired,
+                              errorThisFieldRequired:
+                                  locale.value.thisFieldIsRequired,
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return locale.value.thisFieldIsRequired;
@@ -310,7 +363,8 @@ class EditUserProfileScreen extends StatelessWidget {
                               },
                               readOnly: true,
                               onTap: () async {
-                                await editUserProfileController.pickDate(context);
+                                await editUserProfileController
+                                    .pickDate(context);
                                 formKey.currentState?.validate();
                               },
                               decoration: inputDecoration(
@@ -346,7 +400,8 @@ class EditUserProfileScreen extends StatelessWidget {
             },
             loadingWidget: const LoaderWidget(),
           ),
-          Obx(() => const LoaderWidget().visible(editUserProfileController.isLoading.value)),
+          Obx(() => const LoaderWidget()
+              .visible(editUserProfileController.isLoading.value)),
         ],
       ),
     );

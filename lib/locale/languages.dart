@@ -702,6 +702,8 @@ abstract class BaseLanguage {
 
   String get yourAppointmentHasBeenBookedSuccessfully;
 
+  String get pleaseWaitForAppointmentConfirmationOrCancellation;
+
   String get totalPayment;
 
   String get goToAppointments;

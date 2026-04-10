@@ -31,7 +31,9 @@ class HomeScreen extends StatelessWidget {
       appBarChild: const GreetingsComponent(),
       body: RefreshIndicator(
         onRefresh: () async {
-          Get.find<QuickBookController>().resetFields();
+          if (Get.isRegistered<QuickBookController>()) {
+            Get.find<QuickBookController>().resetFields();
+          }
           homeScreenController.getBannersList();
           return homeScreenController.getDashboardDetail(
               isFromSwipeRefresh: true);

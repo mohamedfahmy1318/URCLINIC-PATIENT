@@ -373,21 +373,21 @@ void main() {
     testWidgets(
       'gallery flow updates image and opens profile-photo confirm',
       (WidgetTester tester) async {
-      final BuildContext context = await pumpHost(tester);
-      final controller = EditUserProfileController(isProfilePhoto: true);
-      final File image = await createTempFile('gallery.png');
-      nextPickedImagePath = image.path;
+        final BuildContext context = await pumpHost(tester);
+        final controller = EditUserProfileController(isProfilePhoto: true);
+        final File image = await createTempFile('gallery.png');
+        nextPickedImagePath = image.path;
 
-      controller.showBottomSheet(context);
-      await pumpUi(tester);
+        controller.showBottomSheet(context);
+        await pumpUi(tester);
 
-      expect(find.text(locale.value.gallery), findsOneWidget);
-      await tester.tap(find.text(locale.value.gallery));
-      await pumpUi(tester);
+        expect(find.text(locale.value.gallery), findsOneWidget);
+        await tester.tap(find.text(locale.value.gallery));
+        await pumpUi(tester);
 
-      expect(controller.imageFile.value.path, image.path);
-      expect(find.text(locale.value.wouldYouLikeToSetProfilePhotoAs),
-          findsOneWidget);
+        expect(controller.imageFile.value.path, image.path);
+        expect(find.text(locale.value.wouldYouLikeToSetProfilePhotoAs),
+            findsOneWidget);
 
         controller.onClose();
       },
@@ -397,21 +397,21 @@ void main() {
     testWidgets(
       'camera flow updates image and opens profile-photo confirm',
       (WidgetTester tester) async {
-      final BuildContext context = await pumpHost(tester);
-      final controller = EditUserProfileController(isProfilePhoto: true);
-      final File image = await createTempFile('camera.png');
-      nextPickedImagePath = image.path;
+        final BuildContext context = await pumpHost(tester);
+        final controller = EditUserProfileController(isProfilePhoto: true);
+        final File image = await createTempFile('camera.png');
+        nextPickedImagePath = image.path;
 
-      controller.showBottomSheet(context);
-      await pumpUi(tester);
+        controller.showBottomSheet(context);
+        await pumpUi(tester);
 
-      expect(find.text(locale.value.camera), findsOneWidget);
-      await tester.tap(find.text(locale.value.camera));
-      await pumpUi(tester);
+        expect(find.text(locale.value.camera), findsOneWidget);
+        await tester.tap(find.text(locale.value.camera));
+        await pumpUi(tester);
 
-      expect(controller.imageFile.value.path, image.path);
-      expect(find.text(locale.value.wouldYouLikeToSetProfilePhotoAs),
-          findsOneWidget);
+        expect(controller.imageFile.value.path, image.path);
+        expect(find.text(locale.value.wouldYouLikeToSetProfilePhotoAs),
+            findsOneWidget);
 
         controller.onClose();
       },

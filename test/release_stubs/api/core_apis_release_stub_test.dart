@@ -834,7 +834,8 @@ class _StubHttpClientResponse extends Stream<List<int>>
   final List<int> _bytes;
   final _StubHttpHeaders _headers = _StubHttpHeaders();
 
-  _StubHttpClientResponse({required this.reply}) : _bytes = utf8.encode(reply.body) {
+  _StubHttpClientResponse({required this.reply})
+      : _bytes = utf8.encode(reply.body) {
     _headers.set(HttpHeaders.contentTypeHeader, 'application/json');
   }
 

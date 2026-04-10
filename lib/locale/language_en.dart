@@ -1112,6 +1112,10 @@ class LanguageEn extends BaseLanguage {
       "Your appointment has been booked successfully";
 
   @override
+  String get pleaseWaitForAppointmentConfirmationOrCancellation =>
+      "Your appointment is currently pending. Please wait for confirmation or cancellation.";
+
+  @override
   String get totalPayment => "Total Payment";
 
   @override

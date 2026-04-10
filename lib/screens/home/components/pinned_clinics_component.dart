@@ -20,7 +20,6 @@ class PinnedClinicsComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final allClinics = <Clinic>[
-        ...homeController.dashboardData.value.popularClinic.selectedClinic,
         ...homeController.dashboardData.value.nearByClinic,
       ];
 
