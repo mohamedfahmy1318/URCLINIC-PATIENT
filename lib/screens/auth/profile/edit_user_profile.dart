@@ -96,8 +96,9 @@ class EditUserProfileScreen extends StatelessWidget {
                             return null;
                           },
                           onChanged: (value) {
-                            if (value.trim().isNotEmpty)
+                            if (value.trim().isNotEmpty) {
                               formKey.currentState?.validate();
+                            }
                           },
                           decoration: inputDecoration(
                             context,
@@ -129,8 +130,9 @@ class EditUserProfileScreen extends StatelessWidget {
                             return null;
                           },
                           onChanged: (value) {
-                            if (value.trim().isNotEmpty)
+                            if (value.trim().isNotEmpty) {
                               formKey.currentState?.validate();
+                            }
                           },
                           decoration: inputDecoration(
                             context,
@@ -166,8 +168,9 @@ class EditUserProfileScreen extends StatelessWidget {
                             return null;
                           },
                           onChanged: (value) {
-                            if (value.trim().isNotEmpty && value.isEmail)
+                            if (value.trim().isNotEmpty && value.isEmail) {
                               formKey.currentState?.validate();
+                            }
                           },
                           decoration: inputDecoration(
                             context,

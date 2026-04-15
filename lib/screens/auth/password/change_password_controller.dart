@@ -30,11 +30,6 @@ class ChangePassController extends GetxController {
     hasLetter.value = RegExp('[a-z]').hasMatch(password);
   }
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
-
   Future<void> saveForm() async {
     isLoading(true);
     if (newpasswordCont.text.trim() != confirmPasswordCont.text.trim()) {

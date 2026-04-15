@@ -50,7 +50,7 @@ import GoogleMaps
     }
     
     if #available(iOS 10.0, *) {
-      UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+      UNUserNotificationCenter.current().delegate = self
     }
     FirebaseApp.configure()
     GeneratedPluginRegistrant.register(with: self)

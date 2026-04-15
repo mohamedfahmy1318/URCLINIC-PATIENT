@@ -232,20 +232,27 @@ class AuthServiceApis {
     if (isLoggedIn.value) {
       final MultipartRequest multiPartRequest =
           await getMultiPartRequest(APIEndPoints.updateProfile);
-      if (firstName.trim().isNotEmpty)
+      if (firstName.trim().isNotEmpty) {
         multiPartRequest.fields[UserKeys.firstName] = firstName;
-      if (lastName.trim().isNotEmpty)
+      }
+      if (lastName.trim().isNotEmpty) {
         multiPartRequest.fields[UserKeys.lastName] = lastName;
-      if (mobile.trim().isNotEmpty)
+      }
+      if (mobile.trim().isNotEmpty) {
         multiPartRequest.fields[UserKeys.mobile] = mobile;
-      if (address.trim().isNotEmpty)
+      }
+      if (address.trim().isNotEmpty) {
         multiPartRequest.fields[UserKeys.address] = address;
-      if (gender.trim().isNotEmpty)
+      }
+      if (gender.trim().isNotEmpty) {
         multiPartRequest.fields[UserKeys.gender] = gender;
-      if (email.trim().isNotEmpty)
+      }
+      if (email.trim().isNotEmpty) {
         multiPartRequest.fields[UserKeys.email] = email;
-      if (dateOfBirth.trim().isNotEmpty)
+      }
+      if (dateOfBirth.trim().isNotEmpty) {
         multiPartRequest.fields[UserKeys.dateOfBirth] = dateOfBirth;
+      }
 
       if (imageFile != null) {
         multiPartRequest.files.add(await MultipartFile.fromPath(
