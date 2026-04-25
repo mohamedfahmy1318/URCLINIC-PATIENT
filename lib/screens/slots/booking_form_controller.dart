@@ -144,7 +144,9 @@ class BookingFormController extends GetxController {
     }
 
     getServiceList();
-    await manageOtherPatientController.getOtherPatientList();
+    if (isLoggedIn.value) {
+      await manageOtherPatientController.getOtherPatientList();
+    }
   }
 
   Future<void> handleFilesPickerClick() async {

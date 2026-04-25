@@ -282,8 +282,14 @@ class ServiceElement {
       totalAppointments:
           json['total_appointments'] is int ? json['total_appointments'] : -1,
       clinicName: json['clinic_name'] is List
-          ? List<String>.from(json['clinic_name'].map((x) => x))
-          : [],
+          ? List<String>.from((json['clinic_name'] as List)
+              .where((x) => x != null)
+              .map((x) => '$x')
+              .where((x) => x.trim().isNotEmpty))
+          : json['clinic_name'] is String &&
+                  (json['clinic_name'] as String).trim().isNotEmpty
+              ? <String>[json['clinic_name'] as String]
+              : [],
       totalInclusiveTax:
           json['total_inclusive_tax'] is num ? json['total_inclusive_tax'] : 0,
       price: json['price'] is num ? json['price'] : 0,

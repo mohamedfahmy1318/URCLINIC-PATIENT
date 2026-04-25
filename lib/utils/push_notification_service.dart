@@ -4,18 +4,21 @@ import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/screens/booking/appointment_detail_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../main.dart';
 import '../models/notificationdata_model.dart';
+import '../screens/auth/profile/patient_wallet_history_screen.dart';
 import '../screens/booking/model/appointments_res_model.dart';
 import 'app_common.dart';
 import 'common_base.dart';
 import 'constants.dart';
+import 'notification_controller.dart';
 
 class PushNotificationService {
   final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
@@ -29,8 +32,42 @@ class PushNotificationService {
 
   Future<void> setupFirebaseMessaging() async {
     await _initializeLocalNotifications();
+    await _requestAndroidPostNotifications();
     await initFirebaseMessaging();
     await enableIOSNotifications();
+  }
+
+  Future<String?> _awaitApnsToken() async {
+    if (!Platform.isIOS) return null;
+    // Escalating backoff: APNs registration on first launch can take 5–10s on
+    // flaky networks or in Low Power Mode — a single retry isn't enough.
+    const List<Duration> delays = <Duration>[
+      Duration.zero,
+      Duration(seconds: 1),
+      Duration(seconds: 2),
+      Duration(seconds: 3),
+      Duration(seconds: 5),
+    ];
+    for (final Duration delay in delays) {
+      if (delay > Duration.zero) {
+        await Future<void>.delayed(delay);
+      }
+      final String? token = await FirebaseMessaging.instance.getAPNSToken();
+      if (token != null && token.isNotEmpty) return token;
+    }
+    return null;
+  }
+
+  Future<void> _requestAndroidPostNotifications() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final PermissionStatus status = await Permission.notification.status;
+      if (status.isDenied) {
+        await Permission.notification.request();
+      }
+    } catch (e) {
+      if (kDebugMode) log('POST_NOTIFICATIONS request failed: $e');
+    }
   }
 
   Future<void> initFirebaseMessaging() async {
@@ -53,25 +90,13 @@ class PushNotificationService {
     if (!canHandleNotifications) return;
 
     await registerNotificationListeners();
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-    await FirebaseMessaging.instance
-        .setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
   }
 
   Future<void> registerFCMAndTopics() async {
     if (!isLoggedIn.value) return;
 
     if (Platform.isIOS) {
-      String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-      if (apnsToken == null) {
-        await Future.delayed(const Duration(seconds: 3));
-        apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-      }
+      final String? apnsToken = await _awaitApnsToken();
       if (kDebugMode) {
         log(
           "===============${FirebaseTopicConst.apnsNotificationTokenKey}===============\n${apnsToken != null}",
@@ -144,6 +169,8 @@ class PushNotificationService {
 
     NotificationData.fromJson(message.data);
 
+    _applyServerUnreadCount(message.data);
+
     if (isForeGround) {
       final String title = message.notification?.title?.trim() ?? '';
       final String body = message.notification?.body?.trim() ?? '';
@@ -153,37 +180,105 @@ class PushNotificationService {
       return;
     }
 
-    _handleAdditionalData(message.data);
+    _routeByPayload(message.data);
   }
 
-  void _handleAdditionalData(Map<String, dynamic> data) {
+  int? _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value == null) return null;
+    return int.tryParse(value.toString());
+  }
+
+  /// Routes a tap on a notification payload to the right screen.
+  ///
+  /// Payload contract:
+  ///   data.type : one of [NotificationConst] (string)
+  ///   data.id   : resource id the notification refers to (stringified int)
+  ///
+  /// Flat keys win; falls back to the legacy nested `additional_data` JSON
+  /// blob. Unknown / malformed payloads are logged so backend drift is
+  /// visible in production traces instead of silently swallowed.
+  void _routeByPayload(Map<String, dynamic> data) {
+    Map<String, dynamic> resolved;
     try {
-      final dynamic additionalRaw = data[FirebaseTopicConst.additionalDataKey];
-      Map<String, dynamic> additionalData = <String, dynamic>{};
+      resolved = _resolvePayload(data);
+    } catch (e) {
+      if (kDebugMode) log('notification payload parse failed: $e — $data');
+      return;
+    }
 
-      if (additionalRaw is String && additionalRaw.trim().isNotEmpty) {
-        final dynamic parsed = jsonDecode(additionalRaw);
-        if (parsed is Map<String, dynamic>) {
-          additionalData = parsed;
-        }
-      } else if (additionalRaw is Map<String, dynamic>) {
-        additionalData = additionalRaw;
+    final String type =
+        (resolved[NotificationConst.typeKey]?.toString() ?? '').trim();
+    final int? id = _toInt(resolved[FirebaseTopicConst.idKey]);
+
+    // Empty type + no id is a no-op — nothing to route to. Empty type WITH
+    // an id falls through to the appointment-detail default for backward
+    // compatibility with older server payloads.
+    if (type.isEmpty && id == null) {
+      if (kDebugMode) log('notification: empty payload — $data');
+      return;
+    }
+
+    if (NotificationConst.appointmentDetailTypes.contains(type) ||
+        (type.isEmpty && id != null)) {
+      if (id == null) {
+        if (kDebugMode) log('notification: missing id for type=$type');
+        return;
       }
+      Get.to(
+        () => AppointmentDetail(),
+        arguments: AppointmentData(id: id),
+      );
+      return;
+    }
 
-      if (additionalData.isEmpty) return;
+    if (type == NotificationConst.walletRefund) {
+      Get.to(() => PatientWalletHistory());
+      return;
+    }
 
-      final dynamic notIdRaw = additionalData[FirebaseTopicConst.idKey];
-      final int? notificationId =
-          notIdRaw is int ? notIdRaw : int.tryParse(notIdRaw?.toString() ?? '');
+    if (kDebugMode) {
+      log('notification: unrouted type="$type" id=$id payload=$data');
+    }
+  }
 
-      if (notificationId != null) {
-        Get.to(
-          () => AppointmentDetail(),
-          arguments: AppointmentData(id: notificationId),
-        );
+  /// Merges flat payload keys with the legacy nested `additional_data`
+  /// blob (which may arrive as a JSON string OR a Map). Flat keys always win.
+  Map<String, dynamic> _resolvePayload(Map<String, dynamic> data) {
+    final Map<String, dynamic> merged = <String, dynamic>{};
+
+    final dynamic additionalRaw = data[FirebaseTopicConst.additionalDataKey];
+    if (additionalRaw is String && additionalRaw.trim().isNotEmpty) {
+      final dynamic decoded = jsonDecode(additionalRaw);
+      if (decoded is Map) merged.addAll(Map<String, dynamic>.from(decoded));
+    } else if (additionalRaw is Map) {
+      merged.addAll(Map<String, dynamic>.from(additionalRaw));
+    }
+
+    data.forEach((String key, dynamic value) {
+      if (value == null) return;
+      if (value is String && value.isEmpty) return;
+      merged[key] = value;
+    });
+
+    return merged;
+  }
+
+  void _applyServerUnreadCount(Map<String, dynamic> data) {
+    try {
+      if (!Get.isRegistered<NotificationController>()) return;
+      final dynamic raw = data[NotificationConst.unreadCountCamelKey] ??
+          data[NotificationConst.unreadCountKey];
+      if (raw == null) {
+        NotificationController.to.incrementLocal();
+        return;
+      }
+      final int parsed = raw is int ? raw : int.tryParse(raw.toString()) ?? -1;
+      if (parsed >= 0) {
+        NotificationController.to.applyServerUnreadCount(parsed);
       }
     } catch (_) {
-      // Keep push payload parsing resilient.
+      // Never let badge plumbing break notification routing.
     }
   }
 
@@ -206,9 +301,12 @@ class PushNotificationService {
 
     FirebaseMessaging.instance.getInitialMessage().then(
       (RemoteMessage? message) {
-        if (message != null) {
+        if (message == null) return;
+        // The callback can fire before GetMaterialApp mounts its navigator
+        // (fast on M-series). Defer to the first frame so Get.to resolves.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           handleNotificationClick(message);
-        }
+        });
       },
     );
   }
@@ -252,8 +350,8 @@ class PushNotificationService {
 
         try {
           final dynamic decoded = jsonDecode(payload);
-          if (decoded is Map<String, dynamic>) {
-            _handleAdditionalData(decoded);
+          if (decoded is Map) {
+            _routeByPayload(Map<String, dynamic>.from(decoded));
           }
         } catch (_) {
           // Ignore malformed payloads.

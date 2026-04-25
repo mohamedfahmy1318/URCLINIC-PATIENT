@@ -17,7 +17,9 @@ class DoctorListRes {
   factory DoctorListRes.fromJson(Map<String, dynamic> json) {
     return DoctorListRes(
       status: json['status'] is bool ? json['status'] : false,
-      data: json['data'] is List ? List<Doctor>.from(json['data'].map((x) => Doctor.fromJson(x))) : [],
+      data: json['data'] is List
+          ? List<Doctor>.from(json['data'].map((x) => Doctor.fromJson(x)))
+          : [],
       message: json['message'] is String ? json['message'] : "",
     );
   }
@@ -172,8 +174,10 @@ class Doctor {
       gender: json['gender'] is String ? json['gender'] : "",
       expert: json['expert'] is String ? json['expert'] : "",
       dateOfBirth: json['date_of_birth'] is String ? json['date_of_birth'] : "",
-      emailVerifiedAt: json['email_verified_at'] is String ? json['email_verified_at'] : "",
-      profileImage: json['profile_image'] is String ? json['profile_image'] : "",
+      emailVerifiedAt:
+          json['email_verified_at'] is String ? json['email_verified_at'] : "",
+      profileImage:
+          json['profile_image'] is String ? json['profile_image'] : "",
       status: json['status'] is int ? json['status'] : -1,
       isBanned: json['is_banned'] is int ? json['is_banned'] : -1,
       isManager: json['is_manager'] is int ? json['is_manager'] : -1,
@@ -181,10 +185,13 @@ class Doctor {
       updatedAt: json['updated_at'] is String ? json['updated_at'] : "",
       deletedAt: json['deleted_at'] is String ? json['deleted_at'] : "",
       aboutSelf: json['about_self'] is String ? json['about_self'] : "",
-      facebookLink: json['facebook_link'] is String ? json['facebook_link'] : "",
-      instagramLink: json['instagram_link'] is String ? json['instagram_link'] : "",
+      facebookLink:
+          json['facebook_link'] is String ? json['facebook_link'] : "",
+      instagramLink:
+          json['instagram_link'] is String ? json['instagram_link'] : "",
       twitterLink: json['twitter_link'] is String ? json['twitter_link'] : "",
-      dribbbleLink: json['dribbble_link'] is String ? json['dribbble_link'] : "",
+      dribbbleLink:
+          json['dribbble_link'] is String ? json['dribbble_link'] : "",
       experience: json['experience'] is String ? json['experience'] : "",
       description: json['description'] is String ? json['description'] : "",
       signature: json['signature'] is String ? json['signature'] : "",
@@ -198,15 +205,40 @@ class Doctor {
       pincode: json['pincode'] is String ? json['pincode'] : "",
       latitude: json['latitude'] is String ? json['latitude'] : "",
       longitude: json['longitude'] is String ? json['longitude'] : "",
-      clinics: json['clinics'] is List ? List<Clinic>.from(json['clinics'].map((x) => Clinic.fromJson(x))) : [],
-      commissions: json['commissions'] is List ? List<Commissions>.from(json['commissions'].map((x) => Commissions.fromJson(x))) : [],
+      clinics: json['clinics'] is List
+          ? List<Clinic>.from((json['clinics'] as List)
+              .whereType<Map>()
+              .map((x) => Clinic.fromJson(Map<String, dynamic>.from(x))))
+          : [],
+      commissions: json['commissions'] is List
+          ? List<Commissions>.from((json['commissions'] as List)
+              .whereType<Map>()
+              .map((x) => Commissions.fromJson(Map<String, dynamic>.from(x))))
+          : [],
       totalServices: json['total_services'] is int ? json['total_services'] : 0,
       totalReviews: json['total_reviews'] is int ? json['total_reviews'] : 0,
-      totalAppointmemt: json['total_appointment'] is int ? json['total_appointment'] : 0,
-      averageRating: json['average_rating'] is num ? json['average_rating'] : 0.0,
-      reviews: json['reviews'] is List ? List<DoctorReviewData>.from(json['reviews'].map((x) => DoctorReviewData.fromJson(x))) : [],
-      qualifications: json['qualifications'] is List ? List<Qualifications>.from(json['qualifications'].map((x) => Qualifications.fromJson(x))) : [],
-      services: json['services'] is List ? List<ServiceElement>.from(json['services'].map((x) => ServiceElement.fromJson(x))) : [],
+      totalAppointmemt:
+          json['total_appointment'] is int ? json['total_appointment'] : 0,
+      averageRating:
+          json['average_rating'] is num ? json['average_rating'] : 0.0,
+      reviews: json['reviews'] is List
+          ? List<DoctorReviewData>.from((json['reviews'] as List)
+              .whereType<Map>()
+              .map((x) =>
+                  DoctorReviewData.fromJson(Map<String, dynamic>.from(x))))
+          : [],
+      qualifications: json['qualifications'] is List
+          ? List<Qualifications>.from((json['qualifications'] as List)
+              .whereType<Map>()
+              .map(
+                  (x) => Qualifications.fromJson(Map<String, dynamic>.from(x))))
+          : [],
+      services: json['services'] is List
+          ? List<ServiceElement>.from((json['services'] as List)
+              .whereType<Map>()
+              .map(
+                  (x) => ServiceElement.fromJson(Map<String, dynamic>.from(x))))
+          : [],
     );
   }
 

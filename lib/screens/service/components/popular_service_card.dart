@@ -12,7 +12,6 @@ import '../../../utils/price_widget.dart';
 import '../../clinic/clinics_list_screen.dart';
 import '../../doctor/doctor_list_screen.dart';
 import '../model/service_list_model.dart';
-import '../service_detail_controller.dart';
 import '../service_detail_screen.dart';
 
 class PopularServiceCard extends StatelessWidget {
@@ -24,6 +23,41 @@ class PopularServiceCard extends StatelessWidget {
     required this.serviceElement,
     this.isFromClinicDetail = false,
   });
+
+  void _handleBookNowTap(BuildContext context) {
+    if (isFromClinicDetail) {
+      showInDialog(
+        context,
+        contentPadding: EdgeInsets.zero,
+        builder: (context) {
+          return AppCustomDialog(
+            title: locale.value.doYouWantToReplaceThePreviousServiceWithTheCu,
+            negativeText: locale.value.no,
+            positiveText: locale.value.yes,
+            onTap: () {
+              currentSelectedService(serviceElement);
+              Get.back();
+              Get.to(() => DoctorsListScreen(),
+                  arguments: currentSelectedClinic.value.id);
+            },
+          );
+        },
+      );
+    } else {
+      currentSelectedService(serviceElement);
+      Get.to(() => ClinicListScreen(), arguments: serviceElement);
+    }
+  }
+
+  void _handleCardTap(BuildContext context) {
+    if (isFromClinicDetail) {
+      _handleBookNowTap(context);
+      return;
+    }
+
+    Get.to(() => ServiceDetailScreen(isFromClinicDetail: isFromClinicDetail),
+        arguments: serviceElement);
+  }
 
   String formatDuration(int minutes) {
     final hours = minutes ~/ 60;
@@ -41,14 +75,7 @@ class PopularServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (isFromClinicDetail) {
-          Get.delete<ServiceDetailController>();
-        }
-        Get.to(
-            () => ServiceDetailScreen(isFromClinicDetail: isFromClinicDetail),
-            arguments: serviceElement);
-      },
+      onTap: () => _handleCardTap(context),
       child: Container(
         decoration: boxDecorationWithRoundedCorners(
           borderRadius: radius(8),
@@ -163,32 +190,7 @@ class PopularServiceCard extends StatelessWidget {
                   color: appColorSecondary,
                   shapeBorder: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
-                  onTap: () async {
-                    if (isFromClinicDetail) {
-                      showInDialog(
-                        context,
-                        contentPadding: EdgeInsets.zero,
-                        builder: (context) {
-                          return AppCustomDialog(
-                            title: locale.value
-                                .doYouWantToReplaceThePreviousServiceWithTheCu,
-                            negativeText: locale.value.no,
-                            positiveText: locale.value.yes,
-                            onTap: () {
-                              currentSelectedService(serviceElement);
-                              Get.back();
-                              Get.to(() => DoctorsListScreen(),
-                                  arguments: currentSelectedClinic.value.id);
-                            },
-                          );
-                        },
-                      );
-                    } else {
-                      currentSelectedService(serviceElement);
-                      Get.to(() => ClinicListScreen(),
-                          arguments: serviceElement);
-                    }
-                  },
+                  onTap: () => _handleBookNowTap(context),
                   child: Text(
                     locale.value.bookNow,
                     style: boldTextStyle(size: 14, color: white),

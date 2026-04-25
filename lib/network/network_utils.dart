@@ -266,6 +266,16 @@ Future handleResponse(Response response,
     }
   } else if (response.statusCode == 400) {
     throw locale.value.badRequest;
+  } else if (response.statusCode == 401) {
+    final String bodyText = response.body.trim();
+    if (bodyText.isJson()) {
+      final Map body = jsonDecode(bodyText);
+      final dynamic message = body['message'] ?? body['error'];
+      if (message is String && message.trim().isNotEmpty) {
+        throw message;
+      }
+    }
+    throw 'Session expired. Please sign in again.';
   } else if (response.statusCode == 403) {
     throw locale.value.forbidden;
   } else if (response.statusCode == 404) {

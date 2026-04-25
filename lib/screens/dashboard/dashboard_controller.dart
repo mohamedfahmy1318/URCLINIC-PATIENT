@@ -1,5 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -11,6 +13,8 @@ import '../../utils/app_common.dart';
 import '../../utils/common_base.dart';
 import '../../utils/constants.dart';
 import '../../utils/local_storage.dart';
+import '../../utils/notification_controller.dart';
+import '../../utils/push_notification_service.dart';
 import '../auth/other/settings_screen.dart';
 import '../auth/profile/profile_controller.dart';
 import '../auth/profile/profile_screen.dart';
@@ -40,6 +44,10 @@ class DashboardController extends GetxController {
   void onInit() {
     if (!isLoggedIn.value) {
       ProfileController().getAboutPageData();
+    }
+    if (isLoggedIn.value) {
+      PushNotificationService().registerFCMAndTopics();
+      unawaited(NotificationController.to.fetchUnreadCount());
     }
     getAppConfigurations().then((value) {
       Future.delayed(const Duration(seconds: 2), () {

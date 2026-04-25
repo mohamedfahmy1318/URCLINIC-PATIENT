@@ -14,7 +14,9 @@ class ClinicDetailModel {
   factory ClinicDetailModel.fromJson(Map<String, dynamic> json) {
     return ClinicDetailModel(
       status: json['status'] is bool ? json['status'] : false,
-      data: json['data'] is Map ? Clinic.fromJson(json['data']) : Clinic(clinicSession: ClinicSession()),
+      data: json['data'] is Map
+          ? Clinic.fromJson(json['data'])
+          : Clinic(clinicSession: ClinicSession()),
       message: json['message'] is String ? json['message'] : "",
     );
   }
@@ -39,8 +41,16 @@ class ClinicSession {
 
   factory ClinicSession.fromJson(Map<String, dynamic> json) {
     return ClinicSession(
-      openDays: json['open_days'] is List ? List<OpenDays>.from(json['open_days'].map((x) => OpenDays.fromJson(x))) : [],
-      closeDays: json['close_days'] is List ? List<String>.from(json['close_days'].map((x) => x)) : [],
+      openDays: json['open_days'] is List
+          ? List<OpenDays>.from(
+              json['open_days'].map((x) => OpenDays.fromJson(x)))
+          : [],
+      closeDays: json['close_days'] is List
+          ? List<String>.from((json['close_days'] as List)
+              .where((x) => x != null)
+              .map((x) => '$x')
+              .where((x) => x.trim().isNotEmpty))
+          : [],
     );
   }
 
@@ -123,7 +133,10 @@ class AllClinicSession {
               ? true
               : false
           : false,
-      breaks: json['breaks'] is List ? List<BreakListModel>.from(json['breaks'].map((x) => BreakListModel.fromJson(x))) : [],
+      breaks: json['breaks'] is List
+          ? List<BreakListModel>.from(
+              json['breaks'].map((x) => BreakListModel.fromJson(x)))
+          : [],
       createdBy: json['created_by'],
       updatedBy: json['updated_by'],
       deletedBy: json['deleted_by'],

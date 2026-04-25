@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/screens/auth/profile/patient_wallet_history_screen.dart';
@@ -11,6 +13,7 @@ import '../../../utils/app_common.dart';
 import '../../../utils/colors.dart';
 import '../../../utils/common_base.dart';
 import '../../../utils/empty_error_state_widget.dart';
+import '../../../utils/notification_controller.dart';
 import '../../booking/appointment_detail_screen.dart';
 import '../../booking/model/appointments_res_model.dart';
 import '../model/notification_model.dart';
@@ -33,7 +36,7 @@ class NotificationScreen extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   notificationScreenController.getNotificationsList(isReadAll: true);
-                  unreadNotificationCount(0);
+                  NotificationController.to.markAllRead();
                 },
                 child: Text(locale.value.readAll, style: primaryTextStyle(color: white)),
               ).paddingOnly(right: 16),
@@ -78,6 +81,13 @@ class NotificationScreen extends StatelessWidget {
                           log(notification.readAt);
                           return GestureDetector(
                             onTap: () async {
+                              final bool wasUnread = notification.readAt.trim().isEmpty;
+                              if (wasUnread) {
+                                final int? notifIntId = int.tryParse(notification.id);
+                                if (notifIntId != null) {
+                                  unawaited(NotificationController.to.markAsRead(notifIntId));
+                                }
+                              }
                               if (notification.data.notificationDetail.type == "wallet_refund") {
                                 Get.to(() => PatientWalletHistory());
                               } else if (notification.data.notificationDetail.id > 0) {
@@ -85,9 +95,7 @@ class NotificationScreen extends StatelessWidget {
                                       () => AppointmentDetail(),
                                   arguments: AppointmentData(
                                     id: notification.data.notificationDetail.id,
-                                    notificationId: notification.readAt
-                                        .trim()
-                                        .isEmpty ? notification.id : "",
+                                    notificationId: wasUnread ? notification.id : "",
                                   ),
                                 );
                                 notificationScreenController.page(1);

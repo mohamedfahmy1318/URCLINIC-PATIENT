@@ -14,7 +14,8 @@ import '../../slots/booking_form_screen.dart';
 class DoctorServiceCard extends StatelessWidget {
   final ServiceElement serviceElement;
   final Doctor? doctor;
-  const DoctorServiceCard({super.key, required this.serviceElement, this.doctor});
+  const DoctorServiceCard(
+      {super.key, required this.serviceElement, this.doctor});
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +38,38 @@ class DoctorServiceCard extends StatelessWidget {
                   locale.value.bookNow,
                   style: primaryTextStyle(color: context.primaryColor),
                 ).onTap(() {
-                  final BookingFormController bookingFormCont = Get.put(BookingFormController());
-                  bookingFormCont.selectedDoctor(doctor!);
-                  bookingFormCont.doctorNameText('${doctor!.firstName} ${doctor!.lastName}');
-                  bookingFormCont.getServiceList(serviceId: serviceElement.id);
-                  bookingFormCont.selectedService(bookingFormCont.serviceList.first);
+                  if (doctor == null) {
+                    toast(errorSomethingWentWrong);
+                    return;
+                  }
+
+                  // Set globals first so BookingFormController.onInit reads
+                  // the correct service/doctor/clinic context.
                   currentSelectedDoctor(doctor!);
                   currentSelectedService(serviceElement);
+                  if (currentSelectedClinic.value.id.isNegative &&
+                      doctor!.clinics.isNotEmpty) {
+                    currentSelectedClinic(doctor!.clinics.first);
+                  }
+
+                  final BookingFormController bookingFormCont =
+                      Get.put(BookingFormController());
+                  bookingFormCont.selectedDoctor(doctor!);
+                  bookingFormCont.doctorNameText(doctor!.fullName.isNotEmpty
+                      ? doctor!.fullName
+                      : '${doctor!.firstName} ${doctor!.lastName}'.trim());
+                  bookingFormCont.selectedService(serviceElement);
+                  bookingFormCont.serviceNameText(
+                    serviceElement.localizedName.isNotEmpty
+                        ? serviceElement.localizedName
+                        : serviceElement.serviceName,
+                  );
+                  if (!currentSelectedClinic.value.id.isNegative) {
+                    bookingFormCont.selectedClinic(currentSelectedClinic.value);
+                    bookingFormCont
+                        .clinicNameText(currentSelectedClinic.value.name);
+                  }
+
                   Get.to(BookingFormScreen());
                 });
               }),
@@ -73,7 +99,10 @@ class DoctorServiceCard extends StatelessWidget {
                 style: secondaryTextStyle(size: 14),
               ).flexible(),
               Text(
-                serviceElement.clinicName.map((e) => e.validate()).toList().join(', '),
+                serviceElement.clinicName
+                    .map((e) => e.validate())
+                    .toList()
+                    .join(', '),
                 style: primaryTextStyle(),
               ).flexible(),
             ],

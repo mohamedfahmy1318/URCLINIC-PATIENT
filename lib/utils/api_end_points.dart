@@ -16,6 +16,8 @@ class APIEndPoints {
   static const String getNotification = 'notification-list';
   static const String removeNotification = 'notification-remove';
   static const String clearAllNotification = 'notification-deleteall';
+  static const String notificationUnreadCount = 'notifications/unread-count';
+  static const String notificationMarkRead = 'notification-mark-read';
   static const String getPatientWallet = 'get-patient-wallet';
   static const String getWalletHistory = 'get-wallet-history';
   static const String addUserPhoneNumber = 'add-phone-number';

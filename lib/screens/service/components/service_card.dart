@@ -13,7 +13,6 @@ import '../../../utils/price_widget.dart';
 import '../../clinic/clinics_list_screen.dart';
 import '../../doctor/doctor_list_screen.dart';
 import '../model/service_list_model.dart';
-import '../service_detail_controller.dart';
 import '../service_detail_screen.dart';
 
 class ServiceCard extends StatelessWidget {
@@ -25,17 +24,47 @@ class ServiceCard extends StatelessWidget {
       required this.serviceElement,
       this.isFromClinicDetail = false});
 
+  void _handleBookNowTap(BuildContext context) {
+    if (isFromClinicDetail) {
+      showInDialog(
+        context,
+        contentPadding: EdgeInsets.zero,
+        builder: (context) {
+          return AppCustomDialog(
+            title: locale.value.doYouWantToReplaceThePreviousServiceWithTheCu,
+            negativeText: locale.value.no,
+            positiveText: locale.value.yes,
+            onTap: () {
+              currentSelectedService(serviceElement);
+              Get.back();
+              Get.to(() => DoctorsListScreen(),
+                  arguments: currentSelectedClinic.value.id);
+            },
+          );
+        },
+      );
+    } else {
+      /// Store select service in global variable
+      currentSelectedService(serviceElement);
+      Get.to(() => ClinicListScreen(), arguments: serviceElement);
+    }
+  }
+
+  void _handleCardTap(BuildContext context) {
+    if (isFromClinicDetail) {
+      // In clinic booking flow, tapping service image should behave as Book Now.
+      _handleBookNowTap(context);
+      return;
+    }
+
+    Get.to(() => ServiceDetailScreen(isFromClinicDetail: isFromClinicDetail),
+        arguments: serviceElement);
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (isFromClinicDetail) {
-          Get.delete<ServiceDetailController>();
-        }
-        Get.to(
-            () => ServiceDetailScreen(isFromClinicDetail: isFromClinicDetail),
-            arguments: serviceElement);
-      },
+      onTap: () => _handleCardTap(context),
       child: Container(
         decoration: boxDecorationDefault(
             color: context.cardColor, borderRadius: radius(8)),
@@ -148,33 +177,7 @@ class ServiceCard extends StatelessWidget {
                   width: Get.width,
                   elevation: 0,
                   color: appColorSecondary,
-                  onTap: () async {
-                    if (isFromClinicDetail) {
-                      showInDialog(
-                        context,
-                        contentPadding: EdgeInsets.zero,
-                        builder: (context) {
-                          return AppCustomDialog(
-                            title: locale.value
-                                .doYouWantToReplaceThePreviousServiceWithTheCu,
-                            negativeText: locale.value.no,
-                            positiveText: locale.value.yes,
-                            onTap: () {
-                              currentSelectedService(serviceElement);
-                              Get.back();
-                              Get.to(() => DoctorsListScreen(),
-                                  arguments: currentSelectedClinic.value.id);
-                            },
-                          );
-                        },
-                      );
-                    } else {
-                      /// Store select service in global variable
-                      currentSelectedService(serviceElement);
-                      Get.to(() => ClinicListScreen(),
-                          arguments: serviceElement);
-                    }
-                  },
+                  onTap: () => _handleBookNowTap(context),
                   child: Text(locale.value.bookNow,
                       style: boldTextStyle(
                           size: 12,

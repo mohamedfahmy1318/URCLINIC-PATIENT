@@ -210,6 +210,15 @@ class AddOtherPatientController extends GetxController {
 
   Future<void> addMember() async {
     if (isLoading.value) return;
+
+    final bool isAuthenticated = isLoggedIn.value &&
+        loginUserData.value.id > 0 &&
+        loginUserData.value.apiToken.trim().isNotEmpty;
+    if (!isAuthenticated) {
+      toast('Session expired. Please sign in again.');
+      return;
+    }
+
     isLoading(true);
 
     final Map<String, dynamic> memberData = {
@@ -228,23 +237,32 @@ class AddOtherPatientController extends GetxController {
           OtherPatientConst.idKey, () => (Get.arguments as UserData).id);
     }
 
-    await CoreServiceApis.addUpdateOtherPatientApi(
-      request: memberData,
-      profileImage: imageFile.value,
-    ).whenComplete(() => isLoading(false)).then(
-      (value) {
-        if (isEdit.value) {
-          toast(locale.value.patientUpdatedSuccessfully);
-        } else {
-          toast(locale.value.patientAddedSuccessfully);
-        }
-        Get.back(result: true);
-      },
-    ).catchError((e) {
+    try {
+      await CoreServiceApis.addUpdateOtherPatientApi(
+        request: memberData,
+        profileImage: imageFile.value,
+      );
+
+      if (isEdit.value) {
+        toast(locale.value.patientUpdatedSuccessfully);
+      } else {
+        toast(locale.value.patientAddedSuccessfully);
+      }
+      Get.back(result: true);
+    } catch (e) {
+      if (kDebugMode) {
+        log('addOtherPatientController: $e');
+      }
+
+      final String message = e.toString();
+      if (message.toLowerCase().contains('unauth')) {
+        toast('Session expired. Please sign in again.');
+      } else {
+        toast(message);
+      }
+    } finally {
       isLoading(false);
-      log('addOtherPatientController: $e');
-      throw e;
-    });
+    }
   }
 
   Future<void> handleAddOtherPatient() async {

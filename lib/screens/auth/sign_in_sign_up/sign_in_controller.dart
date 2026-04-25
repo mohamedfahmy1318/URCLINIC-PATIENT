@@ -17,6 +17,7 @@ import '../../../utils/app_common.dart';
 import '../../../utils/common_base.dart';
 import '../../../utils/constants.dart';
 import '../../../utils/local_storage.dart';
+import '../../../utils/notification_controller.dart';
 import '../../../utils/secure_storage.dart';
 import '../../../utils/session_guard.dart';
 import '../services/social_logins.dart';
@@ -297,6 +298,7 @@ class SignInController extends GetxController {
       isLoading(false);
 
       PushNotificationService().registerFCMAndTopics();
+      unawaited(NotificationController.to.fetchUnreadCount());
 
       if (isNavigateToDashboard.value) {
         Get.offAll(
