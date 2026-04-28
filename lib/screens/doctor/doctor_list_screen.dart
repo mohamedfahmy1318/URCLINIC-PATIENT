@@ -46,7 +46,8 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
       case DoctorSortOption.ratingLow:
         return locale.value.ratingLowToHigh;
       case DoctorSortOption.nearest:
-        return locale.value.nearestClinics; // Actually nearest doctors, but using same string
+        return locale.value
+            .nearestClinics; // Actually nearest doctors, but using same string
     }
   }
 
@@ -105,10 +106,12 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
       case DoctorSortOption.none:
         break;
       case DoctorSortOption.nameAZ:
-        sorted.sort((a, b) => a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
+        sorted.sort((a, b) =>
+            a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
         break;
       case DoctorSortOption.nameZA:
-        sorted.sort((a, b) => b.fullName.toLowerCase().compareTo(a.fullName.toLowerCase()));
+        sorted.sort((a, b) =>
+            b.fullName.toLowerCase().compareTo(a.fullName.toLowerCase()));
         break;
       case DoctorSortOption.ratingHigh:
         sorted.sort((a, b) => b.averageRating.compareTo(a.averageRating));
@@ -152,30 +155,36 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
               16.height,
               Text(locale.value.sortBy, style: boldTextStyle(size: 18)),
               16.height,
-              ...DoctorSortOption.values.where((o) => o != DoctorSortOption.none).map(
-                (option) => ListTile(
-                  leading: Icon(
-                    _getSortIcon(option),
-                    color: _currentSort == option ? appColorPrimary : iconColor,
+              ...DoctorSortOption.values
+                  .where((o) => o != DoctorSortOption.none)
+                  .map(
+                    (option) => ListTile(
+                      leading: Icon(
+                        _getSortIcon(option),
+                        color: _currentSort == option
+                            ? appColorPrimary
+                            : iconColor,
+                      ),
+                      title: Text(
+                        _getSortLabel(option),
+                        style: _currentSort == option
+                            ? boldTextStyle(color: appColorPrimary)
+                            : primaryTextStyle(),
+                      ),
+                      trailing: _currentSort == option
+                          ? const Icon(Icons.check_circle,
+                              color: appColorPrimary)
+                          : null,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _onSortChanged(option);
+                      },
+                    ),
                   ),
-                  title: Text(
-                    _getSortLabel(option),
-                    style: _currentSort == option
-                        ? boldTextStyle(color: appColorPrimary)
-                        : primaryTextStyle(),
-                  ),
-                  trailing: _currentSort == option
-                      ? const Icon(Icons.check_circle, color: appColorPrimary)
-                      : null,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _onSortChanged(option);
-                  },
-                ),
-              ),
               if (_currentSort != DoctorSortOption.none)
                 ListTile(
-                  leading: const Icon(Icons.clear_rounded, color: cancelStatusColor),
+                  leading:
+                      const Icon(Icons.clear_rounded, color: cancelStatusColor),
                   title: Text(
                     locale.value.clearAll,
                     style: primaryTextStyle(color: cancelStatusColor),
@@ -222,7 +231,8 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                 GestureDetector(
                   onTap: () => _showSortBottomSheet(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: boxDecorationDefault(
                       color: _currentSort != DoctorSortOption.none
                           ? appColorPrimary.withValues(alpha: 0.1)
@@ -275,7 +285,8 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
           8.height,
 
           if (_loadingLocation)
-            const Center(child: CircularProgressIndicator()).paddingSymmetric(vertical: 20),
+            const Center(child: CircularProgressIndicator())
+                .paddingSymmetric(vertical: 20),
 
           Obx(
             () => SnapHelperWidget(
@@ -291,22 +302,14 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                   },
                 ).paddingSymmetric(horizontal: 32);
               },
-              loadingWidget: doctorsListCont.isLoading.value ? const Offstage() : const LoaderWidget(),
+              loadingWidget: doctorsListCont.isLoading.value
+                  ? const Offstage()
+                  : const LoaderWidget(),
               onSuccess: (p0) {
                 final doctors = _getFilteredDoctors();
-                
+
                 if (doctors.isEmpty) {
-                  return NoDataWidget(
-                    title: locale.value.noDoctorsFoundAtAMoment,
-                    subTitle: locale.value.looksLikeThereIsNoDoctorsForThisClinicWellKee,
-                    titleTextStyle: primaryTextStyle(),
-                    imageWidget: const EmptyStateWidget(),
-                    retryText: locale.value.reload,
-                    onRetry: () {
-                      doctorsListCont.page(1);
-                      doctorsListCont.getDoctors();
-                    },
-                  ).paddingSymmetric(horizontal: 32).paddingBottom(Get.height * 0.15);
+                  return const SizedBox.shrink();
                 }
                 return AnimatedScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -351,7 +354,8 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
             }
           },
           child: const Icon(Icons.arrow_forward_ios, color: Colors.white),
-        ).visible(doctorsListCont.doctors.isNotEmpty && (!doctorsListCont.selectedDoctor.value.doctorId.isNegative)),
+        ).visible(doctorsListCont.doctors.isNotEmpty &&
+            (!doctorsListCont.selectedDoctor.value.doctorId.isNegative)),
       ),
     );
   }

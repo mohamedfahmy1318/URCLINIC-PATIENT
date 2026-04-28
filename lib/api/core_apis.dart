@@ -279,8 +279,11 @@ class CoreServiceApis {
         ),
       ),
     );
+    final List<Doctor> visibleDoctors = doctorListRes.data
+        .where((doctor) => doctor.hasDisplayableData)
+        .toList();
     if (page == 1) doctors.clear();
-    doctors.addAll(doctorListRes.data);
+    doctors.addAll(visibleDoctors);
     lastPageCallBack?.call(doctorListRes.data.length != perPage);
     return doctors.obs;
   }

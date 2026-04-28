@@ -291,4 +291,15 @@ class Doctor {
       'services': services.map((e) => e.toJson()).toList(),
     };
   }
+
+  bool get hasDisplayableData {
+    return doctorId > 0 ||
+        fullName.trim().isNotEmpty ||
+        firstName.trim().isNotEmpty ||
+        lastName.trim().isNotEmpty ||
+        email.trim().isNotEmpty ||
+        mobile.trim().isNotEmpty ||
+        expert.trim().isNotEmpty ||
+        profileImage.trim().isNotEmpty;
+  }
 }

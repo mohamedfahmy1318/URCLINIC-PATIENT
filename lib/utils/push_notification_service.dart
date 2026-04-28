@@ -12,6 +12,7 @@ import 'package:kivicare_patient/screens/booking/appointment_detail_screen.dart'
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../configs.dart';
 import '../models/notificationdata_model.dart';
 import '../screens/auth/profile/patient_wallet_history_screen.dart';
 import '../screens/booking/model/appointments_res_model.dart';
@@ -29,6 +30,41 @@ class PushNotificationService {
 
   bool _listenersRegistered = false;
   bool _localNotificationsInitialized = false;
+
+  static final Set<String> _allowedNotificationHosts = <String>{
+    Uri.parse(DOMAIN_URL).host,
+    'play.google.com',
+    'apps.apple.com',
+    'meet.google.com',
+    'zoom.us',
+  };
+
+  bool _isSafeNotificationUrl(String rawUrl) {
+    final String value = rawUrl.trim();
+    final Uri? uri = Uri.tryParse(value);
+
+    if (uri == null) return false;
+    if (uri.scheme != 'https') return false;
+    if (uri.host.trim().isEmpty) return false;
+
+    final String host = uri.host.toLowerCase();
+    return _allowedNotificationHosts.any((allowedHost) {
+      final String normalizedAllowedHost = allowedHost.toLowerCase();
+      return host == normalizedAllowedHost ||
+          host.endsWith('.$normalizedAllowedHost');
+    });
+  }
+
+  void _launchSafeNotificationUrl(String rawUrl) {
+    if (_isSafeNotificationUrl(rawUrl)) {
+      commonLaunchUrl(rawUrl, launchMode: LaunchMode.externalApplication);
+      return;
+    }
+
+    if (kDebugMode) {
+      log('Blocked unsafe notification URL: $rawUrl');
+    }
+  }
 
   Future<void> setupFirebaseMessaging() async {
     await _initializeLocalNotifications();
@@ -97,9 +133,10 @@ class PushNotificationService {
 
     if (Platform.isIOS) {
       final String? apnsToken = await _awaitApnsToken();
+      if (apnsToken == null) return;
       if (kDebugMode) {
         log(
-          "===============${FirebaseTopicConst.apnsNotificationTokenKey}===============\n${apnsToken != null}",
+          "===============${FirebaseTopicConst.apnsNotificationTokenKey}===============\n${apnsToken.isNotEmpty}",
         );
       }
     }
@@ -156,11 +193,7 @@ class PushNotificationService {
 
     final dynamic rawUrl = message.data['url'];
     if (rawUrl is String && rawUrl.trim().isNotEmpty) {
-      final Uri? parsed = Uri.tryParse(rawUrl.trim());
-      if (parsed != null &&
-          (parsed.scheme == 'https' || parsed.scheme == 'http')) {
-        commonLaunchUrl(rawUrl, launchMode: LaunchMode.externalApplication);
-      }
+      _launchSafeNotificationUrl(rawUrl);
     }
 
     if (kDebugMode) {
@@ -172,8 +205,16 @@ class PushNotificationService {
     _applyServerUnreadCount(message.data);
 
     if (isForeGround) {
-      final String title = message.notification?.title?.trim() ?? '';
-      final String body = message.notification?.body?.trim() ?? '';
+      final String title = (message.notification?.title ??
+              message.data[FirebaseTopicConst.notificationTitleKey]
+                  ?.toString() ??
+              APP_NAME)
+          .trim();
+      final String body = (message.notification?.body ??
+              message.data[FirebaseTopicConst.notificationBodyKey]
+                  ?.toString() ??
+              '')
+          .trim();
       if (title.isNotEmpty || body.isNotEmpty) {
         showNotification(currentTimeStamp(), title, body, message);
       }
@@ -249,8 +290,12 @@ class PushNotificationService {
 
     final dynamic additionalRaw = data[FirebaseTopicConst.additionalDataKey];
     if (additionalRaw is String && additionalRaw.trim().isNotEmpty) {
-      final dynamic decoded = jsonDecode(additionalRaw);
-      if (decoded is Map) merged.addAll(Map<String, dynamic>.from(decoded));
+      try {
+        final dynamic decoded = jsonDecode(additionalRaw);
+        if (decoded is Map) merged.addAll(Map<String, dynamic>.from(decoded));
+      } catch (_) {
+        // Malformed nested payload; flat keys below still win.
+      }
     } else if (additionalRaw is Map) {
       merged.addAll(Map<String, dynamic>.from(additionalRaw));
     }
