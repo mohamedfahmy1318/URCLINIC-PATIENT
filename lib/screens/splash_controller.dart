@@ -1,5 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/screens/home/home_controller.dart';
@@ -7,6 +8,7 @@ import 'package:kivicare_patient/utils/app_common.dart';
 import 'package:kivicare_patient/utils/local_storage.dart';
 import '../main.dart';
 import '../api/auth_apis.dart';
+import '../screens/auth/model/login_response.dart';
 import '../utils/common_base.dart';
 import '../utils/constants.dart';
 import '../utils/secure_storage.dart';
@@ -68,21 +70,34 @@ class SplashScreenController extends GetxController {
     if (getValueFromLocal(SharedPreferenceConst.IS_LOGGED_IN) == true) {
       getUserDataSecure().then((userData) async {
         if (userData != null) {
-          isLoggedIn(true);
-          loginUserData(userData);
-
+          // Check if session has expired
           if (isSessionExpired()) {
+            // Session expired, clear all data
             await AuthServiceApis.clearData();
+            isLoggedIn(false);
+            loginUserData(UserData());
           } else {
+            // Session is still valid, restore the user
+            isLoggedIn(true);
+            loginUserData(userData);
+            // Re-persist the login flag to ensure it survives app crashes
+            setValueToLocal(SharedPreferenceConst.IS_LOGGED_IN, true);
+            // Mark the session as active
             markSessionActivity();
           }
         } else {
+          // User data not found in secure storage, clear the login flag
           isLoggedIn(false);
           setValueToLocal(SharedPreferenceConst.IS_LOGGED_IN, false);
+          loginUserData(UserData());
         }
 
         _openDashboard();
-      }).catchError((_) {
+      }).catchError((error) {
+        // Handle any errors during session restoration
+        if (kDebugMode) log('Session restoration error: $error');
+        isLoggedIn(false);
+        setValueToLocal(SharedPreferenceConst.IS_LOGGED_IN, false);
         _openDashboard();
       });
     } else {

@@ -1,7 +1,8 @@
 name: kivicare_patient
 description: A new Flutter project.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.9.2+36
+version: 1.9.3+2
+
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
