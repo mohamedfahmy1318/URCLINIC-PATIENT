@@ -31,15 +31,20 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   try {
+    await GetStorage.init();
+    final GetStorage storage = GetStorage();
+    if (!PushNotificationService.isNotificationsEnabled(storage: storage)) {
+      return;
+    }
+
     final dynamic raw =
         message.data['unreadCount'] ?? message.data['unread_count'];
     final int parsed =
         raw is int ? raw : int.tryParse(raw?.toString() ?? '') ?? -1;
 
     if (parsed >= 0) {
-      await GetStorage.init();
-      await GetStorage()
-          .write(NotificationController.pendingUnreadStorageKey, parsed);
+      await storage.write(
+          NotificationController.pendingUnreadStorageKey, parsed);
 
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         try {

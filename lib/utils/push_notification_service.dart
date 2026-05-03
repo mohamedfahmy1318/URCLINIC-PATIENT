@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:kivicare_patient/screens/booking/appointment_detail_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -19,9 +20,15 @@ import '../screens/booking/model/appointments_res_model.dart';
 import 'app_common.dart';
 import 'common_base.dart';
 import 'constants.dart';
+import 'local_storage.dart';
 import 'notification_controller.dart';
 
 class PushNotificationService {
+  PushNotificationService._internal();
+  static final PushNotificationService _instance =
+      PushNotificationService._internal();
+  factory PushNotificationService() => _instance;
+
   final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -38,6 +45,39 @@ class PushNotificationService {
     'meet.google.com',
     'zoom.us',
   };
+
+  static bool _parseNotificationToggle(dynamic rawValue) {
+    if (rawValue is bool) return rawValue;
+    if (rawValue is int) return rawValue == 1;
+    if (rawValue is String) {
+      final String normalized = rawValue.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1') return true;
+      if (normalized == 'false' || normalized == '0') return false;
+    }
+
+    return true;
+  }
+
+  static bool isNotificationsEnabled({GetStorage? storage}) {
+    final dynamic rawValue = storage == null
+        ? getValueFromLocal(SettingsLocalConst.NOTIFICATION_ENABLED)
+        : storage.read(SettingsLocalConst.NOTIFICATION_ENABLED);
+    return _parseNotificationToggle(rawValue);
+  }
+
+  Future<void> updateNotificationPreference(bool enabled) async {
+    setValueToLocal(SettingsLocalConst.NOTIFICATION_ENABLED, enabled);
+    await FirebaseMessaging.instance.setAutoInitEnabled(enabled);
+    await enableIOSNotifications();
+
+    if (!enabled) {
+      await unsubscribeFirebaseTopic();
+      return;
+    }
+
+    await setupFirebaseMessaging();
+    await registerFCMAndTopics();
+  }
 
   bool _isSafeNotificationUrl(String rawUrl) {
     final String value = rawUrl.trim();
@@ -68,6 +108,15 @@ class PushNotificationService {
 
   Future<void> setupFirebaseMessaging() async {
     await _initializeLocalNotifications();
+    final bool notificationsEnabled = isNotificationsEnabled();
+    await FirebaseMessaging.instance.setAutoInitEnabled(notificationsEnabled);
+
+    if (!notificationsEnabled) {
+      await enableIOSNotifications();
+      await unsubscribeFirebaseTopic();
+      return;
+    }
+
     await _requestAndroidPostNotifications();
     await initFirebaseMessaging();
     await enableIOSNotifications();
@@ -107,6 +156,8 @@ class PushNotificationService {
   }
 
   Future<void> initFirebaseMessaging() async {
+    if (!isNotificationsEnabled()) return;
+
     NotificationSettings settings;
     try {
       settings = await FirebaseMessaging.instance.requestPermission(
@@ -129,6 +180,7 @@ class PushNotificationService {
   }
 
   Future<void> registerFCMAndTopics() async {
+    if (!isNotificationsEnabled()) return;
     if (!isLoggedIn.value) return;
 
     if (Platform.isIOS) {
@@ -177,6 +229,8 @@ class PushNotificationService {
 
   void handleNotificationClick(RemoteMessage message,
       {bool isForeGround = false}) {
+    if (!isNotificationsEnabled()) return;
+
     final String messageId =
         message.messageId ?? message.data['message_id']?.toString() ?? '';
 
@@ -240,6 +294,8 @@ class PushNotificationService {
   /// blob. Unknown / malformed payloads are logged so backend drift is
   /// visible in production traces instead of silently swallowed.
   void _routeByPayload(Map<String, dynamic> data) {
+    if (!isNotificationsEnabled()) return;
+
     Map<String, dynamic> resolved;
     try {
       resolved = _resolvePayload(data);
@@ -390,6 +446,8 @@ class PushNotificationService {
     await _localNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (details) {
+        if (!isNotificationsEnabled()) return;
+
         final String? payload = details.payload;
         if (payload == null || payload.trim().isEmpty) return;
 
@@ -413,6 +471,8 @@ class PushNotificationService {
     String message,
     RemoteMessage remoteMessage,
   ) async {
+    if (!isNotificationsEnabled()) return;
+
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       FirebaseTopicConst.notificationChannelIdKey,
@@ -447,11 +507,12 @@ class PushNotificationService {
   }
 
   Future<void> enableIOSNotifications() async {
+    final bool enabled = isNotificationsEnabled();
     await FirebaseMessaging.instance
         .setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
+      alert: enabled,
+      badge: enabled,
+      sound: enabled,
     );
   }
 

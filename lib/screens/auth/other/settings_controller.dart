@@ -13,15 +13,23 @@ import '../../../utils/app_common.dart';
 import '../../../utils/common_base.dart';
 import '../../../utils/constants.dart';
 import '../../../utils/local_storage.dart';
+import '../../../utils/push_notification_service.dart';
 
 class SettingsController extends GetxController {
   RxBool isLoading = false.obs;
   RxBool isPayment = false.obs;
   RxBool isTouchId = false.obs;
+  RxBool isNotificationEnabled = true.obs;
 
   Rx<LanguageDataModel> selectedLang = LanguageDataModel().obs;
-  List<ThemeModeData> themeModes = [ThemeModeData(id: THEME_MODE_SYSTEM, mode: "System"), ThemeModeData(id: THEME_MODE_LIGHT, mode: "Light"), ThemeModeData(id: THEME_MODE_DARK, mode: "Dark")];
+  List<ThemeModeData> themeModes = [
+    ThemeModeData(id: THEME_MODE_SYSTEM, mode: "System"),
+    ThemeModeData(id: THEME_MODE_LIGHT, mode: "Light"),
+    ThemeModeData(id: THEME_MODE_DARK, mode: "Dark")
+  ];
   Rx<ThemeModeData> dropdownValue = ThemeModeData().obs;
+  final PushNotificationService _pushNotificationService =
+      PushNotificationService();
 
   void handleDeleteAccountClick() {
     ifNotTester(() {
@@ -46,8 +54,10 @@ class SettingsController extends GetxController {
 
   @override
   Future<void> onInit() async {
-    final cached = getValueFromLocal(SELECTED_LANGUAGE_CODE) ?? DEFAULT_LANGUAGE;
+    final cached =
+        getValueFromLocal(SELECTED_LANGUAGE_CODE) ?? DEFAULT_LANGUAGE;
     selectedLanguageCode(cached);
+    isNotificationEnabled(PushNotificationService.isNotificationsEnabled());
     if (appLanguageList.isEmpty) appLanguageList.assignAll(languageList());
     // Ensure the selectedLang points to an item instance from appLanguageList
     selectedLang(
@@ -61,10 +71,18 @@ class SettingsController extends GetxController {
     super.onInit();
   }
 
+  Future<void> onNotificationToggle(bool value) async {
+    if (isNotificationEnabled.value == value) return;
+
+    isNotificationEnabled(value);
+    await _pushNotificationService.updateNotificationPreference(value);
+  }
+
   @override
   void onReady() {
     try {
-      final getThemeFromLocal = getValueFromLocal(SettingsLocalConst.THEME_MODE);
+      final getThemeFromLocal =
+          getValueFromLocal(SettingsLocalConst.THEME_MODE);
       if (getThemeFromLocal is int) {
         dropdownValue(
           themeModes.firstWhere(
