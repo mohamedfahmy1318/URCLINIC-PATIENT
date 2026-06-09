@@ -27,6 +27,7 @@ class SignUpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffoldNew(
       isLoading: signUpController.isLoading,
+      isAuthScreen: true,
       hasLeadingWidget: false,
       clipBehaviorSplitRegion: Clip.none,
       body: Stack(

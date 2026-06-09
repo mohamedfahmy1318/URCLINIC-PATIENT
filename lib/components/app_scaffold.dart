@@ -1,11 +1,14 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../utils/colors.dart';
 import '../utils/common_base.dart';
 import 'body_widget.dart';
-import 'loader_widget.dart';
+import 'shimmer_widget.dart';
 
 class AppScaffold extends StatelessWidget {
   final bool hideAppBar;
@@ -111,6 +114,7 @@ class AppScaffoldNew extends StatelessWidget {
   final bool isBlurBackgroundinLoader;
   final Clip clipBehaviorSplitRegion;
   final Widget? fabWidget;
+  final bool isAuthScreen;
 
   const AppScaffoldNew({
     super.key,
@@ -130,6 +134,7 @@ class AppScaffoldNew extends StatelessWidget {
     this.isBlurBackgroundinLoader = false,
     this.clipBehaviorSplitRegion = Clip.antiAlias,
     this.fabWidget,
+    this.isAuthScreen = false,
   });
 
   double get topBarHeight =>
@@ -227,9 +232,51 @@ class AppScaffoldNew extends StatelessWidget {
               ],
             ),
           ),
-          Obx(() => LoaderWidget(isBlurBackground: isBlurBackgroundinLoader)
-              .center()
-              .visible((isLoading ?? false.obs).value)),
+          Obx(() {
+            if (!(isLoading ?? false.obs).value) return const SizedBox.shrink();
+            if (isAuthScreen) {
+              return AbsorbPointer(
+                child: SizedBox(
+                  height: Get.height,
+                  width: Get.width,
+                  child: isBlurBackgroundinLoader
+                      ? BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0, tileMode: TileMode.mirror),
+                          child: SpinKitFadingCircle(
+                            itemBuilder: (_, __) => const DecoratedBox(
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: appColorSecondary),
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: SpinKitFadingCircle(
+                            itemBuilder: (_, __) => const DecoratedBox(
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: appColorSecondary),
+                            ),
+                          ),
+                        ),
+                ),
+              );
+            }
+            return Positioned(
+              top: topBarHeight,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: AbsorbPointer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(defaultRadius * 2),
+                    topRight: Radius.circular(defaultRadius * 2),
+                  ),
+                  child: Container(
+                    color: scaffoldBackgroundColor ?? context.scaffoldBackgroundColor,
+                    child: const ShimmerLoader(),
+                  ),
+                ),
+              ),
+            );
+          }),
         ],
       ),
       floatingActionButton: fabWidget,

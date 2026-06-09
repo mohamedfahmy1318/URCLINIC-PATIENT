@@ -284,9 +284,7 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
           ),
           8.height,
 
-          if (_loadingLocation)
-            const Center(child: CircularProgressIndicator())
-                .paddingSymmetric(vertical: 20),
+          if (_loadingLocation) const LoaderWidget(),
 
           Obx(
             () => SnapHelperWidget(

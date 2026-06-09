@@ -1,5 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -16,6 +18,13 @@ import '../utils/session_guard.dart';
 import 'dashboard/dashboard_screen.dart';
 
 class SplashScreenController extends GetxController {
+  // Navigation is gated behind two conditions so the splash video isn't cut
+  // off: backend config must be ready AND the video must have finished.
+  bool _configReady = false;
+  bool _videoFinished = false;
+  bool _navigated = false;
+  Timer? _fallbackTimer;
+
   @override
   void onInit() {
     super.onInit();
@@ -23,6 +32,34 @@ class SplashScreenController extends GetxController {
     getPackageInfo().then((value) => currentPackageinfo(value));
     migrateLegacySensitiveData();
     getAppConfigurations();
+
+    // Safety fallback: never trap the user on the splash if the video fails
+    // to load or never reports completion.
+    _fallbackTimer = Timer(const Duration(seconds: 10), onVideoFinished);
+  }
+
+  @override
+  void onClose() {
+    _fallbackTimer?.cancel();
+    super.onClose();
+  }
+
+  /// Called by the splash screen once the video finishes (or fails to load).
+  void onVideoFinished() {
+    _videoFinished = true;
+    _tryNavigate();
+  }
+
+  void _onConfigReady() {
+    _configReady = true;
+    _tryNavigate();
+  }
+
+  void _tryNavigate() {
+    if (_navigated || !_configReady || !_videoFinished) return;
+    _navigated = true;
+    _fallbackTimer?.cancel();
+    navigationLogic();
   }
 
   @override
@@ -56,13 +93,13 @@ class SplashScreenController extends GetxController {
         }
       }
 
-      ///Navigation logic
-      navigationLogic();
+      ///Config ready — navigate once the video also finishes
+      _onConfigReady();
     }).onError((error, stackTrace) {
       toast(error.toString());
 
-      ///Navigation logic
-      navigationLogic();
+      ///Config ready — navigate once the video also finishes
+      _onConfigReady();
     });
   }
 

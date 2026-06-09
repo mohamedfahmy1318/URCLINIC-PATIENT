@@ -328,8 +328,7 @@ class ClinicDetailScreen extends StatelessWidget {
             ),
             12.height,
             if (clinicDetailCont.isServicesLoading.value)
-              const Center(child: CircularProgressIndicator())
-                  .paddingSymmetric(vertical: 20)
+              const LoaderWidget()
             else
               SizedBox(
                 height: 55,

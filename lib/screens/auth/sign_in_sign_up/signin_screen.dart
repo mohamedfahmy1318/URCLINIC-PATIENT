@@ -26,6 +26,7 @@ class SignInScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffoldNew(
       isLoading: signInController.isLoading,
+      isAuthScreen: true,
       hasLeadingWidget: showBackButton,
       appBartitleText: showBackButton ? locale.value.signIn : null,
       clipBehaviorSplitRegion: Clip.none,

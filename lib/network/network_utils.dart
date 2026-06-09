@@ -249,10 +249,8 @@ Future handleResponse(Response response,
             return body;
           } else {
             if (body.containsKey("is_deleted") && body["is_deleted"] == true) {
-              AuthServiceApis.clearData(isFromDeleteAcc: true);
-              isLoggedIn(false);
-              doIfLoggedIn(() {});
-              toast(body['message'] ?? errorSomethingWentWrong);
+              await AuthServiceApis.clearData(isFromDeleteAcc: true);
+              throw body['message'] ?? errorSomethingWentWrong;
             } else {
               throw body['message'] ?? errorSomethingWentWrong;
             }

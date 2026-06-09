@@ -11,6 +11,7 @@ import 'package:kivicare_patient/utils/app_common.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../components/cached_image_widget.dart';
+import '../../../components/shimmer_widget.dart';
 import '../../../main.dart';
 import '../../../utils/colors.dart';
 
@@ -270,7 +271,7 @@ class _SearchBottomSheetState extends State<_SearchBottomSheet> {
           Expanded(
             child: Obx(() {
               if (isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+                return const ShimmerLoader();
               }
 
               if (!hasSearched.value) {

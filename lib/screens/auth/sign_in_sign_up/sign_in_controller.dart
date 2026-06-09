@@ -145,7 +145,6 @@ class SignInController extends GetxController {
     isLoading(true);
     hideKeyBoardWithoutContext();
     await callLoginApi();
-    startTimer();
   }
 
   Future<void> callLoginApi() async {
@@ -162,6 +161,7 @@ class SignInController extends GetxController {
 
     await loginUserRequest(request: req).then((value) async {
       if (value.status == true) {
+        startTimer();
         setValueToLocal(
             SharedPreferenceConst.USER_ID, value.userData.id.toString());
         setValueToLocal(SharedPreferenceConst.IS_GOOGLE_AUTHENTICATION,
@@ -195,8 +195,23 @@ class SignInController extends GetxController {
       //     SharedPreferenceConst.ONE_TIME_PASSWORD, value.userData.mobile);
     }).catchError((e) {
       isLoading(false);
-      toast(e.toString(), print: true);
+      toast(_resolveLoginErrorMessage(e), print: true);
     });
+  }
+
+  String _resolveLoginErrorMessage(dynamic error) {
+    final String rawMessage = error.toString().trim();
+    final String normalizedMessage = rawMessage.toLowerCase();
+
+    final bool isInvalidCredentialsMessage =
+        normalizedMessage.contains('provided credentials do not match') ||
+            normalizedMessage.contains('invalid credentials') ||
+            normalizedMessage.contains('unauthorised') ||
+            normalizedMessage.contains('unauthorized');
+
+    return isInvalidCredentialsMessage
+        ? locale.value.invalidEmailOrPassword
+        : rawMessage;
   }
 
   Future verifyUser({String? authentication}) async {

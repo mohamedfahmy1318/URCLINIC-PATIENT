@@ -267,6 +267,10 @@ class LanguageAr extends BaseLanguage {
   String get signInFailed => 'فشل تسجيل الدخول';
 
   @override
+  String get invalidEmailOrPassword =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مرة أخرى.';
+
+  @override
   String get userCancelled => 'تم إلغاء المستخدم';
 
   @override

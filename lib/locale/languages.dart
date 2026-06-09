@@ -174,6 +174,8 @@ abstract class BaseLanguage {
 
   String get signInFailed;
 
+  String get invalidEmailOrPassword;
+
   String get userCancelled;
 
   String get appleSigninIsNot;

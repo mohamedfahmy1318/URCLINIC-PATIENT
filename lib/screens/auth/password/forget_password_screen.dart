@@ -17,6 +17,7 @@ class ForgetPassword extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffoldNew(
       isLoading: forgetPassController.isLoading,
+      isAuthScreen: true,
       appBartitleText: locale.value.forgotPassword,
       appBarVerticalSize: Get.height * 0.12,
       body: SizedBox(

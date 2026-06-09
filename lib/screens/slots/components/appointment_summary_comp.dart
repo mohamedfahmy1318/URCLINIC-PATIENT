@@ -6,6 +6,7 @@ import 'package:kivicare_patient/generated/assets.dart';
 import 'package:get/get.dart';
 import 'package:kivicare_patient/utils/colors.dart';
 
+import '../../../components/loader_widget.dart';
 import '../../../main.dart';
 import '../../../utils/common_base.dart';
 import '../../../utils/constants.dart';
@@ -174,16 +175,7 @@ class AppointmentSummaryWidget extends StatelessWidget {
                           color: appColorSecondary,
                           borderRadius: radius(defaultAppButtonRadius / 2),
                         ),
-                        child: const Center(
-                          child: SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          ),
-                        ),
+                        child: const Center(child: ThreeBounceLoadingWidget()),
                       )
                     : AppButton(
                         margin: const EdgeInsets.symmetric(horizontal: 16),

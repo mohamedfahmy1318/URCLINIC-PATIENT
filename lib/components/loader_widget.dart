@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:get/get.dart';
-import '../utils/colors.dart';
+import 'package:shimmer/shimmer.dart';
+
+import 'shimmer_widget.dart';
 
 class LoaderWidget extends StatelessWidget {
   final bool isBlurBackground;
@@ -12,36 +11,15 @@ class LoaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return isBlurBackground
-        ? AbsorbPointer(
-            child: SizedBox(
-              height: Get.height,
-              width: Get.width,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0, tileMode: TileMode.mirror),
-                child: SpinKitFadingCircle(
-                  itemBuilder: (BuildContext context, int index) {
-                    return DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: loaderColor ?? appColorSecondary,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          )
-        : SpinKitFadingCircle(
-            itemBuilder: (BuildContext context, int index) {
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: loaderColor ?? appColorSecondary,
-                ),
-              );
-            },
-          );
+    if (isBlurBackground) {
+      return AbsorbPointer(
+        child: Container(
+          color: Colors.white.withValues(alpha: 0.85),
+          child: const ShimmerLoader(),
+        ),
+      );
+    }
+    return const ShimmerLoader();
   }
 }
 
@@ -50,16 +28,24 @@ class ThreeBounceLoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SpinKitThreeBounce(
-      size: 30,
-      itemBuilder: (BuildContext context, int index) {
-        return const DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: appColorPrimary,
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFE0E0E0),
+      highlightColor: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(
+          3,
+          (_) => Container(
+            width: 12,
+            height: 12,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

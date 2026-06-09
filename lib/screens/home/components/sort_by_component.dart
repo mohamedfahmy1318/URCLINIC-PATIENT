@@ -11,6 +11,7 @@ import '../../../components/discount_badge_widget.dart';
 import '../../../main.dart';
 import '../../../network/location_service.dart';
 import '../../../utils/colors.dart';
+import '../../../components/shimmer_widget.dart';
 import '../../../utils/common_base.dart';
 import '../../clinic/model/clinics_res_model.dart';
 import '../home_controller.dart';
@@ -19,8 +20,6 @@ enum ClinicSortOption {
   none,
   nameAZ,
   nameZA,
-  ratingHigh,
-  ratingLow,
   nearest,
   discountOnly,
 }
@@ -48,10 +47,6 @@ class _SortByComponentState extends State<SortByComponent> {
         return locale.value.nameAZ;
       case ClinicSortOption.nameZA:
         return locale.value.nameZA;
-      case ClinicSortOption.ratingHigh:
-        return locale.value.ratingHighToLow;
-      case ClinicSortOption.ratingLow:
-        return locale.value.ratingLowToHigh;
       case ClinicSortOption.nearest:
         return locale.value.nearestClinics;
       case ClinicSortOption.discountOnly:
@@ -67,10 +62,6 @@ class _SortByComponentState extends State<SortByComponent> {
         return Icons.sort_by_alpha_rounded;
       case ClinicSortOption.nameZA:
         return Icons.sort_by_alpha_rounded;
-      case ClinicSortOption.ratingHigh:
-        return Icons.star_rounded;
-      case ClinicSortOption.ratingLow:
-        return Icons.star_outline_rounded;
       case ClinicSortOption.nearest:
         return Icons.near_me_rounded;
       case ClinicSortOption.discountOnly:
@@ -112,14 +103,6 @@ class _SortByComponentState extends State<SortByComponent> {
       case ClinicSortOption.nameZA:
         sorted.sort(
             (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
-        break;
-      case ClinicSortOption.ratingHigh:
-        sorted.sort((a, b) =>
-            b.satisfactionPercentage.compareTo(a.satisfactionPercentage));
-        break;
-      case ClinicSortOption.ratingLow:
-        sorted.sort((a, b) =>
-            a.satisfactionPercentage.compareTo(b.satisfactionPercentage));
         break;
       case ClinicSortOption.nearest:
         if (_userPosition != null) {
@@ -237,9 +220,7 @@ class _SortByComponentState extends State<SortByComponent> {
         12.height,
 
         // Loading indicator for location
-        if (_loadingLocation)
-          const Center(child: CircularProgressIndicator())
-              .paddingSymmetric(vertical: 20),
+        if (_loadingLocation) const ShimmerLoader(),
 
         // Clinics List
         Obx(() {
@@ -283,8 +264,7 @@ class _SortByComponentState extends State<SortByComponent> {
                   });
 
           if (isResolvingDiscountFilter) {
-            return const Center(child: CircularProgressIndicator())
-                .paddingSymmetric(vertical: 20);
+            return const ShimmerLoader();
           }
 
           final sortedClinics = _sortClinics(clinics);

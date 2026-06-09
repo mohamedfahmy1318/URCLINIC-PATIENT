@@ -264,6 +264,10 @@ class LanguageEn extends BaseLanguage {
   String get signInFailed => 'Sign in failed';
 
   @override
+  String get invalidEmailOrPassword =>
+      'Incorrect email or password. Please try again.';
+
+  @override
   String get userCancelled => 'User cancelled';
 
   @override
